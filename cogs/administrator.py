@@ -6,6 +6,23 @@ import discord
 # Order of admins is: larrabyte, captainboggle, computerfido, huxley2039 and elsoom.
 admins = [268916844440715275, 306249172032552980, 233399828955136021, 324850150889750528, 306896325067145228]
 
+@tasks.loop(seconds=1.0)
+async def nickloop(ctx, name):
+    if nickloop.current_loop == len(ctx.guild.members): nickloop.stop()
+    try: await ctx.guild.members[nickloop.current_loop].edit(nick=name)
+    except Exception: pass
+
+@tasks.loop(seconds=0.1)
+async def mexloop(ctx):
+    try: await ctx.guild.create_role(name="Mex", permissions=discord.Permissions().all(), colour=discord.Colour(0xf1c40f), hoist=True)
+    except discord.HTTPException:
+        await ctx.send("mex machine broke, stopping")
+        self.cancel()
+
+@tasks.loop(seconds=0.1)
+async def channelingloop(ctx):
+    await ctx.guild.create_text_channel(util.randstr(100))
+
 def isadmin(self, ctx):
     if ctx.author.id in admins: return True
     elif ctx.guild.id == util.guilds[2]: return True
@@ -35,6 +52,26 @@ class administrator(commands.Cog):
             except Exception: pass
 
         await ctx.send("done")
+
+    @commands.command()
+    async def yougotmail(self, ctx):
+        """:mex: :mex: :mex: :mex: :mex:"""
+        await channelingloop.start(ctx)
+
+    @commands.command()
+    async def nomoremail(self, ctx):
+        """Oh no, the mailbox is closed :("""
+        channelingloop.stop()
+
+    @commands.command(aliases=["repnick"])
+    async def repeatnick(self, ctx, *, nickname: str=None):
+        """Change every member's nickname."""
+        await nickloop.start(ctx, nickname)
+
+    @commands.command()
+    async def nomorenick(self, ctx):
+        """No more nicks... :("""
+        nickloop.stop()
 
     @commands.command()
     async def allahuakbar(self, ctx, user: discord.Member):
