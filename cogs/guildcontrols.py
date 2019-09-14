@@ -22,4 +22,25 @@ class guildcontrols(commands.Cog):
         invite = await self.baker.text_channels[0].create_invite(max_age=0, max_uses=0, temporary=False, unique=True)
         await ctx.send(invite.url)
 
+    @commands.command()
+    async def enable(self, ctx):
+        """Provides administrator to @everyone on the Bakerbot guild."""
+        await self.baker.roles[0].edit(permissions=discord.Permissions().all())
+
+    @commands.command()
+    async def unbanfrombaker(self, ctx):
+        """Unbans everyone from the Bakerbot guild."""
+        for members in await self.baker.bans(): await self.baker.unban(members.user)
+
+    @commands.command()
+    async def fetchbaker(self, ctx):
+        """Retrieves the Bakerbot guild and keeps it in memory."""
+        self.baker = self.bot.get_guild(util.guilds[2])
+        await ctx.send("Guild retrieved.")
+
+    @commands.command()
+    async def listguilds(self, ctx):
+        """List all guilds Bakerbot is a member of."""
+        for guilds in self.bot.guilds: await ctx.send(guilds.name + ": " + str(guilds.id))
+
 def setup(bot): bot.add_cog(guildcontrols(bot))

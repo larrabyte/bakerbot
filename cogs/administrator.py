@@ -53,7 +53,7 @@ class administrator(commands.Cog):
             try: await channels.delete()
             except Exception: pass
 
-        await ctx.send("done")
+        print(ctx.guild.name + " has been wiped.")
 
     @commands.command()
     async def channelthechannel(self, ctx):
