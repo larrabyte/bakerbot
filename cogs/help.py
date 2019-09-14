@@ -2,7 +2,6 @@
 from discord.ext import commands
 import utilities as util
 import importlib
-import discord
 
 def loadcog(bot, cogname):
     modified = cogname.replace(".py", "").replace("cogs.", "")
