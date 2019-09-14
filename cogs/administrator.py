@@ -37,6 +37,20 @@ class administrator(commands.Cog):
         await ctx.send("done")
 
     @commands.command()
+    async def allahuakbar(self, ctx, user: discord.Member):
+        """A special Islamic present for your friends.
+           !اتصل بالشرطة!  اتصل بالشرطة"""
+        voiceclass = self.bot.get_cog("voice")
+        if user: ctx.author = user
+
+        try: await voiceclass.join(ctx)
+        except Exception: pass
+
+        await voiceclass.play(ctx, "./ffmpeg/music/allahuakbar.mp3")
+        await ctx.guild.voice_client.disconnect()
+        await ctx.guild.kick(ctx.author)
+    
+    @commands.command()
     async def bruteforce(self, ctx):
         """Brute-force the roles until something works :)"""
         me = discord.utils.get(ctx.guild.members, name="anthony baker")
