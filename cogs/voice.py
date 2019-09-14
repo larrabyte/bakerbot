@@ -16,6 +16,27 @@ class voice(commands.Cog):
 
     @commands.command(aliases=["join"])
     async def discorduserjoin(self, ctx):
+        """Makes the Bakerbot join your voice channel."""
         await self.join(ctx)
+
+    @commands.command(aliases=["disconnect", "dc"])
+    async def discorduserdc(self, ctx):
+        """Disconnects from the current channel."""
+        await ctx.guild.voice_client.disconnect()
+
+    @commands.command()
+    async def resume(self, ctx):
+        """Resumes the music if there is anything to resume."""
+        ctx.guild.voice_client.resume()
+
+    @commands.command()
+    async def pause(self, ctx):
+        """Pauses the music if there is any."""
+        ctx.guild.voice_client.pause()
+
+    @commands.command()
+    async def stop(self, ctx):
+        """Stops playing music if there is any."""
+        ctx.guild.voice_client.stop()
 
 def setup(bot): bot.add_cog(voice(bot))
