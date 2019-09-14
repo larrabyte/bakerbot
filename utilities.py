@@ -2,6 +2,9 @@ from discord.ext import commands
 import discord
 import os
 
+# Guild order: Admin Abuse 2, Team Magic and the Bakerbot Guild.
+guilds = [554211911697432576, 473426067823263749, 620168587759583243]
+
 def fetchcogs():
     """Returns list of files found in `./cogs`. Files retain suffixes, such as `py`."""
     return [files for files in os.listdir("./cogs") if files.endswith(".py")]
