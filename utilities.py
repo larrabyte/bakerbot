@@ -6,7 +6,7 @@ import os
 
 # Guild order: Admin Abuse 2, Team Magic and the Bakerbot Guild.
 # Banned channels for Team Magic: #rules-and-announcements and #meta
-guilds = [554211911697432576, 473426067823263749, 620168587759583243]
+guilds = [554211911697432576, 473426067823263749, 622555366688817173]
 
 def fetchcogs():
     """Returns list of files found in `./cogs`. Files retain suffixes, such as `py`."""
