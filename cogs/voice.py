@@ -23,9 +23,14 @@ class voice(commands.Cog):
         guildvoice.play(audio, after=None)
 
     def fetchfiles(self):
-        embed = util.getembed("Bakerbot: Files found in `./ffmpeg/music`", 0xE39CF7, "fredbot says hello")
+        embed = util.getembed("Bakerbot: Files found in `./ffmpeg/music`:", 0xE39CF7, "fredbot says hello")
         for files in os.listdir("./ffmpeg/music"): embed.add_field(name=files, value=u"nigganigganigganigga")
         return embed
+
+    @commands.command()
+    async def musiclist(self, ctx):
+        """What's in the musical pocket?"""
+        await ctx.send(embed=self.fetchfiles())
 
     @commands.command(aliases=["join"])
     async def discorduserjoin(self, ctx):
