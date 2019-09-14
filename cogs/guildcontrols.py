@@ -1,4 +1,5 @@
 """Implements functions for the Bakerbot guild."""
+from administrator import isadmin
 from discord.ext import commands
 import utilities as util
 import discord
@@ -8,6 +9,7 @@ class guildcontrols(commands.Cog):
         self.baker = bot.get_guild(util.guilds[2])
         self.bot = bot
 
+    @commands.check(isadmin)
     @commands.command()
     async def createguild(self, ctx):
         """Make a Bakerbot guild. Use when someone utterly destroys another one."""
