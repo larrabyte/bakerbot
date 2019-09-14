@@ -1,2 +1,5 @@
 # bakerbot
- discord.py bot written in Python.
+discord.py bot written in Python. Run the bot by executing main.py.
+Requirements so far:
+- `discord.py`
+- `PyNaCl`
