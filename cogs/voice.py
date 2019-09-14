@@ -6,6 +6,8 @@ import os
 
 class voice(commands.Cog):
     def __init__(self, bot):
+        self.ffexec = "./ffmpeg/bin/ffmpeg.exe"
+        self.ffmusic = "./ffmpeg/music/"
         self.bot = bot
 
     async def join(self, ctx):
@@ -13,6 +15,17 @@ class voice(commands.Cog):
         if guildvoice == None or not guildvoice.is_connected(): await ctx.author.voice.channel.connect()
         elif guildvoice.channel != ctx.author.voice.channel: await guildvoice.move_to(ctx.author.voice.channel)
         else: await ctx.send("um i cant do anything help pls " + ctx.author.mention)
+
+    async def play(self, ctx, filepath):
+        audio = discord.FFmpegPCMAudio(executable=self.ffexec, source=filepath)
+        guildvoice = ctx.guild.voice_client
+        if guildvoice.is_playing(): await guildvoice.disconnect()
+        guildvoice.play(audio, after=None)
+
+    def fetchfiles(self):
+        embed = util.getembed("Bakerbot: Files found in `./ffmpeg/music`", 0xE39CF7, "fredbot says hello")
+        for files in os.listdir("./ffmpeg/music"): embed.add_field(name=files, value=u"nigganigganigganigga")
+        return embed
 
     @commands.command(aliases=["join"])
     async def discorduserjoin(self, ctx):
@@ -23,6 +36,20 @@ class voice(commands.Cog):
     async def discorduserdc(self, ctx):
         """Disconnects from the current channel."""
         await ctx.guild.voice_client.disconnect()
+
+    @commands.command(aliases=["play"])
+    async def discorduserplay(self, ctx, file: str=None):
+        """Let's get some music going on in here!"""
+        try: await self.join(ctx)
+        except Exception: pass
+
+        if file == None:
+            await ctx.send(embed=self.fetchfiles())
+            reply = await self.bot.wait_for("message", check=lambda msg: msg.author == ctx.author)
+            file = reply.content
+
+        await ctx.send("Now playing: `" + file + "`")
+        await self.play(ctx, self.ffmusic + file)
 
     @commands.command()
     async def resume(self, ctx):

@@ -1,3 +1,6 @@
+# ffmpeg executable and music files
+ffmpeg/
+
 # Visual Studio Code: settings folder
 .vscode/
 
