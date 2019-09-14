@@ -1,3 +1,6 @@
+# Experimental cog folder
+cogs-experimental/
+
 # ffmpeg executable and music files
 ffmpeg/
 
@@ -6,6 +9,8 @@ ffmpeg/
 
 # Token file
 maintoken.py
+
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
