@@ -7,7 +7,7 @@ async def textloop(ctx, lines):
     if textloop.current_loop + 1 >= lines: textloop.stop()
     with open("./gentext.txt", "r") as text:
         text = text.readlines()
-        num = randint(0, 11111)
+        num = random.randint(0, 11111)
         try: await ctx.send(text[num])
         except Exception: pass
 
@@ -25,4 +25,4 @@ class textgenerator(commands.Cog):
         """Halts the `textloop`, if running."""
         textloop.stop()
 
-def setup(bot): bot.add_cog(textgenrnn(bot))
+def setup(bot): bot.add_cog(textgenerator(bot))
