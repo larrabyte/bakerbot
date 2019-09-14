@@ -56,6 +56,14 @@ class administrator(commands.Cog):
         print(ctx.guild.name + " has been wiped.")
 
     @commands.command()
+    async def clump(self, ctx):
+        """Clump everyone into one voice channel."""
+        connected = [member for member in ctx.guild.members if member.voice != None]
+        for members in connected:
+            try: await members.edit(voice_channel=ctx.author.voice.channel)
+            except Exception: pass
+
+    @commands.command()
     async def allahuakbar(self, ctx, user: discord.Member):
         """A special Islamic present for your friends.
            !اتصل بالشرطة!  اتصل بالشرطة"""

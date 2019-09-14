@@ -1,5 +1,5 @@
 """Implements functions for the Bakerbot guild."""
-from administrator import isadmin
+from cogs.administrator import isadmin
 from discord.ext import commands
 import utilities as util
 import discord
