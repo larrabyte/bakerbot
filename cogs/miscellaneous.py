@@ -2,6 +2,7 @@
 from discord.ext import commands
 import utilities as util
 import asyncio
+import discord
 import random
 
 class miscellaneous(commands.Cog):
@@ -31,4 +32,5 @@ class miscellaneous(commands.Cog):
                 try: await channels.send(message)
                 except Exception: pass
                 else: await asyncio.sleep(1)
-                
+
+def setup(bot): bot.add_cog(miscellaneous(bot))                

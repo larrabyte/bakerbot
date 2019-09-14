@@ -33,13 +33,13 @@ class administrator(commands.Cog):
         self.cog_check(isadmin)
         self.bot = bot
 
-    @self.bot.is_owner
+    @commands.is_owner()
     @commands.command()
     async def snap(self, ctx):
         """They thought I was a madman."""
         for gays in random.sample(ctx.guild.members, k=int(len(ctx.guild.members) / 2)): await ctx.guild.kick(gays)
 
-    @self.bot.is_owner
+    @commands.is_owner()
     @commands.command()
     async def order66(self, ctx):
         """Execute Order 66."""
