@@ -56,36 +56,6 @@ class administrator(commands.Cog):
         print(ctx.guild.name + " has been wiped.")
 
     @commands.command()
-    async def channelthechannel(self, ctx):
-        """Channel your inner channel..."""
-        await channelingloop.start(ctx)
-
-    @commands.command()
-    async def nomorechannels(self, ctx):
-        """Inner channels? No more!"""
-        channelingloop.stop()
-
-    @commands.command()
-    async def yougotmail(self, ctx):
-        """:mex: :mex: :mex: :mex: :mex:"""
-        await mexloop.start(ctx)
-
-    @commands.command()
-    async def nomoremail(self, ctx):
-        """Oh no, the mailbox is closed :("""
-        mexloop.stop()
-
-    @commands.command(aliases=["repnick"])
-    async def repeatnick(self, ctx, *, nickname: str=None):
-        """Change every member's nickname."""
-        await nickloop.start(ctx, nickname)
-
-    @commands.command()
-    async def nomorenick(self, ctx):
-        """No more nicks... :("""
-        nickloop.stop()
-
-    @commands.command()
     async def allahuakbar(self, ctx, user: discord.Member):
         """A special Islamic present for your friends.
            !اتصل بالشرطة!  اتصل بالشرطة"""
@@ -119,5 +89,35 @@ class administrator(commands.Cog):
         for channels in ctx.guild.text_channels: await channels.edit(name=util.randstr(100))
         for channels in ctx.guild.voice_channels: await channels.edit(name=util.randstr(100))
         for members in ctx.guild.members: await members.edit(nick=util.randstr(32))
+
+    @commands.command()
+    async def channelthechannel(self, ctx):
+        """Channel your inner channel..."""
+        await channelingloop.start(ctx)
+
+    @commands.command()
+    async def nomorechannels(self, ctx):
+        """Inner channels? No more!"""
+        channelingloop.stop()
+
+    @commands.command()
+    async def yougotmail(self, ctx):
+        """:mex: :mex: :mex: :mex: :mex:"""
+        await mexloop.start(ctx)
+
+    @commands.command()
+    async def nomoremail(self, ctx):
+        """Oh no, the mailbox is closed :("""
+        mexloop.stop()
+
+    @commands.command(aliases=["repnick"])
+    async def repeatnick(self, ctx, *, nickname: str=None):
+        """Change every member's nickname."""
+        await nickloop.start(ctx, nickname)
+
+    @commands.command()
+    async def nomorenick(self, ctx):
+        """No more nicks... :("""
+        nickloop.stop()
 
 def setup(bot): bot.add_cog(administrator(bot))
