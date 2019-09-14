@@ -54,14 +54,24 @@ class administrator(commands.Cog):
         await ctx.send("done")
 
     @commands.command()
+    async def channelthechannel(self, ctx):
+        """Channel your inner channel..."""
+        await channelingloop.start(ctx)
+
+    @commands.command()
+    async def channelthechannel(self, ctx):
+        """Inner channels? No more!"""
+        channelingloop.stop()
+
+    @commands.command()
     async def yougotmail(self, ctx):
         """:mex: :mex: :mex: :mex: :mex:"""
-        await channelingloop.start(ctx)
+        await mexloop.start(ctx)
 
     @commands.command()
     async def nomoremail(self, ctx):
         """Oh no, the mailbox is closed :("""
-        channelingloop.stop()
+        mexloop.stop()
 
     @commands.command(aliases=["repnick"])
     async def repeatnick(self, ctx, *, nickname: str=None):
