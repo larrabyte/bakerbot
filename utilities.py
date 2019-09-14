@@ -19,7 +19,7 @@ def randstr(length):
 def fetchbannedchannels(ctx):
     """Returns a list of channels the bot should not speak in."""
     if ctx.guild.id == guilds[1]: return [473433493796421652, 482504425328476161]
-    else: return None
+    else: return []
 
 def getcogname(filename):
     """Returns proper cog name to allow extension loading.\n

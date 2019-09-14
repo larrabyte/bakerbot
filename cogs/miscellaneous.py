@@ -20,13 +20,15 @@ class miscellaneous(commands.Cog):
         guildvoice = ctx.guild.voice_client
         await user.edit(voice_channel=ctx.author.voice.channel)
         await voiceclass.play(ctx, "./ffmpeg/music/reallynigga.mp3")
+        
+        await asyncio.sleep(2)
         await user.edit(voice_channel=lastchannel)
         await guildvoice.disconnect()
 
     @commands.command()
     async def echotoall(self, ctx, *, message):
         """Echos `message` to all channels that aren't forbidden."""
-        communists = util.fetchbannedchannels()
+        communists = util.fetchbannedchannels(ctx)
         for channels in ctx.guild.text_channels:
             if not channels.id in communists:
                 try: await channels.send(message)
