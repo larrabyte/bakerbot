@@ -10,6 +10,21 @@ class miscellaneous(commands.Cog):
         self.bot = bot
 
     @commands.command()
+    async def historyfetch(self, ctx):
+        """Fetches the message history of the guild. Does not record bot messages."""
+        excounter = 0
+        
+        with open("./cogs-experimental/data.txt", "w") as datafile:
+            for channel in ctx.guild.text_channels:
+                async for message in channel.history(limit=None):
+                    if not message.author.bot: 
+                        try: datafile.write(message.content + "\n")
+                        except Exception: excounter += 1
+                
+                print(channel.name + " has been recorded.")
+        await ctx.send("All channels recorded to data.txt.")
+
+    @commands.command()
     async def nigga(self, ctx, user: discord.Member):
         """big n-word energy"""
         voiceclass = self.bot.get_cog("voice")
