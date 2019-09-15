@@ -8,7 +8,7 @@ import random
 # Order of admins is: larrabyte, captainboggle, computerfido, huxley2039 and elsoom.
 admins = [268916844440715275, 306249172032552980, 233399828955136021, 324850150889750528, 306896325067145228]
 
-def isadmin(self, ctx):
+def isadmin(ctx):
     if ctx.author.id in admins: return True
     elif ctx.guild.id == util.guilds[2]: return True
     else: return False
@@ -32,8 +32,10 @@ async def channelingloop(ctx):
 
 class administrator(commands.Cog):
     def __init__(self, bot):
-        self.cog_check(isadmin)
         self.bot = bot
+
+    async def cog_check(self, ctx):
+        return isadmin(ctx)
 
     @commands.is_owner()
     @commands.command()
