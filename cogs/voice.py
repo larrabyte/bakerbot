@@ -43,25 +43,15 @@ class voice(commands.Cog):
         await ctx.guild.voice_client.disconnect()
 
     @commands.command(aliases=["play"])
-    async def discorduserplay(self, ctx, file: str=None):
-        """Let's get some music going on in here!"""
-        try: await self.join(ctx)
-        except Exception: pass
+    async def discorduseruniversalplay(self, ctx, inputstr: str=None):
+        """Let's get some music going on in here! Plays local files or YouTube videos."""
+        if not ctx.guild.voice_client or ctx.guild.voice_client.is_connected(): await self.join(ctx)
 
-        if file == None:
+        if inputstr == None or not inputstr[:4] == "http":
             await ctx.send(embed=self.fetchfiles())
             reply = await self.bot.wait_for("message", check=lambda msg: msg.author == ctx.author)
-            file = reply.content
-
-        await ctx.send("Now playing: `" + file + "`")
-        await self.play(ctx, self.ffmusic + file)
-
-    @commands.command(aliases=["ytplay"])
-    async def discorduservideoplay(self, ctx, url):
-        """Music, but now it's on the cloud!"""
-        voiceclient = ctx.guild.voice_client
-        if not voiceclient or voiceclient.is_connected(): await self.join(ctx)
-        await self.play(ctx, util.downloadyt(url))
+            await self.play(ctx, self.ffmusic + reply.content)
+        else: await self.play(ctx, util.downloadyt(inputstr))
 
     @commands.command()
     async def resume(self, ctx):
