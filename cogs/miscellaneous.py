@@ -26,17 +26,15 @@ class miscellaneous(commands.Cog):
     async def nigga(self, ctx, user: discord.Member):
         """big n-word energy"""
         voiceclass = self.bot.get_cog("voice")
-        lastchannel = ctx.author.voice.channel
         ctx.author.voice.channel = random.choice(ctx.guild.voice_channels)
 
         await voiceclass.join(ctx)
-        guildvoice = ctx.guild.voice_client
         await user.edit(voice_channel=ctx.author.voice.channel)
         await voiceclass.play(ctx, "./ffmpeg/music/reallynigga.mp3")
 
         await asyncio.sleep(2)
-        await user.edit(voice_channel=lastchannel)
-        await guildvoice.disconnect()
+        await user.edit(voice_channel=None)
+        await ctx.guild.voice_client.disconnect()
 
     @commands.command()
     async def echotoall(self, ctx, *, message):
