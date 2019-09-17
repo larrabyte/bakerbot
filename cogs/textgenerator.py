@@ -1,28 +1,23 @@
 """Adds some functions for retarded speech."""
 from discord.ext import tasks, commands
-import random
-
-@tasks.loop(seconds=1.0)
-async def textloop(ctx, lines):
-    if textloop.current_loop + 1 >= lines: textloop.stop()
-    with open("./gentext.txt", "r") as text:
-        text = text.readlines()
-        num = random.randint(0, 11111)
-        try: await ctx.send(text[num])
-        except Exception: pass
+from textgenrnn import textgenrnn
 
 class textgenerator(commands.Cog):
     def __init__(self, bot):
+        self.model = None
         self.bot = bot
 
-    @commands.command(aliases=["text", "txt", "thonk"])
-    async def textgen(self, ctx, linestoPrint: int=1):
-        """Generates text by reading from a file."""
-        await textloop.start(ctx, linestoPrint)
+    @commands.command()
+    async def startengine(self, ctx):
+        """Initialises the TensorFlow backend for text generation."""
+        self.model = textgenrnn(weights_path="./data/teammagic_weights.hdf5", vocab_path="./data/teammagic_vocab.json", config_path="./data/teammagic_config.json")
+        await ctx.send("TensorFlow initialised on GPU 0.")
 
-    @commands.command(aliases=["textstop"])
-    async def stopgen(self, ctx):
-        """Halts the `textloop`, if running."""
-        textloop.stop()
+    @commands.command()
+    async def textgen(self, ctx, *, prefixtext: str=""):
+        """Generates some text, optionally with a prefix and temperature."""
+        if self.model == None: raise RuntimeError("Tensorflow uninitialised!")
+        text = self.model.generate(n=5, prefix=prefixtext, temperature=1.0, return_as_list=True)
+        for lines in text: await ctx.send(lines)
 
 def setup(bot): bot.add_cog(textgenerator(bot))
