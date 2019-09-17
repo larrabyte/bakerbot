@@ -12,14 +12,12 @@ class miscellaneous(commands.Cog):
     @commands.command()
     async def historyfetch(self, ctx):
         """Fetches the message history of the guild. Does not record bot messages."""
-        excounter = 0
-
-        with open("./cogs-experimental/data.txt", "w") as datafile:
+        with open("./data/data.txt", "w") as datafile:
             for channel in ctx.guild.text_channels:
                 async for message in channel.history(limit=None):
                     if not message.author.bot:
                         try: datafile.write(message.content + "\n")
-                        except Exception: excounter += 1
+                        except Exception: pass
 
                 print(channel.name + " has been recorded.")
         await ctx.send("All channels recorded to data.txt.")

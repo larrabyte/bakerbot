@@ -1,5 +1,5 @@
-# Experimental cog folder
-cogs-experimental/
+# Data folder
+data/
 
 # ffmpeg executable and music files
 ffmpeg/
