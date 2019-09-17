@@ -19,7 +19,7 @@ class voice(commands.Cog):
     async def play(self, ctx, filepath):
         audio = discord.FFmpegPCMAudio(executable=self.ffexec, source=filepath)
         guildvoice = ctx.guild.voice_client
-        if guildvoice.is_playing(): await guildvoice.disconnect()
+        if guildvoice.is_playing(): guildvoice.stop()
         guildvoice.play(audio, after=None)
 
     def fetchfiles(self):
@@ -55,6 +55,13 @@ class voice(commands.Cog):
 
         await ctx.send("Now playing: `" + file + "`")
         await self.play(ctx, self.ffmusic + file)
+
+    @commands.command(aliases=["ytplay"])
+    async def discorduservideoplay(self, ctx, url):
+        """Music, but now it's on the cloud!"""
+        voiceclient = ctx.guild.voice_client
+        if not voiceclient or voiceclient.is_connected(): await self.join(ctx)
+        await self.play(ctx, util.downloadyt(url))
 
     @commands.command()
     async def resume(self, ctx):

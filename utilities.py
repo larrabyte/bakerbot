@@ -1,4 +1,5 @@
 from discord.ext import commands
+import youtube_dl as youtube
 import discord
 import random
 import string
@@ -11,6 +12,14 @@ guilds = [554211911697432576, 473426067823263749, 622555366688817173]
 def fetchcogs():
     """Returns list of files found in `./cogs`. Files retain suffixes, such as `py`."""
     return [files for files in os.listdir("./cogs") if files.endswith(".py")]
+
+def downloadyt(url):
+    """Downloads a YouTube video and saves it to `./ffmpeg/music/`. Returns filepath to file."""
+    options = {"format": "bestaudio/best", "outtmpl": "./ffmpeg/music/download.temp", "postprocessors": 
+              [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "192"}]}
+    
+    youtube.YoutubeDL(options).download([url])
+    return "./ffmpeg/music/download.mp3"
 
 def randstr(length):
     """Returns `length` random characters."""
