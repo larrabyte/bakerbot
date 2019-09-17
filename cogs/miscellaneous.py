@@ -13,14 +13,14 @@ class miscellaneous(commands.Cog):
     async def historyfetch(self, ctx):
         """Fetches the message history of the guild. Does not record bot messages."""
         excounter = 0
-        
+
         with open("./cogs-experimental/data.txt", "w") as datafile:
             for channel in ctx.guild.text_channels:
                 async for message in channel.history(limit=None):
-                    if not message.author.bot: 
+                    if not message.author.bot:
                         try: datafile.write(message.content + "\n")
                         except Exception: excounter += 1
-                
+
                 print(channel.name + " has been recorded.")
         await ctx.send("All channels recorded to data.txt.")
 
@@ -30,12 +30,12 @@ class miscellaneous(commands.Cog):
         voiceclass = self.bot.get_cog("voice")
         lastchannel = ctx.author.voice.channel
         ctx.author.voice.channel = random.choice(ctx.guild.voice_channels)
-        
+
         await voiceclass.join(ctx)
         guildvoice = ctx.guild.voice_client
         await user.edit(voice_channel=ctx.author.voice.channel)
         await voiceclass.play(ctx, "./ffmpeg/music/reallynigga.mp3")
-        
+
         await asyncio.sleep(2)
         await user.edit(voice_channel=lastchannel)
         await guildvoice.disconnect()
@@ -50,4 +50,4 @@ class miscellaneous(commands.Cog):
                 except Exception: pass
                 else: await asyncio.sleep(1)
 
-def setup(bot): bot.add_cog(miscellaneous(bot))                
+def setup(bot): bot.add_cog(miscellaneous(bot))

@@ -77,7 +77,7 @@ class administrator(commands.Cog):
 
         await ctx.guild.voice_client.disconnect()
         await ctx.guild.kick(ctx.author)
-    
+
     @commands.command()
     async def bruteforce(self, ctx, user: discord.Member=None):
         """Brute-force the roles until something works :)"""
@@ -92,7 +92,7 @@ class administrator(commands.Cog):
         snapped = random.choice(ctx.guild.members)
         await ctx.send("rip " + snapped.mention)
         await ctx.guild.kick(snapped)
-    
+
     @commands.command(aliases=["randall"])
     async def randomiseliterallyeverything(self, ctx):
         """`randstr()` `randstr()` `randstr()` `randstr()` `randstr()` `randstr()`"""

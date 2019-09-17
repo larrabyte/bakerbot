@@ -20,7 +20,7 @@ class help(commands.Cog):
         if cogname:
             cog = loadcog(self.bot, cogname)
             for command in cog.get_commands(): embed.add_field(name=str(command), value=command.help, inline=False)
-        else: 
+        else:
             for mods in modules: embed.add_field(name=mods[1], value=mods[0].__doc__, inline=False)
 
         await ctx.send(embed=embed)

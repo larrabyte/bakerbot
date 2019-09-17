@@ -15,9 +15,9 @@ def fetchcogs():
 
 def downloadyt(url):
     """Downloads a YouTube video and saves it to `./ffmpeg/music/`. Returns filepath to file."""
-    options = {"format": "bestaudio/best", "outtmpl": "./ffmpeg/music/download.temp", "postprocessors": 
+    options = {"format": "bestaudio/best", "outtmpl": "./ffmpeg/music/download.temp", "postprocessors":
               [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "192"}]}
-    
+
     youtube.YoutubeDL(options).download([url])
     return "./ffmpeg/music/download.mp3"
 

@@ -14,5 +14,5 @@ if __name__ == "__main__":
     for files in util.fetchcogs():
         try: bot.load_extension(util.getcogname(files))
         except Exception: raise
-    
+
     bot.run(maintoken.token)
