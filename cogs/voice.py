@@ -47,10 +47,11 @@ class voice(commands.Cog):
         """Let's get some music going on in here! Plays local files or YouTube videos."""
         if not ctx.guild.voice_client or ctx.guild.voice_client.is_connected(): await self.join(ctx)
 
-        if inputstr == None or not inputstr[:4] == "http":
+        if inputstr == None:
             await ctx.send(embed=self.fetchfiles())
             reply = await self.bot.wait_for("message", check=lambda msg: msg.author == ctx.author)
             await self.play(ctx, self.ffmusic + reply.content)
+        elif not inputstr[:4] == "http": await self.play(ctx, self.ffmusic + inputstr)
         else: await self.play(ctx, util.downloadyt(inputstr))
 
     @commands.command()
