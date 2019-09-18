@@ -23,6 +23,11 @@ class miscellaneous(commands.Cog):
         await ctx.send("All channels recorded to data.txt.")
 
     @commands.command()
+    async def disbandeveryone(self, ctx):
+        """Disband the entire channel."""
+        for members in ctx.author.voice.channel.members: await members.edit(voice_channel=None)
+
+    @commands.command()
     async def nigga(self, ctx, user: discord.Member):
         """big n-word energy"""
         voiceclass = self.bot.get_cog("voice")
