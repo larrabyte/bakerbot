@@ -41,14 +41,14 @@ class miscellaneous(commands.Cog):
         await user.edit(voice_channel=None)
         await ctx.guild.voice_client.disconnect()
 
-    @commands.command()
-    async def echotoall(self, ctx, *, message):
-        """Echos `message` to all channels that aren't forbidden."""
-        communists = util.fetchbannedchannels(ctx)
-        for channels in ctx.guild.text_channels:
-            if not channels.id in communists:
-                try: await channels.send(message)
-                except Exception: pass
-                else: await asyncio.sleep(1)
+    # @commands.command()
+    # async def echotoall(self, ctx, *, message):
+    #     """Echos `message` to all channels that aren't forbidden."""
+    #     communists = util.fetchbannedchannels(ctx)
+    #     for channels in ctx.guild.text_channels:
+    #         if not channels.id in communists:
+    #             try: await channels.send(message)
+    #             except Exception: pass
+    #             else: await asyncio.sleep(1)
 
 def setup(bot): bot.add_cog(miscellaneous(bot))

@@ -1,6 +1,5 @@
 """Adds some functions for retarded speech."""
 from discord.ext import tasks, commands
-from textgenrnn import textgenrnn
 
 class textgenerator(commands.Cog):
     def __init__(self, bot):
@@ -10,8 +9,11 @@ class textgenerator(commands.Cog):
     @commands.command()
     async def startengine(self, ctx):
         """Initialises the TensorFlow backend for text generation."""
-        self.model = textgenrnn(weights_path="./data/teammagic_weights.hdf5", vocab_path="./data/teammagic_vocab.json", config_path="./data/teammagic_config.json")
-        await ctx.send("TensorFlow initialised on GPU 0.")
+        try:
+            from textgenrnn import textgenrnn
+            self.model = textgenrnn(weights_path="./data/teammagic_weights.hdf5", vocab_path="./data/teammagic_vocab.json", config_path="./data/teammagic_config.json")
+            await ctx.send("TensorFlow initialised, using somewhere around 7GiB of VRAM.")
+        except ModuleNotFoundError: return await ctx.send("textgenrnn not installed :(")
 
     @commands.command()
     async def textgen(self, ctx, *, prefixtext: str=""):
