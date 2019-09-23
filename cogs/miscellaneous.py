@@ -41,6 +41,15 @@ class miscellaneous(commands.Cog):
         await user.edit(voice_channel=None)
         await ctx.guild.voice_client.disconnect()
 
+    @commands.command()
+    async def ringring(self, ctx):
+        """Ring ring ring ring ring ring, BANANA PHONE!"""
+        songs = ["bananaphone-earrape.mp3", "bananaphone.webm", "bananaphone-nightcore.webm"]
+        voiceclass = self.bot.get_cog("voice")
+
+        await voiceclass.join(ctx)
+        await voiceclass.play(ctx, "./ffmpeg/music/" + random.choice(songs))
+
     # @commands.command()
     # async def echotoall(self, ctx, *, message):
     #     """Echos `message` to all channels that aren't forbidden."""
