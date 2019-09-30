@@ -4,6 +4,7 @@ import utilities as util
 import asyncio
 import discord
 import random
+import math
 
 class miscellaneous(commands.Cog):
     def __init__(self, bot):
@@ -28,6 +29,11 @@ class miscellaneous(commands.Cog):
         for members in ctx.author.voice.channel.members: await members.edit(voice_channel=None)
 
     @commands.command()
+    async def typingtoinfinityandbeyond(self, ctx):
+        """To infinity, and beyond!"""
+        async with ctx.channel.typing(): await asyncio.sleep(math.inf)
+
+    @commands.command(aliases=["ng"])
     async def nigga(self, ctx, user: discord.Member):
         """big n-word energy"""
         voiceclass = self.bot.get_cog("voice")
