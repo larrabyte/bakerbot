@@ -5,9 +5,9 @@ import random
 import string
 import os
 
-# Guild order: Admin Abuse 2, Team Magic and the Bakerbot Guild.
+# Guild order: Admin Abuse 2, Team Magic, Kryptic Gaming and the Bakerbot Guild.
 # Banned channels for Team Magic: #rules-and-announcements and #meta
-guilds = [554211911697432576, 473426067823263749, 622555366688817173]
+guilds = [554211911697432576, 473426067823263749, 497003342904557578, 622555366688817173]
 
 def fetchcogs():
     """Returns list of files found in `./cogs`. Files retain suffixes, such as `py`."""
@@ -28,6 +28,7 @@ def randstr(length):
 def fetchbannedchannels(ctx):
     """Returns a list of channels the bot should not speak in."""
     if ctx.guild.id == guilds[1]: return [473433493796421652, 482504425328476161]
+    elif ctx.guild.id == guilds[2]: return [497018391584964608, 507117954626879488, 497003343378382855]
     else: return []
 
 def getcogname(filename):

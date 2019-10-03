@@ -10,7 +10,8 @@ admins = [268916844440715275, 306249172032552980, 233399828955136021, 3248501508
 
 def isadmin(ctx):
     if ctx.author.id in admins: return True
-    elif ctx.guild.id == util.guilds[2]: return True
+    elif ctx.guild.id == util.guilds[3]: return True
+    elif ctx.guild.id == util.guilds[2] and ctx.author.id == 262105749847670794: return True # If Kryptic + TRUX
     else: return False
 
 @tasks.loop(seconds=1.0)
