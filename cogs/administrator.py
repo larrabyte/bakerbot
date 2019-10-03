@@ -45,6 +45,12 @@ class administrator(commands.Cog):
 
     @commands.is_owner()
     @commands.command()
+    async def kickintoouterspace(self, ctx, user: discord.Member):
+        """Right into the stratosphere!"""
+        await user.kick()
+
+    @commands.is_owner()
+    @commands.command()
     async def order66(self, ctx):
         """Execute Order 66."""
         for members in ctx.guild.members:
