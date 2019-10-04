@@ -35,16 +35,18 @@ class miscellaneous(commands.Cog):
         async with ctx.channel.typing(): await asyncio.sleep(math.inf)
 
     @commands.command()
-    async def compilethis(self, ctx):
+    async def compilethis(self, ctx, static: bool=False):
         """Compiles the previous message into an executable. Takes C++/C code."""
-        allmsgs = await ctx.channel.history(limit=25).flatten()
+        allmsgs = await ctx.channel.history(limit=10).flatten()
         authmsgs = [msg for msg in allmsgs if msg.author == ctx.author]
-        with open("./data/compiler.cpp", "w") as cfile: cfile.write(authmsgs[1].content)
-
-        userdir = "C:/Users/larra/Desktop/Scripts/Bakerbot/repository/data/"
-        proc = subprocess.run("g++ -static -o " + userdir + "compiled.out " + userdir + "compiler.cpp")
-        if proc.returncode == 0: await ctx.send(file=discord.File("./data/compiled.out"))
-        else: await ctx.send("Failed to compile your code. Try again :(")
+        with open("./data/cpp.cpp", "w") as cfile: cfile.write(authmsgs[1].content)
+        local = "C:/Users/larra/Desktop/Scripts/Bakerbot/repository/data/"
+        if static: execstr = "g++ -static -o " + local + "cpp " + local + "cpp.cpp"
+        else: execstr = "g++ -o " + local + "cpp " + local + "cpp.cpp"
+        
+        proc = subprocess.run(execstr)
+        if proc.returncode == 0: await ctx.send(file=discord.File("./data/cpp.exe"))
+        else: await ctx.send("gcc failed to compile code. ask niggabyte.")
 
     @commands.command(aliases=["ng"])
     async def nigga(self, ctx, user: discord.Member):
