@@ -33,17 +33,17 @@ class voice(commands.Cog):
         await ctx.send(embed=self.fetchfiles())
 
     @commands.command(aliases=["join"])
-    async def discorduserjoin(self, ctx):
+    async def dujoin(self, ctx):
         """Makes the Bakerbot join your voice channel."""
         await self.join(ctx)
 
     @commands.command(aliases=["disconnect", "dc"])
-    async def discorduserdc(self, ctx):
+    async def dudc(self, ctx):
         """Disconnects from the current channel."""
         await ctx.guild.voice_client.disconnect()
 
     @commands.command(aliases=["play"])
-    async def discorduseruniversalplay(self, ctx, inputstr: str=None):
+    async def duplay(self, ctx, inputstr: str=None):
         """Let's get some music going on in here! Plays local files or YouTube videos."""
         if not ctx.guild.voice_client or ctx.guild.voice_client.is_connected(): await self.join(ctx)
 
