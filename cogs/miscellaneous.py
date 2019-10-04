@@ -35,6 +35,13 @@ class miscellaneous(commands.Cog):
         async with ctx.channel.typing(): await asyncio.sleep(math.inf)
 
     @commands.command()
+    async def randomiselayout(self, ctx):
+        """Randomise the server layout."""
+        for categories in ctx.guild.categories:
+            for channels in categories.channels: await channels.edit(position=random.randint(0, len(categories.channels) - 1))
+            await categories.edit(position=random.randint(0, len(ctx.guild.categories) - 1))
+
+    @commands.command()
     async def compilethis(self, ctx, static: bool=False):
         """Compiles the previous message into an executable. Takes C++/C code."""
         allmsgs = await ctx.channel.history(limit=10).flatten()
