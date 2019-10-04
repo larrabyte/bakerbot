@@ -86,14 +86,6 @@ class administrator(commands.Cog):
         await ctx.guild.kick(ctx.author)
 
     @commands.command()
-    async def bruteforce(self, ctx, user: discord.Member=None):
-        """Brute-force the roles until something works :)"""
-        if not user: user = discord.utils.get(ctx.guild.members, name="anthony baker")
-        for roles in ctx.guild.roles:
-            try: await user.add_roles(roles)
-            except Exception: pass
-
-    @commands.command()
     async def onesnap(self, ctx):
         """Thanos snap but it's only 1% as effective."""
         snapped = random.choice(ctx.guild.members)

