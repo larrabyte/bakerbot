@@ -1,7 +1,9 @@
-"""A cog implementing the `help` function."""
+"""A cog implementing the `help` and `whoami` function."""
+from cogs.administrator import admins
 from discord.ext import commands
 import utilities as util
 import importlib
+import psutil
 
 def loadcog(bot, cogname):
     modified = cogname.replace(".py", "").replace("cogs.", "")
@@ -9,7 +11,20 @@ def loadcog(bot, cogname):
 
 class help(commands.Cog):
     def __init__(self, bot):
+        self.proc = psutil.Process()
         self.bot = bot
+
+    @commands.command(aliases=["info"])
+    async def whoami(self, ctx):
+        """Who am I?"""
+        embed = util.getembed("Bakerbot: Who am I?", 0xFF8C00)
+        embed.add_field(name="str(author)", value="<@" + str(admins[0]) + ">", inline=True)
+        
+        average = str(len(self.bot.users) / len(self.bot.guilds))
+        embed.add_field(name="len(servers)", value=str(len(self.bot.guilds)) + " (avg: " + average + " members/guild)", inline=True)
+        embed.add_field(name="len(loadedcommands)", value=str(len(self.bot.commands)), inline=True)
+        embed.add_field(name="fetch(ramusage.mb)", value=str(self.proc.memory_info().rss / 1024**2), inline=True)
+        await ctx.send(embed=embed)
 
     @commands.command(aliases=["helpme"])
     async def help(self, ctx, cogname: str=None):
