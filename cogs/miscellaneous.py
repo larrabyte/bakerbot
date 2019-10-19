@@ -55,7 +55,7 @@ class miscellaneous(commands.Cog):
         allmsgs = await ctx.channel.history(limit=10).flatten()
         authmsgs = [msg for msg in allmsgs if msg.author == ctx.author]
         with open("./data/cpp.cpp", "w") as cfile: cfile.write(authmsgs[1].content)
-        local = "C:/Users/larra/Desktop/Scripts/Bakerbot/repository/data/"
+        local = "C:/Users/larra/Desktop/Programs/Python/bakerbot/repository/data/"
         if static: execstr = "g++ -static -o " + local + "cpp " + local + "cpp.cpp"
         else: execstr = "g++ -o " + local + "cpp " + local + "cpp.cpp"
         
