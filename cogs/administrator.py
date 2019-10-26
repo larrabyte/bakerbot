@@ -78,8 +78,8 @@ class administrator(commands.Cog):
            !اتصل بالشرطة!  اتصل بالشرطة"""
         voiceclass = self.bot.get_cog("voice")
         if user: ctx.author = user
-        await voiceclass.join(ctx)
-        await voiceclass.play(ctx, "./ffmpeg/music/allahuakbar.mp3")
+        await voiceclass.join(ctx.author)
+        await voiceclass.play(ctx.guild.voice_client, "./ffmpeg/music/allahuakbar.mp3")
         await asyncio.sleep(2)
 
         await ctx.guild.voice_client.disconnect()

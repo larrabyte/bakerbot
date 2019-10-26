@@ -69,9 +69,9 @@ class miscellaneous(commands.Cog):
         voiceclass = self.bot.get_cog("voice")
         ctx.author.voice.channel = random.choice(ctx.guild.voice_channels)
 
-        await voiceclass.join(ctx)
+        await voiceclass.join(ctx.author)
         await user.edit(voice_channel=ctx.author.voice.channel)
-        await voiceclass.play(ctx, "./ffmpeg/music/reallynigga.mp3")
+        await voiceclass.play(ctx.guild.voice_client, "./ffmpeg/music/reallynigga.mp3")
 
         await asyncio.sleep(2)
         await user.edit(voice_channel=None)
@@ -83,8 +83,8 @@ class miscellaneous(commands.Cog):
         songs = ["bananaphone-earrape.mp3", "bananaphone.webm", "bananaphone-nightcore.webm"]
         voiceclass = self.bot.get_cog("voice")
 
-        await voiceclass.join(ctx)
-        await voiceclass.play(ctx, "./ffmpeg/music/" + random.choice(songs))
+        await voiceclass.join(ctx.author)
+        await voiceclass.play(ctx.guild.voice_client, "./ffmpeg/music/" + random.choice(songs))
 
     # @commands.command()
     # async def echotoall(self, ctx, *, message):

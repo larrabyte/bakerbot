@@ -10,17 +10,15 @@ class voice(commands.Cog):
         self.ffmusic = "./ffmpeg/music/"
         self.bot = bot
 
-    async def join(self, ctx):
-        guildvoice = ctx.guild.voice_client
-        if guildvoice == None or not guildvoice.is_connected(): await ctx.author.voice.channel.connect()
-        elif guildvoice.channel != ctx.author.voice.channel: await guildvoice.move_to(ctx.author.voice.channel)
-        else: await ctx.send("um i cant do anything help pls " + ctx.author.mention)
+    async def join(self, user):
+        vclient = user.guild.voice_client
+        if vclient == None or not vclient.is_connected(): await user.voice.channel.connect()
+        elif vclient.channel != user.voice.channel: await vclient.move_to(user.voice.channel)
 
-    async def play(self, ctx, filepath):
+    async def play(self, guildclient, filepath):
         audio = discord.FFmpegPCMAudio(executable=self.ffexec, source=filepath)
-        guildvoice = ctx.guild.voice_client
-        if guildvoice.is_playing(): guildvoice.stop()
-        guildvoice.play(audio, after=None)
+        if guildclient.is_playing(): guildclient.stop()
+        guildclient.play(audio, after=None)
 
     def fetchfiles(self):
         embed = util.getembed("Bakerbot: Files found in `./ffmpeg/music`:", 0xE39CF7, "fredbot says hello")
@@ -35,7 +33,7 @@ class voice(commands.Cog):
     @commands.command(aliases=["join"])
     async def dujoin(self, ctx):
         """Makes the Bakerbot join your voice channel."""
-        await self.join(ctx)
+        await self.join(ctx.author)
 
     @commands.command(aliases=["disconnect", "dc"])
     async def dudc(self, ctx):
@@ -45,13 +43,13 @@ class voice(commands.Cog):
     @commands.command(aliases=["play"])
     async def duplay(self, ctx, inputstr: str=None):
         """Let's get some music going on in here! Plays local files or YouTube videos."""
-        if not ctx.guild.voice_client or ctx.guild.voice_client.is_connected(): await self.join(ctx)
+        if not ctx.guild.voice_client or ctx.guild.voice_client.is_connected(): await self.join(ctx.author)
 
         if inputstr == None:
             await ctx.send(embed=self.fetchfiles())
             reply = await self.bot.wait_for("message", check=lambda msg: msg.author == ctx.author)
-            await self.play(ctx, self.ffmusic + reply.content)
-        elif not inputstr[:4] == "http": await self.play(ctx, self.ffmusic + inputstr)
+            await self.play(ctx.guild.voice_client, self.ffmusic + reply.content)
+        elif not inputstr[:4] == "http": await self.play(ctx.guild.voice_client, self.ffmusic + inputstr)
         else: await self.play(ctx, util.downloadyt(inputstr))
 
     @commands.command()
