@@ -44,8 +44,11 @@ class voice(commands.Cog):
     async def duplay(self, ctx, inputstr: str=None):
         """Let's get some music going on in here! Plays local files or YouTube videos."""
         if not ctx.guild.voice_client or ctx.guild.voice_client.is_connected(): await self.join(ctx.author)
-
-        if inputstr == None:
+        
+        if ctx.message.attachments: 
+            await ctx.message.attachments[0].save("./ffmpeg/music/" + ctx.message.attachments[0].filename)
+            await self.play(ctx.guild.voice_client, "./ffmpeg/music/" + ctx.message.attachments[0].filename)
+        elif inputstr == None:
             await ctx.send(embed=self.fetchfiles())
             reply = await self.bot.wait_for("message", check=lambda msg: msg.author == ctx.author)
             await self.play(ctx.guild.voice_client, self.ffmusic + reply.content)
