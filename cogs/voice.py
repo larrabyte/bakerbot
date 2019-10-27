@@ -17,7 +17,7 @@ class voice(commands.Cog):
 
     async def play(self, guildclient, filepath):
         audio = discord.FFmpegPCMAudio(executable=self.ffexec, source=filepath)
-        if guildclient.is_playing(): guildclient.stop()
+        if guildclient != None and guildclient.is_playing(): guildclient.stop()
         guildclient.play(audio, after=None)
 
     def fetchfiles(self):
@@ -50,7 +50,7 @@ class voice(commands.Cog):
             reply = await self.bot.wait_for("message", check=lambda msg: msg.author == ctx.author)
             await self.play(ctx.guild.voice_client, self.ffmusic + reply.content)
         elif not inputstr[:4] == "http": await self.play(ctx.guild.voice_client, self.ffmusic + inputstr)
-        else: await self.play(ctx, util.downloadyt(inputstr))
+        else: await self.play(ctx.guild.voice_client, util.downloadyt(inputstr))
 
     @commands.command()
     async def resume(self, ctx):
