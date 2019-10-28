@@ -49,20 +49,6 @@ class miscellaneous(commands.Cog):
             for channels in categories.channels: await channels.edit(position=random.randint(0, len(categories.channels) - 1))
             await categories.edit(position=random.randint(0, len(ctx.guild.categories) - 1))
 
-    @commands.command()
-    async def compilethis(self, ctx, static: bool=False):
-        """Compiles the previous message into an executable. Takes C++/C code."""
-        allmsgs = await ctx.channel.history(limit=10).flatten()
-        authmsgs = [msg for msg in allmsgs if msg.author == ctx.author]
-        with open("./data/cpp.cpp", "w") as cfile: cfile.write(authmsgs[1].content)
-        local = "C:/Users/larra/Desktop/Programs/Python/bakerbot/repository/data/"
-        if static: execstr = "g++ -static -o " + local + "cpp " + local + "cpp.cpp"
-        else: execstr = "g++ -o " + local + "cpp " + local + "cpp.cpp"
-        
-        proc = subprocess.run(execstr)
-        if proc.returncode == 0: await ctx.send(file=discord.File("./data/cpp.exe"))
-        else: await ctx.send("gcc failed to compile code. ask niggabyte.")
-
     @commands.command(aliases=["ng"])
     async def nigga(self, ctx, user: discord.Member):
         """big n-word energy"""
