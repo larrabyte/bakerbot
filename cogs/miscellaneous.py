@@ -15,9 +15,7 @@ class miscellaneous(commands.Cog):
     async def bruteforce(self, ctx, user: discord.Member=None):
         """Brute-force the roles until something works :)"""
         if not user: user = discord.utils.get(ctx.guild.members, name="anthony baker")
-        for roles in ctx.guild.roles:
-            try: await user.add_roles(roles)
-            except Exception: pass
+        await user.add_roles(ctx.guild.roles)
 
     @commands.command()
     async def historyfetch(self, ctx):
@@ -52,14 +50,12 @@ class miscellaneous(commands.Cog):
     @commands.command(aliases=["ng"])
     async def nigga(self, ctx, user: discord.Member):
         """big n-word energy"""
-        voiceclass = self.bot.get_cog("voice")
+        voice = self.bot.get_cog("voice")
         ctx.author.voice.channel = random.choice(ctx.guild.voice_channels)
-
-        await voiceclass.join(ctx.author)
         await user.edit(voice_channel=ctx.author.voice.channel)
-        await voiceclass.play(ctx.guild.voice_client, "./ffmpeg/music/reallynigga.mp3")
-
+        await voice.unifiedplay(ctx.author, "./ffmpeg/music/reallynigga.mp3")
         await asyncio.sleep(2)
+
         await user.edit(voice_channel=None)
         await ctx.guild.voice_client.disconnect()
 
@@ -67,10 +63,7 @@ class miscellaneous(commands.Cog):
     async def ringring(self, ctx):
         """Ring ring ring ring ring ring, BANANA PHONE!"""
         songs = ["bananaphone-earrape.mp3", "bananaphone.webm", "bananaphone-nightcore.webm"]
-        voiceclass = self.bot.get_cog("voice")
-
-        await voiceclass.join(ctx.author)
-        await voiceclass.play(ctx.guild.voice_client, "./ffmpeg/music/" + random.choice(songs))
+        await self.bot.get_cog("voice").unifiedplay(ctx.author, "./ffmpeg/music/" + random.choice(songs))
 
     # @commands.command()
     # async def echotoall(self, ctx, *, message):

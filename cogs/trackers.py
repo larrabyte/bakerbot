@@ -6,22 +6,26 @@ import random
 
 class trackers(commands.Cog):
     def __init__(self, bot):
-        self.voice = bot.get_cog("voice")
+        self.songs = ["air_raid_siren.mp3", "yogscast-babayetu.mp3", "babayetu.mp3"]
+        self.members = bot.get_all_members()
         self.civilisation = False
-        self.members = []
         self.bot = bot
 
-        for guilds in bot.guilds: self.members += guilds.members
         self.civtracker.start()
 
     @tasks.loop(seconds=5.0)
     async def civtracker(self):
-        if not self.civilisation:
-            for member in self.members:
-                if member.activity.name == "Sid Meier's Civilization VI":
-                    song = random.choice(["./ffmpeg/music/air_raid_siren.mp3", "./ffmpeg/music/babayetu.mp3", "./ffmpeg/music/yogscast-babayetu.mp3"])
-                    await self.voice.join(member)
-                    await self.voice.play(member.guild.voice_client, song)
-                    self.civilisation = True
+        vclass = self.bot.get_cog("voice")
+        if self.civilisation: self.civtracker.cancel()
+        players = [member for member in self.members if member.activity.name == "Sid Meier's Civilization VI"]
+        
+        if len(players) != 0:
+            song = random.choice(self.songs)
+            await vclass.unifiedplay(players[0], "./ffmpeg/music/" + song)
+            self.civilisation = True
+
+    @civtracker.before_loop
+    async def precivtracker(self):
+        await self.bot.wait_until_ready()
 
 def setup(bot): bot.add_cog(trackers(bot))

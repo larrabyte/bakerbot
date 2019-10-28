@@ -11,7 +11,6 @@ admins = [268916844440715275, 306249172032552980, 233399828955136021, 3248501508
 def isadmin(ctx):
     if ctx.author.id in admins: return True
     elif ctx.guild.id == util.guilds[3]: return True
-    elif ctx.guild.id == util.guilds[2] and ctx.author.id == 262105749847670794: return True # If Kryptic + TRUX
     else: return False
 
 @tasks.loop(seconds=1.0)
@@ -76,14 +75,12 @@ class administrator(commands.Cog):
     async def allahuakbar(self, ctx, user: discord.Member):
         """A special Islamic present for your friends.
            !اتصل بالشرطة!  اتصل بالشرطة"""
-        voiceclass = self.bot.get_cog("voice")
-        if user: ctx.author = user
-        await voiceclass.join(ctx.author)
-        await voiceclass.play(ctx.guild.voice_client, "./ffmpeg/music/allahuakbar.mp3")
+        await voice.unifiedplay(ctx.author, "./ffmpeg/music/allahuakbar.mp3")
+        voice = self.bot.get_cog("voice")
         await asyncio.sleep(2)
 
         await ctx.guild.voice_client.disconnect()
-        await ctx.guild.kick(ctx.author)
+        await ctx.guild.kick(user)
 
     @commands.command()
     async def onesnap(self, ctx):

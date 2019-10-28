@@ -10,22 +10,21 @@ class voice(commands.Cog):
         self.ffmusic = "./ffmpeg/music/"
         self.bot = bot
 
-    async def join(self, user):
-        vclient = user.guild.voice_client
-        if vclient == None or not vclient.is_connected(): await user.voice.channel.connect()
-        elif vclient.channel != user.voice.channel: await vclient.move_to(user.voice.channel)
+    async def unifiedplay(self, user, filepath):
+        gclient = user.guild.voice_client
+        if gclient == None or not vclient.is_connected(): await user.voice.channel.connect()
+        elif gclient.channel != user.voice.channel: await vclient.move_to(user.voice.channel)
+        if guildclient.is_playing(): guildclient.stop()
 
-    async def play(self, guildclient, filepath):
-        audio = discord.FFmpegPCMAudio(executable=self.ffexec, source=filepath)
-        if guildclient != None and guildclient.is_playing(): guildclient.stop()
-        guildclient.play(audio, after=None)
+        try: guildclient.play(discord.FFmpegPCMAudio(executable=self.ffexec, source=filepath), after=None)
+        except Exception: pass
 
     def fetchfiles(self):
         embed = util.getembed("Bakerbot: Files found in `./ffmpeg/music`:", 0xE39CF7, "fredbot says hello")
-        for files in os.listdir("./ffmpeg/music"): embed.add_field(name=files, value=u"nigganigganigganigga")
+        for files in os.listdir("./ffmpeg/music"): embed.add_field(name=files, value=files)
         return embed
 
-    @commands.command()
+    @commands.command(aliases=["ml"])
     async def musiclist(self, ctx):
         """What's in the musical pocket?"""
         await ctx.send(embed=self.fetchfiles())
@@ -43,17 +42,17 @@ class voice(commands.Cog):
     @commands.command(aliases=["play"])
     async def duplay(self, ctx, inputstr: str=None):
         """Let's get some music going on in here! Plays local files or YouTube videos."""
-        if not ctx.guild.voice_client or ctx.guild.voice_client.is_connected(): await self.join(ctx.author)
-        
-        if ctx.message.attachments: 
-            await ctx.message.attachments[0].save("./ffmpeg/music/" + ctx.message.attachments[0].filename)
-            await self.play(ctx.guild.voice_client, "./ffmpeg/music/" + ctx.message.attachments[0].filename)
+        vclient = ctx.guild.voice_client
+
+        if ctx.message.attachments:
+            await ctx.message.attachments[0].save(self.ffmusic + ctx.message.attachments[0].filename)
+            await self.unifiedplay(ctx.author, self.ffmusic + ctx.message.attachments[0].filename)
         elif inputstr == None:
             await ctx.send(embed=self.fetchfiles())
             reply = await self.bot.wait_for("message", check=lambda msg: msg.author == ctx.author)
-            await self.play(ctx.guild.voice_client, self.ffmusic + reply.content)
-        elif not inputstr[:4] == "http": await self.play(ctx.guild.voice_client, self.ffmusic + inputstr)
-        else: await self.play(ctx.guild.voice_client, util.downloadyt(inputstr))
+            await self.unifiedplay(ctx.author, self.ffmusic + reply.content)
+        elif not inputstr[:4] == "http": await self.unifiedplay(ctx.author, self.ffmusic + inputstr)
+        else: await self.unifiedplay(ctx.author, util.downloadyt(inputstr))
 
     @commands.command()
     async def resume(self, ctx):
