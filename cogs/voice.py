@@ -12,11 +12,11 @@ class voice(commands.Cog):
 
     async def unifiedplay(self, user, filepath):
         gclient = user.guild.voice_client
-        if gclient == None or not vclient.is_connected(): await user.voice.channel.connect()
-        elif gclient.channel != user.voice.channel: await vclient.move_to(user.voice.channel)
-        if guildclient.is_playing(): guildclient.stop()
+        if gclient == None or not gclient.is_connected(): gclient = await user.voice.channel.connect()
+        elif gclient.channel != user.voice.channel: await gclient.move_to(user.voice.channel)
+        if gclient.is_playing(): gclient.stop()
 
-        try: guildclient.play(discord.FFmpegPCMAudio(executable=self.ffexec, source=filepath), after=None)
+        try: gclient.play(discord.FFmpegPCMAudio(executable=self.ffexec, source=filepath), after=None)
         except Exception: pass
 
     def fetchfiles(self):
