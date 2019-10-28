@@ -6,7 +6,6 @@ import os
 
 class voice(commands.Cog):
     def __init__(self, bot):
-        self.ffexec = "./ffmpeg/bin/ffmpeg.exe"
         self.ffmusic = "./ffmpeg/music/"
         self.bot = bot
 
@@ -16,7 +15,7 @@ class voice(commands.Cog):
         elif gclient.channel != user.voice.channel: await gclient.move_to(user.voice.channel)
         if gclient.is_playing(): gclient.stop()
 
-        try: gclient.play(discord.FFmpegPCMAudio(executable=self.ffexec, source=filepath), after=None)
+        try: gclient.play(discord.FFmpegPCMAudio(executable="./ffmpeg/bin/ffmpeg.exe", source=filepath), after=None)
         except Exception: pass
 
     def fetchfiles(self):

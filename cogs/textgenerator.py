@@ -9,11 +9,10 @@ class textgenerator(commands.Cog):
     @commands.command()
     async def startengine(self, ctx):
         """Initialises the TensorFlow backend for text generation."""
-        try:
-            from textgenrnn import textgenrnn
-            self.model = textgenrnn(weights_path="./data/teammagic_weights.hdf5", vocab_path="./data/teammagic_vocab.json", config_path="./data/teammagic_config.json")
-            await ctx.send("TensorFlow initialised!")
-        except ModuleNotFoundError: await ctx.send("textgenrnn not installed :(")
+        try: from textgenrnn import textgenrnn
+        except ModuleNotFoundError: return await ctx.send("textgenrnn not installed :(")
+        self.model = textgenrnn(weights_path="./data/teammagic_weights.hdf5", vocab_path="./data/teammagic_vocab.json", config_path="./data/teammagic_config.json")
+        await ctx.send("TensorFlow initialised!")
 
     @commands.command()
     async def textgen(self, ctx, *, prefixtext):

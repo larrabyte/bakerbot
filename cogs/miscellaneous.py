@@ -19,7 +19,7 @@ class miscellaneous(commands.Cog):
 
     @commands.command()
     async def historyfetch(self, ctx):
-        """Fetches the message history of the guild. Does not record bot messages."""
+        """Fetches the message history of the guild. Does not record bot messages."""        
         with open("./data/data.txt", "w") as datafile:
             for channel in ctx.guild.text_channels:
                 async for message in channel.history(limit=None):
@@ -31,31 +31,17 @@ class miscellaneous(commands.Cog):
         await ctx.send("All channels recorded to data.txt.")
 
     @commands.command()
-    async def disbandeveryone(self, ctx):
-        """Disband the entire channel."""
-        for members in ctx.author.voice.channel.members: await members.edit(voice_channel=None)
-
-    @commands.command()
     async def typingtoinfinityandbeyond(self, ctx):
         """To infinity, and beyond!"""
         async with ctx.channel.typing(): await asyncio.sleep(math.inf)
-
-    @commands.command()
-    async def randomiselayout(self, ctx):
-        """Randomise the server layout."""
-        for categories in ctx.guild.categories:
-            for channels in categories.channels: await channels.edit(position=random.randint(0, len(categories.channels) - 1))
-            await categories.edit(position=random.randint(0, len(ctx.guild.categories) - 1))
 
     @commands.command(aliases=["ng"])
     async def nigga(self, ctx, user: discord.Member):
         """big n-word energy"""
         voice = self.bot.get_cog("voice")
-        ctx.author.voice.channel = random.choice(ctx.guild.voice_channels)
-        await user.edit(voice_channel=ctx.author.voice.channel)
+        await user.edit(voice_channel=random.choice(ctx.guild.voice_channels))
         await voice.unifiedplay(ctx.author, "./ffmpeg/music/reallynigga.mp3")
         await asyncio.sleep(2)
-
         await user.edit(voice_channel=None)
         await ctx.guild.voice_client.disconnect()
 

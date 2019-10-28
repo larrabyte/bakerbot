@@ -18,12 +18,12 @@ class help(commands.Cog):
     async def whoami(self, ctx):
         """Who am I?"""
         embed = util.getembed("Bakerbot: Who am I?", 0xFF8C00)
-        embed.add_field(name="str(author)", value="<@" + str(admins[0]) + ">", inline=True)
+        embed.add_field(name="Author", value="<@" + str(admins[0]) + ">", inline=True)
         
         average = str(len(self.bot.users) / len(self.bot.guilds))
-        embed.add_field(name="len(servers)", value=str(len(self.bot.guilds)) + " (avg: " + average + " members/guild)", inline=True)
-        embed.add_field(name="len(loadedcommands)", value=str(len(self.bot.commands)), inline=True)
-        embed.add_field(name="fetch(ramusage.mb)", value=str(self.proc.memory_info().rss / 1024**2), inline=True)
+        embed.add_field(name="# of Servers", value=str(len(self.bot.guilds)) + " (avg: " + average + " members/guild)", inline=True)
+        embed.add_field(name="Loaded Commands", value=str(len(self.bot.commands)), inline=True)
+        embed.add_field(name="Memory Usage (MiB)", value=str(self.proc.memory_info().rss / 1024**2), inline=True)
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["helpme"])
