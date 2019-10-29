@@ -6,7 +6,7 @@ import discord
 
 class guildcontrols(commands.Cog):
     def __init__(self, bot):
-        self.baker = bot.get_guild(util.guilds[2])
+        self.baker = bot.get_guild(util.guilds[3])
         self.bot = bot
 
     @commands.check(isadmin)
@@ -43,6 +43,6 @@ class guildcontrols(commands.Cog):
     @commands.command()
     async def listguilds(self, ctx):
         """List all guilds Bakerbot is a member of."""
-        for guilds in self.bot.guilds: await ctx.send(guilds.name + ": " + str(guilds.id))
+        for guilds in self.bot.guilds: await ctx.send(f"{guilds.name}: {guilds.id}")
 
 def setup(bot): bot.add_cog(guildcontrols(bot))

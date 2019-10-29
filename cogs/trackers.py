@@ -15,13 +15,12 @@ class trackers(commands.Cog):
 
     @tasks.loop(seconds=5.0)
     async def civtracker(self):
-        vclass = self.bot.get_cog("voice")
         if self.civilisation: self.civtracker.cancel()
         players = [member for member in self.members if member.activity.name == "Sid Meier's Civilization VI"]
         
         if len(players) != 0:
             song = random.choice(self.songs)
-            await vclass.unifiedplay(players[0], "./ffmpeg/music/" + song)
+            await self.bot.get_cog("voice").unifiedplay(players[0], "./ffmpeg/music/" + song)
             self.civilisation = True
 
     @civtracker.before_loop

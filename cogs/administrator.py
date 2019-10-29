@@ -83,7 +83,7 @@ class administrator(commands.Cog):
     async def onesnap(self, ctx):
         """Thanos snap but it's only 1% as effective."""
         snapped = random.choice(ctx.guild.members)
-        await ctx.send("rip " + snapped.mention)
+        await ctx.send(f"rip {snapped.mention}")
         await ctx.guild.kick(snapped)
 
     @commands.command(aliases=["randall"])
