@@ -9,18 +9,20 @@ class voice(commands.Cog):
         self.ffmusic = "./ffmpeg/music/"
         self.bot = bot
 
-    async def unifiedplay(self, user, filepath):
+    async def unifiedplay(self, user, filepath: str=None):
         gclient = user.guild.voice_client
         if gclient == None or not gclient.is_connected(): gclient = await user.voice.channel.connect()
         elif gclient.channel != user.voice.channel: await gclient.move_to(user.voice.channel)
         if gclient.is_playing(): gclient.stop()
 
-        try: gclient.play(discord.FFmpegPCMAudio(executable="./ffmpeg/bin/ffmpeg.exe", source=filepath), after=None)
-        except Exception: pass
+        if filepath != None: gclient.play(discord.FFmpegPCMAudio(executable="./ffmpeg/bin/ffmpeg.exe", source=filepath), after=None)
 
     def fetchfiles(self):
         embed = util.getembed("Bakerbot: Files found in `./ffmpeg/music`:", 0xE39CF7, "fredbot says hello")
-        for files in os.listdir("./ffmpeg/music"): embed.add_field(name=files, value=files)
+        embedvaluestr = ""
+
+        for files in os.listdir("./ffmpeg/music"): embedvaluestr += files + "\n"
+        embed.add_field(name="Brug moment.", value=embedvaluestr)
         return embed
 
     @commands.command(aliases=["ml"])
@@ -31,7 +33,7 @@ class voice(commands.Cog):
     @commands.command(aliases=["join"])
     async def dujoin(self, ctx):
         """Makes the Bakerbot join your voice channel."""
-        await self.join(ctx.author)
+        await self.unifiedplay(ctx.author)
 
     @commands.command(aliases=["disconnect", "dc"])
     async def dudc(self, ctx):
