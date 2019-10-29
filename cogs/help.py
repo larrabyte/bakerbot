@@ -33,10 +33,11 @@ class help(commands.Cog):
         modules = [(importlib.import_module(util.getcogname(cogs)), util.getcogname(cogs)) for cogs in util.fetchcogs()]
 
         if cogname:
-            cog = loadcog(self.bot, cogname)
-            for command in cog.get_commands(): embed.add_field(name=str(command), value=command.help, inline=False)
+            for command in loadcog(self.bot, cogname).get_commands(): 
+                embed.add_field(name=str(command), value=command.help, inline=False)
         else:
-            for mods in modules: embed.add_field(name=mods[1], value=mods[0].__doc__, inline=False)
+            for mods in modules: 
+                embed.add_field(name=mods[1], value=mods[0].__doc__, inline=False)
 
         await ctx.send(embed=embed)
 
