@@ -12,6 +12,11 @@ class miscellaneous(commands.Cog):
         self.bot = bot
 
     @commands.command()
+    async def yougotspam(self, ctx, *, message):
+        """You've got SPAM(tm)! You've got SPAM(tm)!"""
+        while True: await ctx.send(message)
+
+    @commands.command()
     async def bruteforce(self, ctx, user: discord.Member=None):
         """Brute-force the roles until something works :)"""
         if not user: user = discord.utils.get(ctx.guild.members, name="anthony baker")
