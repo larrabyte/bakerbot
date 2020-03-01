@@ -5,12 +5,11 @@ import discord
 import asyncio
 import random
 
-# Order of admins is: larrabyte, captainboggle, computerfido, huxley2039 and elsoom.
-admins = [268916844440715275, 306249172032552980, 233399828955136021, 324850150889750528, 306896325067145228]
-
+#        larrabyte            captainboggle       computerfido        huxley2039,         elsoom              dxv
+admins = [268916844440715275, 306249172032552980, 233399828955136021, 324850150889750528, 306896325067145228, 525454884166959121]
+    
 def isadmin(ctx):
     if ctx.author.id in admins: return True
-    elif ctx.guild.id == util.guilds[3]: return True
     else: return False
 
 @tasks.loop(seconds=1.0)
@@ -32,6 +31,9 @@ async def channelingloop(ctx):
 
 class administrator(commands.Cog):
     def __init__(self, bot):
+        self.channeling = False
+        self.necking = False
+        self.mailing = False
         self.bot = bot
 
     async def cog_check(self, ctx):
@@ -72,8 +74,8 @@ class administrator(commands.Cog):
     async def allahuakbar(self, ctx, user: discord.Member):
         """A special Islamic present for your friends.
            !اتصل بالشرطة!  اتصل بالشرطة"""
-        await voice.unifiedplay(ctx.author, "./ffmpeg/music/allahuakbar.mp3")
         voice = self.bot.get_cog("voice")
+        await voice.unifiedplay(ctx.author, "./ffmpeg/music/allahuakbar.mp3")
         await asyncio.sleep(2)
 
         await ctx.guild.voice_client.disconnect()
@@ -96,31 +98,22 @@ class administrator(commands.Cog):
     @commands.command()
     async def channelthechannel(self, ctx):
         """Channel your inner channel..."""
-        await channelingloop.start(ctx)
-
-    @commands.command()
-    async def nomorechannels(self, ctx):
-        """Inner channels? No more!"""
-        channelingloop.stop()
+        if self.channeling: channelingloop.stop()
+        else: await channelingloop.start(ctx)
+        self.channeling = not self.channeling
 
     @commands.command()
     async def yougotmail(self, ctx):
         """:mex: :mex: :mex: :mex: :mex:"""
-        await mexloop.start(ctx)
-
-    @commands.command()
-    async def nomoremail(self, ctx):
-        """Oh no, the mailbox is closed :("""
-        mexloop.stop()
+        if self.mailing: mexloop.stop()
+        else: await mexloop.start(ctx)
+        self.mailing = not self.mailing
 
     @commands.command(aliases=["repnick"])
     async def repeatnick(self, ctx, *, nickname: str=None):
         """Change every member's nickname."""
-        await nickloop.start(ctx, nickname)
-
-    @commands.command()
-    async def nomorenick(self, ctx):
-        """No more nicks... :("""
-        nickloop.stop()
+        if self.necking: nickloop.stop()
+        else: await nickloop.start(ctx, nickname)
+        self.necking = not self.necking
 
 def setup(bot): bot.add_cog(administrator(bot))

@@ -21,7 +21,7 @@ class voice(commands.Cog):
         embed = util.getembed("Bakerbot: Files found in `./ffmpeg/music`:", 0xE39CF7, "fredbot says hello")
         embedvaluestr = ""
 
-        for files in os.listdir("./ffmpeg/music"): embedvaluestr += files + "\n"
+        for files in os.listdir(self.ffmusic): embedvaluestr += files + "\n"
         embed.add_field(name="Brug moment.", value=embedvaluestr)
         return embed
 
@@ -43,8 +43,6 @@ class voice(commands.Cog):
     @commands.command(aliases=["play"])
     async def duplay(self, ctx, inputstr: str=None):
         """Let's get some music going on in here! Plays local files or YouTube videos."""
-        vclient = ctx.guild.voice_client
-
         if ctx.message.attachments:
             await ctx.message.attachments[0].save(self.ffmusic + ctx.message.attachments[0].filename)
             await self.unifiedplay(ctx.author, self.ffmusic + ctx.message.attachments[0].filename)

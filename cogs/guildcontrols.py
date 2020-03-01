@@ -6,7 +6,7 @@ import discord
 
 class guildcontrols(commands.Cog):
     def __init__(self, bot):
-        self.baker = bot.get_guild(util.guilds[3])
+        self.baker = bot.get_guild(622555366688817173)
         self.bot = bot
 
     @commands.check(isadmin)
@@ -33,12 +33,6 @@ class guildcontrols(commands.Cog):
     async def unbanfrombaker(self, ctx):
         """Unbans everyone from the Bakerbot guild."""
         for members in await self.baker.bans(): await self.baker.unban(members.user)
-
-    @commands.command()
-    async def fetchbaker(self, ctx):
-        """Retrieves the Bakerbot guild and keeps it in memory."""
-        self.baker = self.bot.get_guild(util.guilds[2])
-        await ctx.send("Guild retrieved.")
 
     @commands.command()
     async def listguilds(self, ctx):
