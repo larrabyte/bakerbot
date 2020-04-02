@@ -18,14 +18,14 @@ class games(commands.Cog):
     @commands.command()
     async def giveaway(self, ctx, *, prize: str=None):
         """Giveaway random prizes! Pass in a string to display."""
-        if self.giving: raise GiveawayException("please wait!")
+        if self.giving: await ctx.send("Giveaway in progress, please wait!"); return
 
         self.giving = True
         members = "\n".join([member.mention for member in sample(ctx.guild.members, 5)])
         embed = getembed(f"The Bakerbot Lottery!", 0xFF8C00, "sponsored by the pharmaceutical industry")
 
         if not prize: prize = choice(self.defaultprizes)
-        embed.add_field(name="Winner's Prize", value=prize, inline=False)
+        embed.add_field(name="Winner's Prize", value=f"From {ctx.author.mention}: {prize}", inline=False)
         embed.add_field(name="Potential Winners", value=members, inline=False)
         await ctx.send(embed=embed)
         await ctx.send("now performing extremely complicated math to find ourselves a winner winner chicken dinner")
