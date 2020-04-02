@@ -1,5 +1,7 @@
 from discord.ext import commands
-from btoken import token
+from glob import glob
+from helpers import *
+from btoken import *
 import discord
 
 bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True)
@@ -10,4 +12,8 @@ async def on_ready():
     await bot.change_presence(activity=discord.Game("with the API."))
 
 if __name__ == "__main__":
+    for files in glob("cogs/*.py"):
+      try: bot.load_extension(file2ext(files))
+      except Exception: raise
+
     bot.run(token)
