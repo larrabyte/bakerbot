@@ -3,7 +3,7 @@ from importlib import *
 from utilities import *
 import psutil
 
-class help(commands.Cog):
+class helper(commands.Cog):
     """Implements the help function."""
 
     def __init__(self, bot):
@@ -27,4 +27,4 @@ class help(commands.Cog):
 
         await ctx.send(embed=embed)
 
-def setup(bot): bot.add_cog(help(bot))
+def setup(bot): bot.add_cog(helper(bot))
