@@ -1,8 +1,10 @@
 from discord.ext import commands
 from glob import glob
-from helpers import *
+from utilities import *
 
 class debugger(commands.Cog):
+    """Implements the exception handler and a module function."""
+
     def __init__(self, bot):
         self.bot = bot
 

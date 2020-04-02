@@ -1,6 +1,6 @@
 from discord.ext import commands
+from utilities import *
 from glob import glob
-from helpers import *
 from btoken import *
 import discord
 
@@ -13,7 +13,7 @@ async def on_ready():
 
 if __name__ == "__main__":
     for files in glob("cogs/*.py"):
-      try: bot.load_extension(file2ext(files))
-      except Exception: raise
+        try: bot.load_extension(file2ext(files))
+        except Exception: raise
 
     bot.run(token)
