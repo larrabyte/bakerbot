@@ -1,16 +1,11 @@
 # Data folder
 data/
 
-# ffmpeg executable and music files
-ffmpeg/
-
 # Visual Studio Code: settings folder
 .vscode/
 
 # Token file
-maintoken.py
-
-
+btoken.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
