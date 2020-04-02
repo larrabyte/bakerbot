@@ -10,7 +10,7 @@ class helper(commands.Cog):
         self.proc = psutil.Process()
         self.bot = bot
 
-    def getcog(self, cogname):
+    def getcog(self, cogname: str):
         return self.bot.get_cog(cogname)
 
     @commands.command(aliases=["helpme"])
