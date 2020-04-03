@@ -1,49 +1,46 @@
-from discord.ext import commands
+from discord.ext import tasks, commands
 from utilities import *
+from glob import glob
 import discord
+import asyncio
 import os
 
 class voice(commands.Cog):
     """Implements voice capabilities."""
 
     def __init__(self, bot):
-        self.queue = []
+        self.mfold = "data/music/"
         self.bot = bot
 
-    async def unifiedplay(self, user: discord.Member, filepath: str=None):
-        client = user.guild.voice_client
-        if client == None or not client.is_connected(): await user.voice.channel.connect()
-        elif client.channel != user.voice.channel: await client.move_to(user.voice.channel)
-        if client.is_playing(): client.stop()
+    @commands.command()
+    async def play(self, ctx, *, query):
+        """Plays a local audio file."""
+        audio = discord.FFmpegOpusAudio.from_probe(self.mfold + query)
+        ctx.voice_client.play(audio)
 
-        if filepath:
-            audio = await discord.FFmpegOpusAudio.from_probe(filepath)
-            client.play(audio)
+        embed = getembed("Bakerbot: Now playing.", 0xFF8C00, "jingle jam 2020")
+        embed.add_field(name="Local music file.", value=f"{query}: {ctx.author.mention}")
+        await ctx.send(embed=embed)
 
     @commands.command()
     async def join(self, ctx):
-        """Make Bakerbot join your voice channel."""
-        await self.unifiedplay(ctx.author)
+        """Joins a voice channel."""
+        if ctx.voice_client is not None: 
+            if ctx.author.voice: await ctx.voice_client.move_to(ctx.author.voice.channel)
+            else: await ctx.send("You are not connected to a voice channel.")
+        elif ctx.author.voice: await ctx.author.voice.channel.connect()
+        else: await ctx.send("You are not connected to a voice channel.")
 
-    @commands.command(aliases=["dc"])
+    @commands.command()
     async def disconnect(self, ctx):
-        """Disconnects Bakerbot from the voice channel."""
-        await ctx.guild.voice_client.disconnect()
+        """Disconnects Bakerbot from any voice channels."""
+        if ctx.voice_client: await ctx.voice_client.disconnect()
 
-    @commands.command()
-    async def play(self, ctx, music: str=None):
-        """Plays a local audio file or YouTube video.
-           Optionally, accepts uploaded attachments."""
-        pass
-
-    @commands.command()
-    async def pause(self, ctx):
-        """Pause any playing music."""
-        ctx.guild.voice_client.pause()
-
-    @commands.command()
-    async def resume(self, ctx):
-        """Resume any music that is paused."""
-        ctx.guild.voice_client.resume()
+    @play.before_invoke
+    async def ensureconnection(self, ctx):
+        if ctx.voice_client is None:
+            if ctx.author.voice: await ctx.author.voice.channel.connect()
+            else: await ctx.send("You are not connected to a voice channel.")
+        elif ctx.voice_client.is_playing(): ctx.voice_client.stop()
 
 def setup(bot): bot.add_cog(voice(bot))
