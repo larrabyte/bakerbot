@@ -8,9 +8,10 @@ def extstrip(cogname: str):
     """Strip any folders off a cog name."""
     return cogname.replace("cogs.", "")
 
-def getembed(title: str, colour: int, footer: str=None):
+def getembed(title: str, colour: int, footer: str=None, thumbnail: str=None):
     embed = discord.Embed(title=title, color=colour)
-    embed.set_thumbnail(url="https://airbus-h.assetsadobe2.com/is/image/content/dam/channel-specific/website-/us/management/anthony-baker.jpg?wid=1000&qlt=85,0")
+    if thumbnail: embed.set_thumbnail(url=thumbnail)
+    else: embed.set_thumbnail(url="https://airbus-h.assetsadobe2.com/is/image/content/dam/channel-specific/website-/us/management/anthony-baker.jpg?wid=1000&qlt=85,0")
     if footer: embed.set_footer(text=footer)
     else: embed.set_footer(text="bitly.com/98K8eH")
     return embed
