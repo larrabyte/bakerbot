@@ -1,7 +1,9 @@
 from discord.ext import commands
 from utilities import *
 import youtube_dl
+import validators
 import discord
+import os
 
 ytformatopt = {
     "format": 'bestaudio/best',
@@ -29,6 +31,11 @@ class voice(commands.Cog):
         self.mfold = "data/music/"
         self.bot = bot
 
+    @commands.command()
+    async def stop(self, ctx):
+        """Stop any audio from playing."""
+        if ctx.voice_client: ctx.voice_client.stop()
+
     @commands.command(aliases=["resume"])
     async def pause(self, ctx):
         """Pause/resume."""
@@ -38,24 +45,28 @@ class voice(commands.Cog):
 
     @commands.command()
     async def play(self, ctx, *, query: str):
-        """Plays a local audio file."""
-        audio = await discord.FFmpegOpusAudio.from_probe(self.mfold + query)
-        ctx.voice_client.play(audio)
-
+        """Plays audio to a voice channel. Accepts both local filenames or YouTube URLs."""
         embed = getembed("Bakerbot: Now playing.", 0xFF8C00, "jingle jam 2020")
-        embed.add_field(name="Local music file.", value=query)
+
+        if validators.url(query):
+            data = await self.bot.loop.run_in_executor(None, lambda: self.ytdl.extract_info(query, download=False))
+            if "entries" in data: data = data["entries"][0]
+            embed.add_field(name="Remote YouTube video.", value=f"[{data['title']}]({data['url']})")
+            audio = await discord.FFmpegOpusAudio.from_probe(data["url"], options=ffmpegopt)
+        elif os.path.exists(self.mfold + query):
+            audio = await discord.FFmpegOpusAudio.from_probe(self.mfold + query)
+            embed.add_field(name="Local audio file.", value=query)
+        else:
+            # YouTube search.
+            pass
+
+        ctx.voice_client.play(audio)
         await ctx.send(embed=embed)
 
     @commands.command()
     async def stream(self, ctx, url: str):
         """Stream a YouTube URL to voice."""
-        data = await self.bot.loop.run_in_executor(None, lambda: self.ytdl.extract_info(url, download=False))
-        if "entries" in data: data = data["entries"][0]
-        embed = getembed("Bakerbot: Now playing.", 0xFF8C00, "jingle jam 2020", data["thumbnail"])
-        embed.add_field(name="Remote YouTube video.", value=f"[{data['title']}]({data['url']})")
-        audio = await discord.FFmpegOpusAudio.from_probe(data["url"], options=ffmpegopt)
-        await ctx.send(embed=embed)
-        ctx.voice_client.play(audio)
+
 
     @commands.command()
     async def join(self, ctx):
@@ -66,7 +77,7 @@ class voice(commands.Cog):
         elif ctx.author.voice: await ctx.author.voice.channel.connect()
         else: await ctx.send("You are not connected to a voice channel.")
 
-    @commands.command()
+    @commands.command(aliases=["dc"])
     async def disconnect(self, ctx):
         """Disconnects Bakerbot from any voice channels."""
         if ctx.voice_client: await ctx.voice_client.disconnect()
