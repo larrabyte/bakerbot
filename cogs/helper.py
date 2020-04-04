@@ -19,10 +19,10 @@ class helper(commands.Cog):
         modules = [self.getcog(extstrip(ext)) for ext in self.bot.extensions]
 
         if cogname:
-            embed = getembed(f"Bakerbot: List of commands in {cogname}.", 0xFF8C00)
+            embed = getembed(f"Bakerbot: List of commands in {cogname}.", 0x7000A8)
             for commands in self.getcog(cogname).get_commands(): embed.add_field(name=commands.name, value=commands.help, inline=False)
         else:
-            embed = getembed("Bakerbot: List of command groups.", 0xFF8C00)
+            embed = getembed("Bakerbot: List of command groups.", 0x7000A8)
             for mod in modules: embed.add_field(name=mod.qualified_name, value=mod.__doc__, inline=False)
 
         await ctx.send(embed=embed)
