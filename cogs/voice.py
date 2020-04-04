@@ -55,6 +55,7 @@ class voice(commands.Cog):
             audio, ytdata = await self.getytstream(query)
             embed.add_field(name="Remote audio source.", value=f"[{ytdata['title']}](https://youtube.com/watch?v={ytdata['id']})")
 
+        if ctx.voice_client.is_playing(): ctx.voice_client.stop()
         ctx.voice_client.play(audio)
         await ctx.send(embed=embed)
 
@@ -84,6 +85,5 @@ class voice(commands.Cog):
         if ctx.voice_client is None:
             if ctx.author.voice: await ctx.author.voice.channel.connect()
             else: await ctx.send("You are not connected to a voice channel.")
-        elif ctx.voice_client.is_playing(): ctx.voice_client.stop()
 
 def setup(bot): bot.add_cog(voice(bot))
