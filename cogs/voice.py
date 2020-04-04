@@ -52,9 +52,8 @@ class voice(commands.Cog):
             audio = await discord.FFmpegOpusAudio.from_probe(self.mfold + query)
             embed.add_field(name="Local audio file.", value=query)
         else:
-            ytdata = await self.getytstream(query)
-            audio = ytdata[0]
-            embed.add_field(name="YouTube video.", value=f"[{ytdata[1]['title']}]({ytdata[1]['url']})")
+            audio, ytdata = await self.getytstream(query)
+            embed.add_field(name="Remote audio source.", value=f"[{ytdata['title']}](https://youtube.com/watch?v={ytdata['id']})")
 
         ctx.voice_client.play(audio)
         await ctx.send(embed=embed)
