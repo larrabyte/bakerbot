@@ -74,7 +74,7 @@ class voice(commands.Cog):
         if ctx.voice_client: await ctx.voice_client.disconnect()
 
     async def getytstream(self, query: str):
-        if not validators.url(query): query = f"ytsearch:{query}"
+        if not validators.url(query): query = f"ytsearch1:{query}"
         data = await self.bot.loop.run_in_executor(None, lambda: self.ytdl.extract_info(query, download=False))
         if "entries" in data: data = data["entries"][0]
         audio = await discord.FFmpegOpusAudio.from_probe(data["url"], options=ffmpegopt)
