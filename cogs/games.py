@@ -22,7 +22,7 @@ class games(commands.Cog):
 
         self.giving = True
         members = "\n".join([member.mention for member in sample(ctx.guild.members, 5)])
-        embed = getembed(f"The Bakerbot Lottery!", 0x7000A8, "sponsored by the pharmaceutical industry")
+        embed = getembed(f"The Bakerbot Lottery!", 0x9D00C4, "sponsored by the pharmaceutical industry")
 
         if not prize: prize = choice(self.defaultprizes)
         embed.add_field(name="Winner's Prize", value=f"From {ctx.author.mention}: {prize}", inline=False)
@@ -32,7 +32,7 @@ class games(commands.Cog):
         await asyncio.sleep(15)
 
         winner = choice(members.split("\n"))
-        embed = getembed("The Bakerbot Lottery!", 0x7000A8, "sponsored by the pharmaceutical industry")
+        embed = getembed("The Bakerbot Lottery!", 0x9D00C4, "sponsored by the pharmaceutical industry")
         embed.add_field(name="code is fucked and so is ur mum :point_right: :sunglasses: :point_right:", value=f"{winner} wins {prize}!")
         await ctx.send(embed=embed)
         self.giving = False

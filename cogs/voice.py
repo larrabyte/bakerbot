@@ -46,7 +46,7 @@ class voice(commands.Cog):
     @commands.command()
     async def play(self, ctx, *, query: str):
         """Plays audio to a voice channel. Accepts both local filenames or YouTube URLs."""
-        embed = getembed("Bakerbot: Now playing.", 0x7000A8, "jingle jam 2020")
+        embed = getembed("Bakerbot: Now playing.", 0x9D00C4, "jingle jam 2020")
 
         if os.path.exists(self.mfold + query):
             audio = await discord.FFmpegOpusAudio.from_probe(self.mfold + query)
