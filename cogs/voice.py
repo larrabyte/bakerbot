@@ -48,25 +48,16 @@ class voice(commands.Cog):
         """Plays audio to a voice channel. Accepts both local filenames or YouTube URLs."""
         embed = getembed("Bakerbot: Now playing.", 0xFF8C00, "jingle jam 2020")
 
-        if validators.url(query):
-            data = await self.bot.loop.run_in_executor(None, lambda: self.ytdl.extract_info(query, download=False))
-            if "entries" in data: data = data["entries"][0]
-            embed.add_field(name="Remote YouTube video.", value=f"[{data['title']}]({data['url']})")
-            audio = await discord.FFmpegOpusAudio.from_probe(data["url"], options=ffmpegopt)
-        elif os.path.exists(self.mfold + query):
+        if os.path.exists(self.mfold + query):
             audio = await discord.FFmpegOpusAudio.from_probe(self.mfold + query)
             embed.add_field(name="Local audio file.", value=query)
         else:
-            # YouTube search.
-            pass
+            ytdata = await self.getytstream(query)
+            audio = ytdata[0]
+            embed.add_field(name="YouTube video.", value=f"[{ytdata[1]['title']}]({ytdata[1]['url']})")
 
         ctx.voice_client.play(audio)
         await ctx.send(embed=embed)
-
-    @commands.command()
-    async def stream(self, ctx, url: str):
-        """Stream a YouTube URL to voice."""
-
 
     @commands.command()
     async def join(self, ctx):
@@ -82,8 +73,14 @@ class voice(commands.Cog):
         """Disconnects Bakerbot from any voice channels."""
         if ctx.voice_client: await ctx.voice_client.disconnect()
 
+    async def getytstream(self, query: str):
+        if not validators.url(query): query = f"ytsearch:{query}"
+        data = await self.bot.loop.run_in_executor(None, lambda: self.ytdl.extract_info(query, download=False))
+        if "entries" in data: data = data["entries"][0]
+        audio = await discord.FFmpegOpusAudio.from_probe(data["url"], options=ffmpegopt)
+        return (audio, data)
+
     @play.before_invoke
-    @stream.before_invoke
     async def ensureconnection(self, ctx):
         if ctx.voice_client is None:
             if ctx.author.voice: await ctx.author.voice.channel.connect()
