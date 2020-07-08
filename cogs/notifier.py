@@ -1,4 +1,5 @@
 from discord.ext import tasks, commands
+from random import randint
 from utilities import *
 import asyncio
 import discord
@@ -27,7 +28,7 @@ class notifier(commands.Cog):
     @commands.command()
     async def notiflist(self, ctx):
         """Show a list of all currently running notification tasks."""
-        embed = getembed("Bakerbot Notification System", 0x9D00C4, "servicing the notifications of dozens since 2020")
+        embed = getembed("Bakerbot Notification System", "servicing the notifications of dozens since 2020")
         iterator = 0
 
         for events in self.tasks:

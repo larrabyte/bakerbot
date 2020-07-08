@@ -1,7 +1,9 @@
 from discord.ext import commands
+from random import randint
 from utilities import *
 import youtube_dl
 import validators
+import asyncio
 import discord
 import os
 
@@ -29,6 +31,8 @@ class voice(commands.Cog):
     def __init__(self, bot):
         self.ytdl = youtube_dl.YoutubeDL(ytformatopt)
         self.mfold = "data/music/"
+        self.queuectx = None
+        self.queue = []
         self.bot = bot
 
     async def getstream(self, query: str):
@@ -37,6 +41,19 @@ class voice(commands.Cog):
         if "entries" in data: data = data["entries"][0]
         audio = await discord.FFmpegOpusAudio.from_probe(data["url"], options=ffmpegopt)
         return (audio, data)
+
+    async def finaliser(self, error: Exception):
+        if error: await ctx.send(f"Error caught during audio playback: {error}.")
+        if len(self.queue) > 0: await self.playaudio(self.queue.pop())
+
+    def finaliserstub(self, error: Exception):
+        self.bot.loop.create_task(self.finaliser(error))
+
+    async def playaudio(self, query: str):
+        if not os.path.exists(self.mfold + query): audio, metadata = await self.getstream(query)
+        else: audio = await discord.FFmpegOpusAudio.from_probe(self.mfold + query)
+        if self.queuectx.voice_client.is_playing(): self.queuectx.voice_client.stop()
+        self.queuectx.voice_client.play(audio, after=self.finaliserstub)
 
     @commands.command()
     async def stop(self, ctx):
@@ -56,20 +73,44 @@ class voice(commands.Cog):
                 await ctx.send("Audio resumed :)", delete_after=10)
 
     @commands.command()
+    async def queue(self, ctx):
+        """Print out the current queue."""
+        embed = getembed("Bakerbot: Global audio queue.", "jingle jam 2020")
+        iterator = 0
+
+        for query in self.queue:
+            embed.add_field(name=f"#{iterator}", value=query)
+            iterator += 1
+
+        if len(self.queue) == 0: await ctx.send("Nothing in queue.", delete_after=10)
+        else: await ctx.send(embed=embed)
+
+    @commands.command()
+    async def skip(self, ctx):
+        """Skips the current song."""
+        self.queuectx = ctx
+        if len(self.queue) > 0: await self.playaudio(self.queue.pop())
+        else: await ctx.send("Audio queue empty.", delete_after=10)
+
+    @commands.command()
     async def play(self, ctx, *, query: str):
         """Plays audio to a voice channel. Accepts both local filenames or YouTube URLs."""
-        embed = getembed("Bakerbot: Now playing.", 0x9D00C4, "jingle jam 2020")
+        if len(self.queue) == 0 and not ctx.voice_client.is_playing():
+            embed = getembed("Bakerbot: Now playing.", "jingle jam 2020")
 
-        if os.path.exists(self.mfold + query):
-            audio = await discord.FFmpegOpusAudio.from_probe(self.mfold + query)
-            embed.add_field(name="Local audio file.", value=query)
+            if not os.path.exists(self.mfold + query):
+                audio, metadata = await self.getstream(query)
+                embed.add_field(name="Remote audio source.", value=f"[{metadata['title']}]({metadata['webpage_url']})")
+            else: embed.add_field(name="Local audio file.", value=query)
+
+            self.queuectx = ctx
+            await ctx.send(embed=embed)
+            await self.playaudio(query)
         else:
-            audio, metadata = await self.getstream(query)
-            embed.add_field(name="Remote audio source.", value=f"[{metadata['title']}]({metadata['webpage_url']})")
-
-        if ctx.voice_client.is_playing(): ctx.voice_client.stop()
-        ctx.voice_client.play(audio)
-        await ctx.send(embed=embed)
+            embed = getembed("Bakerbot: Adding to queue.", "jingle jam 2020")
+            embed.add_field(name="Search term.", value=query)
+            await ctx.send(embed=embed)
+            self.queue.append(query)
 
     @commands.command()
     async def join(self, ctx):
