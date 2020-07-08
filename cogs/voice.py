@@ -31,6 +31,13 @@ class voice(commands.Cog):
         self.mfold = "data/music/"
         self.bot = bot
 
+    async def getstream(self, query: str):
+        if not validators.url(query): query = f"ytsearch1:{query}"
+        data = await self.bot.loop.run_in_executor(None, lambda: self.ytdl.extract_info(query, download=False))
+        if "entries" in data: data = data["entries"][0]
+        audio = await discord.FFmpegOpusAudio.from_probe(data["url"], options=ffmpegopt)
+        return (audio, data)
+
     @commands.command()
     async def stop(self, ctx):
         """Stop any audio from playing."""
@@ -52,8 +59,8 @@ class voice(commands.Cog):
             audio = await discord.FFmpegOpusAudio.from_probe(self.mfold + query)
             embed.add_field(name="Local audio file.", value=query)
         else:
-            audio, ytdata = await self.getytstream(query)
-            embed.add_field(name="Remote audio source.", value=f"[{ytdata['title']}](https://youtube.com/watch?v={ytdata['id']})")
+            audio, metadata = await self.getstream(query)
+            embed.add_field(name="Remote audio source.", value=f"[{metadata['title']}]({metadata['webpage_url']})")
 
         if ctx.voice_client.is_playing(): ctx.voice_client.stop()
         ctx.voice_client.play(audio)
@@ -73,17 +80,8 @@ class voice(commands.Cog):
         """Disconnects Bakerbot from any voice channels."""
         if ctx.voice_client: await ctx.voice_client.disconnect()
 
-    async def getytstream(self, query: str):
-        if not validators.url(query): query = f"ytsearch1:{query}"
-        data = await self.bot.loop.run_in_executor(None, lambda: self.ytdl.extract_info(query, download=False))
-        if "entries" in data: data = data["entries"][0]
-        audio = await discord.FFmpegOpusAudio.from_probe(data["url"], options=ffmpegopt)
-        return (audio, data)
-
     @play.before_invoke
     async def ensureconnection(self, ctx):
-        if ctx.voice_client is None:
-            if ctx.author.voice: await ctx.author.voice.channel.connect()
-            else: await ctx.send("You are not connected to a voice channel.")
+        await self.join(ctx)
 
 def setup(bot): bot.add_cog(voice(bot))
