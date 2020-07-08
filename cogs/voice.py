@@ -42,13 +42,18 @@ class voice(commands.Cog):
     async def stop(self, ctx):
         """Stop any audio from playing."""
         if ctx.voice_client: ctx.voice_client.stop()
+        await ctx.send("Music stopped!", delete_after=5)
 
     @commands.command(aliases=["resume"])
     async def pause(self, ctx):
         """Pause/resume."""
         if ctx.voice_client:
-            if ctx.voice_client.is_playing(): ctx.voice_client.pause()
-            elif ctx.voice_client.is_paused(): ctx.voice_client.resume()
+            if ctx.voice_client.is_playing():
+                ctx.voice_client.pause()
+                await ctx.send("Audio paused :(", delete_after=10)
+            elif ctx.voice_client.is_paused():
+                ctx.voice_client.resume()
+                await ctx.send("Audio resumed :)", delete_after=10)
 
     @commands.command()
     async def play(self, ctx, *, query: str):
@@ -71,14 +76,15 @@ class voice(commands.Cog):
         """Joins a voice channel."""
         if ctx.voice_client is not None: 
             if ctx.author.voice: await ctx.voice_client.move_to(ctx.author.voice.channel)
-            else: await ctx.send("You are not connected to a voice channel.")
+            else: await ctx.send("You are not connected to a voice channel.", delete_after=10)
         elif ctx.author.voice: await ctx.author.voice.channel.connect()
-        else: await ctx.send("You are not connected to a voice channel.")
+        else: await ctx.send("You are not connected to a voice channel.", delete_after=10)
 
     @commands.command(aliases=["dc"])
     async def disconnect(self, ctx):
         """Disconnects Bakerbot from any voice channels."""
         if ctx.voice_client: await ctx.voice_client.disconnect()
+        await ctx.send("Voice client disconnected.", delete_after=10)
 
     @play.before_invoke
     async def ensureconnection(self, ctx):
