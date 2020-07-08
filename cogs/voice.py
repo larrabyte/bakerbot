@@ -93,6 +93,24 @@ class voice(commands.Cog):
         else: await ctx.send("Audio queue empty.", delete_after=10)
 
     @commands.command()
+    async def search(self, ctx, *, query: str):
+        embed = getembed("Bakerbot: YouTube search.", "jingle jam 2020")
+        data = await self.bot.loop.run_in_executor(None, lambda: self.ytdl.extract_info(f"ytsearch6:{query}", download=False))
+        iterator = 0
+
+        for entry in data["entries"]:
+            embed.add_field(name=f"#{iterator}: {entry['title']}", value=f"[{entry['view_count']} views, {entry['like_count']} likes and {entry['dislike_count']} dislikes.]({entry['webpage_url']})", inline=False)
+            iterator += 1
+
+        await ctx.send(embed=embed)
+        reply = await self.bot.wait_for("message", timeout=30)
+        data = data["entries"][int(reply.content)]
+
+        self.queuectx = ctx
+        await self.join(ctx)
+        await self.playaudio(data["webpage_url"])
+
+    @commands.command()
     async def play(self, ctx, *, query: str):
         """Plays audio to a voice channel. Accepts both local filenames or YouTube URLs."""
         if len(self.queue) == 0 and not ctx.voice_client.is_playing():
