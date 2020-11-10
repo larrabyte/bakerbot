@@ -25,7 +25,7 @@ class extern(commands.Cog):
         else: return await ctx.send("Unsupported operating system. Currently, only Windows and Linux are supported.")
 
         output = subprocess.run(subprocstr, encoding="utf-8", capture_output=True)
-        print(output.stderr)
-        await ctx.send(file=discord.File("data/code/a.out"))
+        if output.stderr: await ctx.send(output.stderr)
+        else: await ctx.send(file=discord.File("data/code/a.out"))
 
 def setup(bot): bot.add_cog(extern(bot))
