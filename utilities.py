@@ -1,8 +1,8 @@
 import discord
 import random
 
-def getembed(title: str, footer: str=None, thumbnail: str=None):
-    embed = discord.Embed(title=title, color=random.randint(0, 0xFFFFFF))
+def getembed(title: str, footer: str=None, colour: int=random.randint(0, 0xFFFFFF), thumbnail: str=None):
+    embed = discord.Embed(title=title, color=colour)
     if thumbnail: embed.set_thumbnail(url=thumbnail)
     else: embed.set_thumbnail(url="https://airbus-h.assetsadobe2.com/is/image/content/dam/channel-specific/website-/us/management/anthony-baker.jpg?wid=1000&qlt=85,0")
     if footer: embed.set_footer(text=footer)

@@ -133,10 +133,6 @@ class voice(commands.Cog, name="voice"):
     async def join(self, ctx, user: discord.Member=None):
         """Joins your channel. Optionally, specify a user to connect Bakerbot to their channel."""
         if user and user.voice and user.voice.channel: await user.voice.channel.connect()
-
-        if not ctx.voice_client:
-            if ctx.author.voice: await ctx.voice_client.move_to(ctx.author.voice.channel)
-            else: await ctx.send("You are not connected to a voice channel.")
         elif ctx.author.voice: await ctx.author.voice.channel.connect()
         else: await ctx.send("You are not connected to a voice channel.")
 

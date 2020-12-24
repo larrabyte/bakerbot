@@ -1,4 +1,5 @@
 from discord.ext import commands
+from utilities import *
 
 class debugger(commands.Cog):
     """Bakerbot's internal debugger. Hosts the exception handler and a Jishaku bootstrapper."""
@@ -9,8 +10,9 @@ class debugger(commands.Cog):
     async def on_command_error(self, ctx, error):
         """Throws exceptions to Discord."""
         if hasattr(ctx.command, "on_error"): return
-        await ctx.send(str(error))
-        raise error
+        embed = getembed("Bakerbot: Unhandled exception!", f"Raised by {ctx.author.mention} while using ${ctx.command}.", 0xFF0000)
+        embed.add_field(name=f"{error}.", value="Try again with different arguments or contact the bot author for help.", inline=False)
+        await ctx.send(embed=embed)
 
     @commands.is_owner()
     @commands.command()
