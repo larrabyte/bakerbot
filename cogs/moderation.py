@@ -1,9 +1,8 @@
 from discord.ext import commands
 import discord
 
-class moderation(commands.Cog):
+class moderation(commands.Cog, name="moderation"):
     """A class of moderation commands."""
-
     def __init__(self, bot):
         self.bot = bot
 

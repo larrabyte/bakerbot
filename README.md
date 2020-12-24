@@ -1,10 +1,8 @@
 # Bakerbot
 Bakerbot is a [discord.py](https://github.com/Rapptz/discord.py) bot written in Python :) Originally made as a learning exercise, now used by friends as a useful bot.
 
-
 ## Things To Be Aware Of
 The [`extern`](https://github.com/larrabyte/bakerbot/blob/master/cogs/extern.py) command group is specific to the bot hoster. Most commands written by me will utilise Linux binaries, something which cannot work under Windows without WSL. You should probably check it out before you start using this cog.
-
 
 ## Prerequisites and Execution
 The following packages are required before running Bakerbot:

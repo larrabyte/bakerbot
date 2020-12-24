@@ -1,14 +1,6 @@
 import discord
 import random
 
-def file2ext(filepath: str):
-    """Convert a filepath into a Python import path."""
-    return filepath.replace("\\", ".").replace("/", ".").replace(".py", "")
-
-def extstrip(cogname: str):
-    """Strip any folders off a cog name."""
-    return cogname.replace("cogs.", "")
-
 def getembed(title: str, footer: str=None, thumbnail: str=None):
     embed = discord.Embed(title=title, color=random.randint(0, 0xFFFFFF))
     if thumbnail: embed.set_thumbnail(url=thumbnail)

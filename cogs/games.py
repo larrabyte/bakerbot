@@ -6,27 +6,23 @@ import asyncio
 
 class games(commands.Cog):
     """This cog hosts some fun games!"""
-
     def __init__(self, bot):
-        self.defaultprizes = ["$-1", "shares in an African mining company", "a 1992 Toyota Hiace", "conversion to Islam",
-                              "death via thigh compression", "free v-card", "penis", "vagina", "membership to the pen15 club",
-                              "loss of bodily fluids", "multiple organ failure", "someone shitting on your car", "cringe"]
-
         self.giving = False
         self.bot = bot
 
     @commands.command()
-    async def giveaway(self, ctx, *, prize: str=None):
+    async def giveaway(self, ctx, *, prize: str):
         """Giveaway random prizes! Pass in a string to display."""
-        if self.giving: await ctx.send("Giveaway in progress, please wait!"); return
+        if self.giving: 
+            await ctx.send("Giveaway in progress, please wait!")
+            return
 
         self.giving = True
         members = "\n".join([member.mention for member in sample(ctx.guild.members, 5)])
         embed = getembed(f"The Bakerbot Lottery!", "sponsored by the pharmaceutical industry")
-
-        if not prize: prize = choice(self.defaultprizes)
         embed.add_field(name="Winner's Prize", value=f"From {ctx.author.mention}: {prize}", inline=False)
         embed.add_field(name="Potential Winners", value=members, inline=False)
+
         await ctx.send(embed=embed)
         await ctx.send("now performing extremely complicated math to find ourselves a winner winner chicken dinner")
         await asyncio.sleep(15)

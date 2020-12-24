@@ -25,9 +25,8 @@ ffmpegopt = {
     "options": "-vn"
 }
 
-class voice(commands.Cog):
+class voice(commands.Cog, name="voice"):
     """Implements voice capabilities."""
-
     def __init__(self, bot):
         self.ytdl = youtube_dl.YoutubeDL(ytformatopt)
         self.mfold = "data/music/"
