@@ -3,7 +3,9 @@ from btoken import token
 from glob import glob
 import discord
 
-bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True)
+intents = discord.Intents.default()
+intents.members = True
+bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True, intents=intents)
 
 @bot.event
 async def on_ready():
