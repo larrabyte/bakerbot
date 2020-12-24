@@ -14,6 +14,6 @@ class moderation(commands.Cog):
         async for message in channel.history(limit=n):
             await message.delete()
 
-        await ctx.send(f"{n} messages purged!", delete_after=10)
+        await ctx.send(f"{n} messages purged!")
 
 def setup(bot): bot.add_cog(moderation(bot))

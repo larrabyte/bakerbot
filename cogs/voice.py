@@ -59,7 +59,7 @@ class voice(commands.Cog):
     async def stop(self, ctx):
         """Stop any audio from playing."""
         if ctx.voice_client: ctx.voice_client.stop()
-        await ctx.send("Music stopped!", delete_after=5)
+        await ctx.send("Music stopped!")
 
     @commands.command(aliases=["resume"])
     async def pause(self, ctx):
@@ -67,10 +67,10 @@ class voice(commands.Cog):
         if ctx.voice_client:
             if ctx.voice_client.is_playing():
                 ctx.voice_client.pause()
-                await ctx.send("Audio paused :(", delete_after=10)
+                await ctx.send("Audio paused :(")
             elif ctx.voice_client.is_paused():
                 ctx.voice_client.resume()
-                await ctx.send("Audio resumed :)", delete_after=10)
+                await ctx.send("Audio resumed :)")
 
     @commands.command()
     async def queue(self, ctx):
@@ -82,7 +82,7 @@ class voice(commands.Cog):
             embed.add_field(name=f"#{iterator}", value=query)
             iterator += 1
 
-        if len(self.queue) == 0: await ctx.send("Nothing in queue.", delete_after=10)
+        if len(self.queue) == 0: await ctx.send("Nothing in queue.")
         else: await ctx.send(embed=embed)
 
     @commands.command()
@@ -90,7 +90,7 @@ class voice(commands.Cog):
         """Skips the current song."""
         self.queuectx = ctx
         if len(self.queue) > 0: await self.playaudio(self.queue.pop())
-        else: await ctx.send("Audio queue empty.", delete_after=10)
+        else: await ctx.send("Audio queue empty.")
 
     @commands.command()
     async def search(self, ctx, *, query: str):
@@ -137,15 +137,15 @@ class voice(commands.Cog):
 
         if not ctx.voice_client:
             if ctx.author.voice: await ctx.voice_client.move_to(ctx.author.voice.channel)
-            else: await ctx.send("You are not connected to a voice channel.", delete_after=10)
+            else: await ctx.send("You are not connected to a voice channel.")
         elif ctx.author.voice: await ctx.author.voice.channel.connect()
-        else: await ctx.send("You are not connected to a voice channel.", delete_after=10)
+        else: await ctx.send("You are not connected to a voice channel.")
 
     @commands.command(aliases=["dc"])
     async def disconnect(self, ctx):
         """Disconnects Bakerbot from any voice channels."""
         if ctx.voice_client: await ctx.voice_client.disconnect()
-        await ctx.send("Voice client disconnected.", delete_after=10)
+        await ctx.send("Voice client disconnected.")
 
     @play.before_invoke
     async def ensureconnection(self, ctx):
