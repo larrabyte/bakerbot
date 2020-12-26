@@ -1,6 +1,7 @@
 from discord.ext import commands
 import utilities
 import discord
+import typing
 
 class debugger(commands.Cog):
     """Bakerbot's internal debugger. Home to an extension injector."""
@@ -9,9 +10,23 @@ class debugger(commands.Cog):
 
     @commands.command()
     @commands.is_owner()
-    async def inject(self, ctx: commands.Context, cogname: str):
-        """Injects an extension into Bakerbot."""
-        self.bot.load_extension(cogname)
+    async def modreload(self, ctx: commands.Context, cogname: typing.Optional[str]):
+        """Reloads a passed in cog, or reloads all cogs."""
+        if not cogname:
+            cogname = "All"
+            cogs = [f"cogs.{cog}" for cog in self.bot.cogs]
+            for item in cogs: self.bot.reload_extension(item)
+        else: self.bot.reload_extension(f"cogs.{cogname}")
+
+        embed = discord.Embed(title="Bakerbot: Extension reloader.", description=f"{cogname} successfully reloaded!", colour=utilities.successColour)
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def modlist(self, ctx: commands.Context):
+        """Provides the command group list."""
+        coglist = "\n".join(self.bot.cogs)
+        embed = discord.Embed(title="Bakerbot: Command group listing.", description=coglist, colour=utilities.regularColour)
+        await ctx.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: object):

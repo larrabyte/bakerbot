@@ -4,7 +4,7 @@ import discord
 import typing
 
 class helper(commands.Cog):
-    """Implements the help function."""
+    """Bakerbot's custom helper function lives here :)"""
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -14,7 +14,7 @@ class helper(commands.Cog):
         if not cogname:
             cogs = [self.bot.cogs[name] for name in self.bot.cogs]
             embed = discord.Embed(title="Bakerbot: List of command groups.", colour=utilities.regularColour)
-            embed.set_footer(text="Note: typing $help <cogname> will display available commands in that cog.")
+            embed.set_footer(text="Note: typing $help [cogname] will display available commands in that cog.")
             for cog in cogs: embed.add_field(name=cog.qualified_name, value=cog.description, inline=False)
         else:
             cog = self.bot.get_cog(cogname)

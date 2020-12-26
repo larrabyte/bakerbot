@@ -5,7 +5,7 @@ import discord
 import asyncio
 
 class games(commands.Cog):
-    """This cog hosts some fun games!"""
+    """Bakerbot Twitch streaming coming soon, I promise!"""
     def __init__(self, bot: commands.Bot):
         self.giving = False
         self.bot = bot
