@@ -1,6 +1,6 @@
 from discord.ext import commands
-from utilities import *
-from random import *
+import utilities
+import random
 import discord
 import asyncio
 
@@ -17,16 +17,16 @@ class games(commands.Cog):
         self.giving = True
 
         size = 5 if len(ctx.guild.members) >= 5 else len(ctx.guild.members)
-        members = "\n".join([member.mention for member in sample(ctx.guild.members, size)])
-        embed = getembed(f"Bakerbot: The lottery!", "sponsored by the pharmaceutical industry\ntime to find winner: approx. 5s", ECONOMYCOLOUR)
+        members = "\n".join([member.mention for member in random.sample(ctx.guild.members, size)])
+        embed = discord.Embed(title=f"Bakerbot: {ctx.author.mention}'s lottery!", colour=utilities.economyColour)
         embed.add_field(name="Winner's Prize", value=f"From {ctx.author.name}: {prize}", inline=False)
         embed.add_field(name="Potential Winners", value=members, inline=False)
         await ctx.send(embed=embed)
-        await asyncio.sleep(5)
+        await asyncio.sleep(10)
 
-        winner = choice(members.split("\n"))
-        embed = getembed("Bakerbot: The lottery!", "sponsored by the pharmaceutical industry", ECONOMYCOLOUR)
-        embed.add_field(name="code is fucked and so is ur mum :point_right: :sunglasses: :point_right:", value=f"{winner} wins {prize}!")
+        winner = random.choice(members.split("\n"))
+        embed = discord.Embed(title=f"Bakerbot: {ctx.author.mention}'s lottery!", colour=utilities.economyColour)
+        embed.add_field(name="code is fucked and so is ur mum :point_right: :sunglasses: :point_right:", value=f"{winner} wins {prize}!", inline=False)
         await ctx.send(embed=embed)
         self.giving = False
 
@@ -34,9 +34,8 @@ class games(commands.Cog):
     async def giveawayerror(self, ctx, error):
         """Error handler for the giveaway command."""
         if isinstance(error, commands.CommandOnCooldown):
-            embed = getembed("Bakerbot: Lottery exception.", f"Raised by {ctx.author.name} whilst trying to start a new lottery.", ERRORCOLOUR)
+            embed = discord.Embed(title="Bakerbot: Lottery exception.", colour=utilities.errorColour)
             embed.add_field(name="Unable to start new lottery.", value="Another lottery is currently in progress, please wait.", inline=False)
             await ctx.send(embed=embed)
-        else: raise error
 
 def setup(bot): bot.add_cog(games(bot))

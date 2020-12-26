@@ -1,23 +1,22 @@
 from discord.ext import commands
-from random import randint
-from utilities import *
+import utilities
+import discord
 
 class helper(commands.Cog):
     """Implements the help function."""
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=["helpme"])
+    @commands.command()
     async def help(self, ctx, cogname: str=None):
-        """Bakerbot's custom help function. Optionally, takes in `cogname`."""
+        """Bakerbot's custom help function."""
         if not cogname:
             cogs = [self.bot.cogs[name] for name in self.bot.cogs]
-            embed = getembed("Bakerbot: List of command groups.")
+            embed = discord.Embed(title="Bakerbot: List of command groups.", colour=utilities.regularColour)
             for cog in cogs: embed.add_field(name=cog.qualified_name, value=cog.description, inline=False)
         else:
-            embed = getembed(f"Bakerbot: List of commands in {cogname}.")
-            for commands in self.bot.get_cog(cogname).get_commands():
-                embed.add_field(name=commands.name, value=commands.help, inline=False)
+            embed = discord.Embed(title=f"Bakerbot: List of commands in {cogname}.", colour=utilities.regularColour)
+            for commands in self.bot.get_cog(cogname).get_commands(): embed.add_field(name=commands.name, value=commands.help, inline=False)
 
         await ctx.send(embed=embed)
 
