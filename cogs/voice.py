@@ -14,23 +14,22 @@ class queue:
         self.internal.extend(*args)
 
     @property
-    def firstTrack(self):
-        if not self.internal: raise utilities.QueueIsEmpty
-        return self.internal[0]
-
-    @property
     def nextTrack(self):
-        if not self.internal: raise utilities.QueueIsEmpty
-        if (self.cursor := self.cursor + 1) > len(self.internal) - 1: return None
+        if not self.internal:
+            raise utilities.QueueIsEmpty
+        elif self.cursor == 0:
+            self.cursor = 1
+            return self.internal[0]
+        elif self.cursor + 1 > len(self.internal) - 1: 
+            return None
+
+        self.cursor += 1
         return self.internal[self.cursor]
 
 class player(wavelink.Player):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.queue = queue()
-
-    async def startplayback(self):
-        await self.play(self.queue.firstTrack)
 
     async def advance(self):
         track = self.queue.nextTrack
@@ -68,7 +67,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         query = query.strip("<>")
         if not re.match(utilities.urlRegex, query): query = f"ytsearch:{query}"
         await player.addtracks(ctx, await self.wavelink.get_tracks(query))
-        if not player.is_playing: await player.startplayback()
+        if not player.is_playing: await player.advance()
 
     @commands.command()
     async def connect(self, ctx: commands.Context, *, channel: typing.Optional[discord.VoiceChannel]):
