@@ -1,4 +1,5 @@
 from discord.ext import commands
+import utilities
 import discord
 
 class moderation(commands.Cog, name="moderation"):
@@ -14,5 +15,10 @@ class moderation(commands.Cog, name="moderation"):
             await message.delete()
 
         await ctx.send(f"{n} messages purged!")
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member: discord.Member):
+        with self.bot.get_guild(utilities.adminAbuse.serverID) as adminAbuse:
+            if member.guild == adminAbuse: await member.add_roles(adminAbuse.get_role(utilities.adminAbuse.defaultRole))
 
 def setup(bot): bot.add_cog(moderation(bot))
