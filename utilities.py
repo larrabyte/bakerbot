@@ -5,5 +5,6 @@ class adminAbuse:
 
 # Common colours.
 errorColour = 0xFF5900
-regularColour = 0x9A59B5
-economyColour = 0xF5CC00
+successColour = 0x00C92C
+regularColour = 0xF5CC00
+gamingColour = 0x0095FF

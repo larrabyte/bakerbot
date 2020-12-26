@@ -13,7 +13,7 @@ class moderation(commands.Cog):
         """Purge n messages in the current channel (or an optional channel of your choosing)."""
         if not channel: channel = ctx.channel
         async for message in channel.history(limit=n): await message.delete()
-        embed = discord.Embed(title="Bakerbot: Message purge results.", description=f"{n} messages successfully purged!", colour=utilities.regularColour)
+        embed = discord.Embed(title="Bakerbot: Message purge results.", description=f"{n} messages successfully purged!", colour=utilities.successColour)
         await ctx.send(embed=embed)
 
     @commands.Cog.listener()
