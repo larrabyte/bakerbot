@@ -31,5 +31,8 @@ class helper(commands.Cog):
         if isinstance(error, utilities.CogDoesntExist):
             embed = discord.Embed(title="Bakerbot: Helper exception.", description="That cog does not exist.", colour=utilities.errorColour)
             await ctx.send(embed=embed)
+        else:
+            debugger = self.bot.get_cog("debugger")
+            await debugger.command_error_default(ctx, error)
 
 def setup(bot): bot.add_cog(helper(bot))
