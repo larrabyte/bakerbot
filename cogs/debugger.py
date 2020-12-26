@@ -31,9 +31,10 @@ class debugger(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: object):
         """Throws any uncaught exceptions to Discord."""
-        if hasattr(ctx.command, "on_error"): raise error
+        if hasattr(ctx.command, "on_error"): pass
         elif not ctx.command: await self.command_not_found(ctx, error)
         else: await self.command_error_default(ctx, error)
+        raise error
 
     async def command_not_found(self, ctx: commands.Context, error: object):
         """Run when on_command_error() is raised without a valid command."""

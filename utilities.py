@@ -23,8 +23,13 @@ wavelinkNodes = {
     }
 }
 
+# A regex for URLs.
+urlRegex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+
 # Custom errors.
 class CogDoesntExist(commands.CommandError): pass
 class GiveawayInProgress(commands.CommandError): pass
 class AlreadyConnectedToChannel(commands.CommandError): pass
 class NoChannelToConnectTo(commands.CommandError): pass
+class QueueIsEmpty(commands.CommandError): pass
+class NoTracksFound(commands.CommandError): pass
