@@ -42,7 +42,9 @@ class debugger(commands.Cog):
 
     async def command_error_default(self, ctx: commands.Context, error: object):
         """Run when on_command_error() when an unknown error is encountered."""
-        errstr = str(error) if str(error)[-1] == "." else f"{error}."
+        if str(error) == "": errstr = type(error)
+        else: errstr = str(error) if str(error)[-1] == "." else f"{error}."
+
         embed = discord.Embed(title="Bakerbot: Unhandled exception!", colour=utilities.errorColour)
         embed.add_field(name="The exception reads as follows:", value=errstr, inline=False)
         embed.set_footer(text=f"Raised by {ctx.author.name} while trying to run ${ctx.command}.")

@@ -26,3 +26,5 @@ wavelinkNodes = {
 # Custom errors.
 class CogDoesntExist(commands.CommandError): pass
 class GiveawayInProgress(commands.CommandError): pass
+class AlreadyConnectedToChannel(commands.CommandError): pass
+class NoChannelToConnectTo(commands.CommandError): pass
