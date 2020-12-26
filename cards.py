@@ -1,4 +1,4 @@
-from random import *
+import random
 
 # Bakerbot-specific implementation of cards and hands.
 # Card rankings come in the form of integers, ranging from 2-14.
@@ -88,7 +88,7 @@ class Card:
 
     @classmethod
     def random(self):
-        return Card(randint(2, 14), randint(1, 4))
+        return Card(random.randint(2, 14), random.randint(1, 4))
 
     def setaction(self, action, boolean):
         if action == "print": self.printsuits = boolean

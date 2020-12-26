@@ -1,7 +1,7 @@
 from discord.ext import commands
 from btoken import token
-from glob import glob
 import discord
+import glob
 
 intents = discord.Intents.default()
 intents.members = True
@@ -13,7 +13,7 @@ async def on_ready():
     await bot.change_presence(activity=discord.Game("with the API."))
 
 if __name__ == "__main__":
-    for filename in glob("cogs/*.py"):
+    for filename in glob.glob("cogs/*.py"):
         filename = filename.replace("\\", ".").replace("/", ".").replace(".py", "")
         try: bot.load_extension(filename)
         except Exception: raise

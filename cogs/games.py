@@ -6,12 +6,12 @@ import asyncio
 
 class games(commands.Cog):
     """This cog hosts some fun games!"""
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.giving = False
         self.bot = bot
 
     @commands.command()
-    async def giveaway(self, ctx, *, prize: str):
+    async def giveaway(self, ctx: commands.Context, *, prize: str):
         """Giveaway random prizes! Pass in a prize to display."""
         if self.giving: raise commands.CommandOnCooldown(None, None)
         self.giving = True
@@ -33,7 +33,7 @@ class games(commands.Cog):
         self.giving = False
 
     @giveaway.error
-    async def giveawayerror(self, ctx, error):
+    async def giveawayerror(self, ctx: commands.Context, error: object):
         """Error handler for the giveaway command."""
         if isinstance(error, commands.CommandOnCooldown):
             embed = discord.Embed(title="Bakerbot: Lottery exception.", description="Another lottery is currently in progress, please wait.", colour=utilities.errorColour)

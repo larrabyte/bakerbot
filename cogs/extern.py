@@ -4,17 +4,17 @@ import discord
 
 class extern(commands.Cog):
     """Implements an interface with external applications."""
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @commands.command()
-    async def quote(self, ctx):
+    async def quote(self, ctx: commands.Context):
         """Return a quote from `fortune`."""
         output = subprocess.run("bash -c fortune", encoding="utf-8", capture_output=True)
         await ctx.send(output.stdout)
 
     @commands.command()
-    async def compile(self, ctx, os: str, *, code: str):
+    async def compile(self, ctx: commands.Context, os: str, *, code: str):
         """Compile some C code into an executable! Supports GCC for Windows and Linux."""
         with open("data/code/main.c", "w") as f:
             f.write(code.replace("```", ""))

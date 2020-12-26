@@ -4,11 +4,11 @@ import discord
 
 class helper(commands.Cog):
     """Implements the help function."""
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @commands.command()
-    async def help(self, ctx, cogname: str=None):
+    async def help(self, ctx: commands.Context, cogname: str = None):
         """Bakerbot's custom help function."""
         if not cogname:
             cogs = [self.bot.cogs[name] for name in self.bot.cogs]
