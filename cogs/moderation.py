@@ -18,6 +18,7 @@ class moderation(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
+        """Fired after a member joins a Guild."""
         with self.bot.get_guild(utilities.adminAbuse.serverID) as adminAbuse:
             if member.guild == adminAbuse: await member.add_roles(adminAbuse.get_role(utilities.adminAbuse.defaultRole))
 

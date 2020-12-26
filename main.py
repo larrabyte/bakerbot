@@ -9,7 +9,7 @@ bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True,
 
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user.name}, ID: {bot.user.id}.")
+    print(f"Connected to Discord (latency: {int(bot.latency * 1000)}ms).")
     await bot.change_presence(activity=discord.Game("with the API."))
 
 if __name__ == "__main__":
