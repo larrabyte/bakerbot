@@ -13,7 +13,7 @@ class games(commands.Cog):
     @commands.command()
     async def giveaway(self, ctx: commands.Context, *, prize: str):
         """Giveaway random prizes! Pass in a prize to display."""
-        if self.giving: raise commands.CommandOnCooldown(None, None)
+        if self.giving: raise commands.CommandOnCooldown(None, 10)
         self.giving = True
 
         size = 5 if len(ctx.guild.members) >= 5 else len(ctx.guild.members)
@@ -21,13 +21,13 @@ class games(commands.Cog):
         displayed = "\n".join([member.mention for member in members])
         winner = random.choice(members)
 
-        embed = discord.Embed(title=f"Bakerbot: {ctx.author.mention}'s lottery!", colour=utilities.economyColour)
-        embed.add_field(name="Winner's Prize", value=f"From {ctx.author.name}: {prize}", inline=False)
+        embed = discord.Embed(title=f"Bakerbot: {ctx.author.name}'s lottery!", colour=utilities.economyColour)
+        embed.add_field(name="The Winner's Prize", value=prize, inline=False)
         embed.add_field(name="Potential Winners", value=displayed, inline=False)
         await ctx.send(embed=embed)
-        await asyncio.sleep(10)
+        await asyncio.sleep(random.randint(1, 10))
 
-        embed = discord.Embed(title=f"Bakerbot: {ctx.author.mention}'s lottery!", colour=utilities.economyColour)
+        embed = discord.Embed(title=f"Bakerbot: {ctx.author.name}'s lottery!", colour=utilities.economyColour)
         embed.add_field(name="code is fucked and so is ur mum :point_right: :sunglasses: :point_right:", value=f"{winner} wins {prize}!", inline=False)
         await ctx.send(embed=embed)
         self.giving = False
