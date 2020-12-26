@@ -1,3 +1,5 @@
+from discord.ext import commands
+
 # Admin Abuse class (stores information about the server).
 class adminAbuse:
     serverID = 554211911697432576
@@ -20,3 +22,7 @@ wavelinkNodes = {
         "region": "sydney"
     }
 }
+
+# Custom errors.
+class CogDoesntExist(commands.CommandError): pass
+class GiveawayInProgress(commands.CommandError): pass

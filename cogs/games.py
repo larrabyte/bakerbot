@@ -13,7 +13,7 @@ class games(commands.Cog):
     @commands.command()
     async def giveaway(self, ctx: commands.Context, *, prize: str):
         """Giveaway random prizes! Pass in a prize to display."""
-        if self.giving: raise commands.CommandOnCooldown(None, 10)
+        if self.giving: raise utilities.GiveawayInProgress
         self.giving = True
 
         size = 5 if len(ctx.guild.members) >= 5 else len(ctx.guild.members)
@@ -35,7 +35,7 @@ class games(commands.Cog):
     @giveaway.error
     async def giveawayerror(self, ctx: commands.Context, error: object):
         """Error handler for the giveaway command."""
-        if isinstance(error, commands.CommandOnCooldown):
+        if isinstance(error, utilities.GiveawayInProgress):
             embed = discord.Embed(title="Bakerbot: Lottery exception.", description="Another lottery is currently in progress, please wait.", colour=utilities.errorColour)
             await ctx.send(embed=embed)
 
