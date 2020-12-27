@@ -109,31 +109,6 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         if not player.is_playing: await player.advance()
 
     @commands.command()
-    async def skip(self, ctx: commands.Context):
-        """Skips to the next available audio track."""
-        player = await self.getplayer(ctx)
-
-        if upcoming := player.queue[player.cursor + 1:]:
-            await player.stop()
-        else:
-            embed = discord.Embed(text="Bakerbot: Voice client status.", description="No audio tracks are currently queued.", colour=utilities.errorColour)
-            await ctx.send(embed=embed)
-            return
-
-    @commands.command()
-    async def rewind(self, ctx: commands.Context):
-        """Rewinds to the previous audio track if available."""
-        player = await self.getplayer(ctx)
-
-        if history := player.queue[:player.cursor]:
-            player.cursor -= 2
-            await player.stop()
-        else:
-            embed = discord.Embed(text="Bakerbot: Voice client status.", description="No audio track history found.", colour=utilities.errorColour)
-            await ctx.send(embed=embed)
-            return
-
-    @commands.command()
     async def queue(self, ctx: commands.Context):
         """Gets the currently active music queue."""
         player = await self.getplayer(ctx)
@@ -157,6 +132,31 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
                 embed.add_field(name="Queued audio tracks.", value=text, inline=False)
 
         await ctx.send(embed=embed)
+
+    @commands.command()
+    async def skip(self, ctx: commands.Context):
+        """Skips to the next available audio track."""
+        player = await self.getplayer(ctx)
+
+        if upcoming := player.queue[player.cursor + 1:]:
+            await player.stop()
+        else:
+            embed = discord.Embed(text="Bakerbot: Voice client status.", description="No audio tracks are currently queued.", colour=utilities.errorColour)
+            await ctx.send(embed=embed)
+            return
+
+    @commands.command()
+    async def rewind(self, ctx: commands.Context):
+        """Rewinds to the previous audio track if available."""
+        player = await self.getplayer(ctx)
+
+        if history := player.queue[:player.cursor]:
+            player.cursor -= 2
+            await player.stop()
+        else:
+            embed = discord.Embed(text="Bakerbot: Voice client status.", description="No audio track history found.", colour=utilities.errorColour)
+            await ctx.send(embed=embed)
+            return
 
     @commands.command()
     async def pause(self, ctx: commands.Context):
