@@ -48,7 +48,7 @@ class debugger(commands.Cog):
 
         embed = discord.Embed(title="Bakerbot: Unhandled exception!", colour=utilities.errorColour)
         embed.add_field(name="The exception reads as follows:", value=errstr, inline=False)
-        embed.set_footer(text=f"Raised by {ctx.author.name} while trying to run ${ctx.command}.")
+        embed.set_footer(text=f"Raised by {ctx.author.display_name} while trying to run ${ctx.command}.", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
 def setup(bot): bot.add_cog(debugger(bot))
