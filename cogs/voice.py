@@ -21,8 +21,8 @@ class player(wavelink.Player):
         elif isinstance(tracks, wavelink.Track): self.queue.append(tracks)
         elif isinstance(tracks, list): self.queue.extend(tracks)
 
-    async def connect(self, ctx: commands.Context, channel: discord.VoiceChannel = None):
-        if (channel := getattr(ctx.author.voice, "channel", channel)) == None: raise utilities.NoChannelToConnectTo
+    async def connect(self, ctx: commands.Context, requested: discord.VoiceChannel = None):
+        if (channel := getattr(ctx.author.voice, "channel", requested)) == None and (channel := requested) == None: raise utilities.NoChannelToConnectTo
         if self.is_connected: raise utilities.AlreadyConnectedToChannel
         await super().connect(channel.id)
         return channel
@@ -37,6 +37,24 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         self.bot = bot
         self.wavelink = wavelink.Client(bot=bot)
         self.bot.loop.create_task(self.startnodes())
+
+    @commands.command()
+    async def surpriseaudio(self, ctx: commands.Context, channel: discord.VoiceChannel, query: str):
+        """Surprise someone in another voice channel with Bakerbot's almighty presence (only accepts URLs)."""
+        query = query.strip("<>")
+        if re.match(utilities.urlRegex, query):
+            player = await self.getplayer(ctx)
+            results = await self.wavelink.get_tracks(query)
+            if not results: raise utilities.NoTracksFound
+            await player.addtracks(ctx, results)
+
+            if ctx.author.voice: ctx.author.voice.channel = None
+            await player.connect(ctx, channel)
+            await player.advance()
+        else:
+            embed = discord.Embed(title="Bakerbot: Audio search failure.", colour=utilities.errorColour)
+            embed.description = "The query must be a URL."
+            await ctx.send(embed=embed)
 
     @commands.command()
     async def play(self, ctx: commands.Context, *, query: str):
@@ -89,9 +107,10 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
         if not player.queue: embed.description = "The queue is currently empty."
         else: embed.add_field(name="Currently playing.", value=player.queue[player.cursor].title, inline=False)
+        upcoming = player.queue[player.cursor + 1:]
 
-        if len(player.queue) > 1:
-            text = "\n".join(track.title for track in player.queue[player.cursor + 1:])
+        if upcoming:
+            text = "\n".join(track.title for track in upcoming)
             embed.add_field(name="Queued audio tracks.", value=text, inline=False)
 
         await ctx.send(embed=embed)
@@ -100,6 +119,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
     async def connect(self, ctx: commands.Context, *, channel: typing.Optional[discord.VoiceChannel]):
         """Joins the requester's voice channel or the specified channel."""
         player = await self.getplayer(ctx)
+        if channel and ctx.author.voice: ctx.author.voice.channel = None
         channel = await player.connect(ctx, channel)
         embed = discord.Embed(title="Bakerbot: Voice client status.", description=f"Successfully connected to {channel.name}.", colour=utilities.successColour)
         await ctx.send(embed=embed)
