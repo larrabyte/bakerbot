@@ -57,17 +57,25 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
             await ctx.send(embed=embed)
 
     @commands.command()
-    async def play(self, ctx: commands.Context, *, query: str):
-        """Plays audio based on the query passed in. Delegates to $search if required."""
+    async def play(self, ctx: commands.Context, *, query: typing.Optional[str]):
+        """Plays audio based on the query passed in. Can also resume playback if paused."""
         player = await self.getplayer(ctx)
-        if not player.is_connected: await player.connect(ctx)
+        if not player.is_connected:
+            await player.connect(ctx)
+        elif not query and player.is_paused:
+            await player.set_pause(False)
+            return
 
         query = query.strip("<>")
         if re.match(utilities.urlRegex, query):
             results = await self.wavelink.get_tracks(query)
             if not results: raise utilities.NoTracksFound
             await player.addtracks(ctx, results)
-        else: await ctx.invoke(self.search, query=query)
+        else:
+            results = await self.wavelink.get_tracks(f"ytsearch:{query}")
+            if not results: raise utilities.NoTracksFound
+            await player.addtracks(ctx, results[0])
+
         if not player.is_playing: await player.advance()
 
     @commands.command()
@@ -76,8 +84,10 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         player = await self.getplayer(ctx)
         if not player.is_connected: await player.connect(ctx)
 
-        results = list(await self.wavelink.get_tracks(f"ytsearch:{query}"))[:5]
+        results = await self.wavelink.get_tracks(f"ytsearch:{query}")
         if not results: raise utilities.NoTracksFound
+        results = results[:5]
+
         embed = discord.Embed(title="Bakerbot: Audio search results.", colour=utilities.regularColour)
         listing = ""
 
@@ -114,6 +124,12 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
             embed.add_field(name="Queued audio tracks.", value=text, inline=False)
 
         await ctx.send(embed=embed)
+
+    @commands.command()
+    async def pause(self, ctx: commands.Context):
+        """Pause the Bakerbot if any audio is playing."""
+        player = await self.getplayer(ctx)
+        await player.set_pause(True)
 
     @commands.command()
     async def connect(self, ctx: commands.Context, *, channel: typing.Optional[discord.VoiceChannel]):
