@@ -1,8 +1,9 @@
 from discord.ext import commands
 import utilities
-import random
+import datetime
 import discord
 import asyncio
+import random
 
 class games(commands.Cog):
     """Bakerbot Twitch streaming coming soon, I promise!"""
@@ -38,7 +39,8 @@ class games(commands.Cog):
     async def giveawayerror(self, ctx: commands.Context, error: object):
         """Error handler for the giveaway command."""
         if isinstance(error, utilities.GiveawayInProgress):
-            embed = discord.Embed(title="Bakerbot: Lottery exception.", description="Another lottery is currently in progress, please wait.", colour=utilities.errorColour)
+            embed = discord.Embed(title="Bakerbot: Lottery exception.", description="Another lottery is currently in progress, please wait.", colour=utilities.errorColour, timestamp=datetime.datetime.utcnow())
+            embed.set_footer(text=f"Raised by {ctx.author.name} while trying to run ${ctx.command}.", icon_url=utilities.crossMark)
             await ctx.send(embed=embed)
         else:
             debugger = self.bot.get_cog("debugger")

@@ -1,6 +1,7 @@
 from discord.ext import commands
 import utilities
 import wavelink
+import datetime
 import discord
 import asyncio
 import typing
@@ -52,8 +53,8 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
             await player.connect(ctx, channel)
             await player.advance()
         else:
-            embed = discord.Embed(title="Bakerbot: Audio search failure.", colour=utilities.errorColour)
-            embed.description = "The query must be a URL."
+            embed = discord.Embed(title="Bakerbot: Audio search exception.", description="The query must be a URL.", colour=utilities.errorColour, timestamp=datetime.datetime.utcnow())
+            embed.set_footer(text=f"Raised by {ctx.author.name} while trying to run ${ctx.command}.", icon_url=utilities.crossMark)
             await ctx.send(embed=embed)
 
     @commands.command()
@@ -142,6 +143,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
             await player.stop()
         else:
             embed = discord.Embed(text="Bakerbot: Voice client status.", description="No audio tracks are currently queued.", colour=utilities.errorColour)
+            embed.set_footer(text="Consider queueing some audio tracks?", icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed)
             return
 
@@ -155,6 +157,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
             await player.stop()
         else:
             embed = discord.Embed(text="Bakerbot: Voice client status.", description="No audio track history found.", colour=utilities.errorColour)
+            embed.set_footer(text="Consider queueing some audio tracks?", icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed)
             return
 
@@ -178,6 +181,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         if channel and ctx.author.voice: ctx.author.voice.channel = None
         channel = await player.connect(ctx, channel)
         embed = discord.Embed(title="Bakerbot: Voice client status.", description=f"Successfully connected to {channel.name}.", colour=utilities.successColour)
+        embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
     @commands.command()

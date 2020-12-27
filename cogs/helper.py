@@ -32,7 +32,8 @@ class helper(commands.Cog):
     async def helperror(self, ctx: commands.Context, error: object):
         """Error handler for the help function."""
         if isinstance(error, utilities.CogDoesntExist):
-            embed = discord.Embed(title="Bakerbot: Helper exception.", description="That cog does not exist.", colour=utilities.errorColour)
+            embed = discord.Embed(title="Bakerbot: Helper exception.", description="That cog does not exist.", colour=utilities.errorColour, timestamp=datetime.datetime.utcnow())
+            embed.set_footer(text=f"Raised by {ctx.author.name} while trying to run ${ctx.command}.", icon_url=utilities.crossMark)
             await ctx.send(embed=embed)
         else:
             debugger = self.bot.get_cog("debugger")

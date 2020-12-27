@@ -14,7 +14,7 @@ class debugger(commands.Cog):
     async def mod(self, ctx: commands.Context):
         """Module command group fallback handler."""
         if ctx.invoked_subcommand == None:
-            embed = discord.Embed(title="Bakerbot: Module injector.", description="Invalid subcommand passed in. See $help debugger for valid subcommands.", colour=utilities.errorColour, timestamp=datetime.datetime.utcnow())
+            embed = discord.Embed(title="Bakerbot: Module injector exception.", description="Invalid subcommand passed in. See $help debugger for valid subcommands.", colour=utilities.errorColour, timestamp=datetime.datetime.utcnow())
             embed.set_footer(text=f"Raised by {ctx.author.name} while trying to run {ctx.message.content}.", icon_url=utilities.crossMark)
             await ctx.send(embed=embed)
 
@@ -68,7 +68,7 @@ class debugger(commands.Cog):
         if str(error) == "": errstr = type(error)
         else: errstr = str(error) if str(error)[-1] == "." else f"{error}."
 
-        embed = discord.Embed(title="Bakerbot: Unhandled exception!", colour=utilities.errorColour, timestamp=datetime.datetime.utcnow())
+        embed = discord.Embed(title="Bakerbot: Unhandled exception.", colour=utilities.errorColour, timestamp=datetime.datetime.utcnow())
         embed.add_field(name="The exception reads as follows:", value=errstr, inline=False)
         embed.set_footer(text=f"Raised by {ctx.author.name} while trying to run ${ctx.command}.", icon_url=utilities.crossMark)
         await ctx.send(embed=embed)
