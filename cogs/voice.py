@@ -92,9 +92,8 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         listing = ""
 
         for index, track in enumerate(results):
-            title = (track.title + "...") if len(track.title) > (50 + 3) else track.title
             length = str(track.length // (1000 * 60)) + ":" + str((track.length // 1000) % 60).zfill(2)
-            listing += f"**{index + 1}**. {title} ({length})\n"
+            listing += f"**{index + 1}**. {track.title} ({length})\n"
 
         embed.description = listing
         embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
@@ -110,6 +109,31 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         if not player.is_playing: await player.advance()
 
     @commands.command()
+    async def skip(self, ctx: commands.Context):
+        """Skips to the next available audio track."""
+        player = await self.getplayer(ctx)
+
+        if upcoming := player.queue[player.cursor + 1:]:
+            await player.stop()
+        else:
+            embed = discord.Embed(text="Bakerbot: Voice client status.", description="No audio tracks are currently queued.", colour=utilities.errorColour)
+            await ctx.send(embed=embed)
+            return
+
+    @commands.command()
+    async def rewind(self, ctx: commands.Context):
+        """Rewinds to the previous audio track if available."""
+        player = await self.getplayer(ctx)
+
+        if history := player.queue[:player.cursor]:
+            player.cursor -= 2
+            await player.stop()
+        else:
+            embed = discord.Embed(text="Bakerbot: Voice client status.", description="No audio track history found.", colour=utilities.errorColour)
+            await ctx.send(embed=embed)
+            return
+
+    @commands.command()
     async def queue(self, ctx: commands.Context):
         """Gets the currently active music queue."""
         player = await self.getplayer(ctx)
@@ -121,11 +145,16 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         else:
             elapsed = str(int(player.position // (1000 * 60))) + ":" + str(int((player.position // 1000) % 60)).zfill(2)
             length = str(player.queue[player.cursor].length // (1000 * 60)) + ":" + str((player.queue[player.cursor].length // 1000) % 60).zfill(2)
+
+            if history := player.queue[:player.cursor]:
+                text = "\n".join(track.title for track in history)
+                embed.add_field(name="Audio track history.", value=text, inline=False)
+
             embed.add_field(name=f"Currently playing: `[{elapsed} / {length}]`", value=player.queue[player.cursor].title, inline=False)
 
-        if upcoming := player.queue[player.cursor + 1:]:
-            text = "\n".join(track.title for track in upcoming)
-            embed.add_field(name="Queued audio tracks.", value=text, inline=False)
+            if upcoming := player.queue[player.cursor + 1:]:
+                text = "\n".join(track.title for track in upcoming)
+                embed.add_field(name="Queued audio tracks.", value=text, inline=False)
 
         await ctx.send(embed=embed)
 
