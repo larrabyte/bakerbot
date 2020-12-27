@@ -17,6 +17,8 @@ urlRegex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\
 # Icon URLs.
 noteURL = "https://img.icons8.com/clouds/344/note.png"
 illuminati = "https://upload.wikimedia.org/wikipedia/commons/a/a9/Illuminati_triangle_eye.png"
+tickMark = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Flat_tick_icon.svg/500px-Flat_tick_icon.svg.png"
+crossMark = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Flat_cross_icon.svg/500px-Flat_cross_icon.svg.png"
 
 # Wavelink node dictionary.
 wavelinkNodes = {
@@ -29,7 +31,6 @@ wavelinkNodes = {
         "region": "sydney"
     }
 }
-
 
 # Reaction dictionary (for choosing stuff, I suppose?)
 reactionOptions = {

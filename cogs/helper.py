@@ -21,7 +21,10 @@ class helper(commands.Cog):
             if not cog: raise utilities.CogDoesntExist
             embed = discord.Embed(title=f"Bakerbot: List of commands in {cogname}.", colour=utilities.regularColour)
             embed.set_footer(text="Note: arguments enclosed in <> are required while [] are optional.", icon_url=utilities.noteURL)
-            for command in cog.get_commands(): embed.add_field(name=f"{command.name} {command.signature}", value=command.help, inline=False)
+            for command in cog.walk_commands():
+                if isinstance(command, commands.Group): continue
+                prefix = f"{command.full_parent_name} " if command.parent else ""
+                embed.add_field(name=f"{prefix}{command.name} {command.signature}", value=command.help, inline=False)
 
         await ctx.send(embed=embed)
 
