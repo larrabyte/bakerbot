@@ -13,9 +13,10 @@ class player(wavelink.Player):
         self.cursor = 0
 
     async def advance(self):
-        if (self.queue and self.cursor == 0) or (len(self.queue) - 1 >= self.cursor + 1):
+        if (self.queue and self.cursor == 0) or (len(self.queue) > self.cursor):
             await self.play(self.queue[self.cursor])
             self.cursor += 1
+        else: raise utilities.NoTracksFound
 
     async def addtracks(self, ctx: commands.Context, tracks: typing.Union[wavelink.TrackPlaylist, wavelink.Track, list]):
         if isinstance(tracks, wavelink.TrackPlaylist): self.queue.extend(*tracks.tracks)
@@ -77,10 +78,18 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         for emojis in possibleReactions: await message.add_reaction(emojis)
         try: reaction, user = await self.bot.wait_for("reaction_add", timeout=60, check=lambda event, user: event.emoji in utilities.reactionOptions.keys() and user == ctx.author and event.message.id == message.id)
         except asyncio.TimeoutError: await ctx.message.delete()
-        else: await player.addtracks(ctx, results[utilities.reactionOptions[reaction.emoji]])
+        else: await player.addtracks(ctx, results[utilities.reactionOptions[reaction.emoji] - 1])
 
         await message.delete()
         if not player.is_playing: await player.advance()
+
+    @commands.command()
+    async def getqueue(self, ctx: commands.Context):
+        """Gets the currently active music queue."""
+        player = await self.getplayer(ctx)
+        embed = discord.Embed(title="Bakerbot: Current audio queue.", colour=utilities.regularColour)
+        embed.description = "\n".join([track.title for track in player.queue])
+        await ctx.send(embed=embed)
 
     @commands.command()
     async def connect(self, ctx: commands.Context, *, channel: typing.Optional[discord.VoiceChannel]):
