@@ -26,6 +26,19 @@ wavelinkNodes = {
 # A regex for URLs.
 urlRegex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
 
+# Reaction dictionary (for choosing stuff, I suppose?)
+reactionOptions = {
+    "1️⃣": 1,
+    "2️⃣": 2,
+    "3️⃣": 3,
+    "4️⃣": 4,
+    "5️⃣": 5,
+    "6️⃣": 6,
+    "7️⃣": 7,
+    "8️⃣": 8,
+    "9️⃣": 9
+}
+
 # Custom errors.
 class CogDoesntExist(commands.CommandError): pass
 class GiveawayInProgress(commands.CommandError): pass

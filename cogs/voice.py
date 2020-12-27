@@ -2,6 +2,7 @@ from discord.ext import commands
 import utilities
 import wavelink
 import discord
+import asyncio
 import typing
 import re
 
@@ -9,9 +10,6 @@ class queue:
     def __init__(self):
         self.internal = []
         self.cursor = 0
-
-    def add(self, *args):
-        self.internal.extend(*args)
 
     @property
     def nextTrack(self):
@@ -35,11 +33,10 @@ class player(wavelink.Player):
         track = self.queue.nextTrack
         if track != None: await self.play(track)
 
-    async def addtracks(self, ctx: commands.Context, tracks: typing.Union[wavelink.TrackPlaylist, list, None]):
+    async def addtracks(self, ctx: commands.Context, tracks: typing.Union[wavelink.TrackPlaylist, wavelink.Track]):
         if not tracks: raise utilities.NoTracksFound
-        if isinstance(tracks, wavelink.TrackPlaylist): self.queue.add(*tracks.tracks)
-        elif isinstance(tracks, list): self.queue.add(tracks)
-        else: pass
+        if isinstance(tracks, wavelink.TrackPlaylist): self.queue.internal.extend(*tracks.tracks)
+        elif isinstance(tracks, wavelink.Track): self.queue.internal.append(tracks)
 
     async def connect(self, ctx: commands.Context, channel: discord.VoiceChannel = None):
         if (channel := getattr(ctx.author.voice, "channel", channel)) == None: raise utilities.NoChannelToConnectTo
@@ -60,13 +57,32 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
 
     @commands.command()
     async def play(self, ctx: commands.Context, *, query: str):
-        """Plays audio based on the query passed in."""
+        """Plays audio based on the query passed in. Accepts search terms or YouTube links."""
         player = await self.getplayer(ctx)
         if not player.is_connected: await player.connect(ctx)
 
         query = query.strip("<>")
-        if not re.match(utilities.urlRegex, query): query = f"ytsearch:{query}"
-        await player.addtracks(ctx, await self.wavelink.get_tracks(query))
+        if not re.match(utilities.urlRegex, query):
+            results = await self.wavelink.get_tracks(f"ytsearch:{query}")
+            embed = discord.Embed(title="Bakerbot: Audio search results.", colour=utilities.regularColour)
+            embed.description = "\n".join(f"**{i + 1}**. {t.title} ({t.length // 60000}:{str(t.length % 60).zfill(2)})" for i, t in enumerate(results[:5]))
+            embed.set_footer(text=f"Invoked by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
+            message = await ctx.send(embed=embed)
+
+            for emojis in list(utilities.reactionOptions.keys())[:min(len(results), len(utilities.reactionOptions))]:
+                await message.add_reaction(emojis)
+
+            try:
+                reaction, user = await self.bot.wait_for("reaction_add", timeout=60, check=lambda event, user: event.emoji in utilities.reactionOptions.keys() and user == ctx.author and event.message.id == message.id)
+            except asyncio.TimeoutError:
+                await ctx.message.delete()
+                await message.delete()
+            else:
+                await message.delete()
+                await player.addtracks(ctx, results[utilities.reactionOptions[reaction.emoji]])
+        else:
+            await player.addtracks(ctx, await self.wavelink.get_tracks(query))
+
         if not player.is_playing: await player.advance()
 
     @commands.command()
