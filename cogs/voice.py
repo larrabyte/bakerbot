@@ -63,7 +63,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
 
         query = query.strip("<>")
         if re.match(utilities.urlRegex, query): await player.addtracks(ctx, await self.wavelink.get_tracks(query))
-        else: await ctx.invoke(self.bot.get_command("search"), query=query)
+        else: await ctx.invoke(self.search, query=query)
         if not player.is_playing: await player.advance()
 
     @commands.command()
@@ -74,22 +74,24 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
 
         results = list(await self.wavelink.get_tracks(f"ytsearch:{query}"))[:5]
         embed = discord.Embed(title="Bakerbot: Audio search results.", colour=utilities.regularColour)
-        embed.description = "\n".join(f"**{i + 1}**. {t.title} ({t.length // 60000}:{str(t.length % 60).zfill(2)})" for i, t in enumerate(results))
+        listing = ""
+
+        for index, track in enumerate(results):
+            title = (track.title + "...") if len(track.title) > (50 + 3) else track.title
+            length = str(track.length // (1000 * 60)) + ":" + str((track.length // 1000) % 60).zfill(2)
+            listing += f"**{index + 1}**. {title} ({length})\n"
+
+        embed.description = listing
         embed.set_footer(text=f"Invoked by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
         message = await ctx.send(embed=embed)
 
-        for emojis in list(utilities.reactionOptions.keys())[:min(len(results), len(utilities.reactionOptions))]:
-            await message.add_reaction(emojis) 
+        possibleReactions = list(utilities.reactionOptions.keys())[:min(len(results), len(utilities.reactionOptions))]
+        for emojis in possibleReactions: await message.add_reaction(emojis)
+        try: reaction, user = await self.bot.wait_for("reaction_add", timeout=60, check=lambda event, user: event.emoji in utilities.reactionOptions.keys() and user == ctx.author and event.message.id == message.id)
+        except asyncio.TimeoutError: await ctx.message.delete()
+        else: await player.addtracks(ctx, results[utilities.reactionOptions[reaction.emoji]])
 
-        try:
-            reaction, user = await self.bot.wait_for("reaction_add", timeout=60, check=lambda event, user: event.emoji in utilities.reactionOptions.keys() and user == ctx.author and event.message.id == message.id)
-        except asyncio.TimeoutError:
-            await ctx.message.delete()
-            await message.delete()
-        else:
-            await player.addtracks(ctx, results[utilities.reactionOptions[reaction.emoji]])
-            await message.delete()
-
+        await message.delete()
         if not player.is_playing: await player.advance()
 
     @commands.command()
