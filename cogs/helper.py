@@ -14,13 +14,13 @@ class helper(commands.Cog):
         if not cogname:
             cogs = [self.bot.cogs[name] for name in self.bot.cogs]
             embed = discord.Embed(title="Bakerbot: List of command groups.", colour=utilities.regularColour)
-            embed.set_footer(text="Note: typing $help [cogname] will display available commands in that cog.")
+            embed.set_footer(text="Note: typing $help [cogname] will display available commands in that cog.", icon_url=utilities.noteURL)
             for cog in cogs: embed.add_field(name=cog.qualified_name, value=cog.description, inline=False)
         else:
             cog = self.bot.get_cog(cogname)
             if not cog: raise utilities.CogDoesntExist
             embed = discord.Embed(title=f"Bakerbot: List of commands in {cogname}.", colour=utilities.regularColour)
-            embed.set_footer(text="Note: arguments enclosed in <> are required while [] are optional.")
+            embed.set_footer(text="Note: arguments enclosed in <> are required while [] are optional.", icon_url=utilities.noteURL)
             for command in cog.get_commands(): embed.add_field(name=f"{command.name} {command.signature}", value=command.help, inline=False)
 
         await ctx.send(embed=embed)

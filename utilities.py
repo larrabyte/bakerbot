@@ -11,6 +11,12 @@ successColour = 0x00C92C
 regularColour = 0xF5CC00
 gamingColour = 0x0095FF
 
+# A regex for URLs.
+urlRegex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+
+# Icon URLs.
+noteURL = "https://img.icons8.com/clouds/344/note.png"
+
 # Wavelink node dictionary.
 wavelinkNodes = {
     "main": {
@@ -23,8 +29,6 @@ wavelinkNodes = {
     }
 }
 
-# A regex for URLs.
-urlRegex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
 
 # Reaction dictionary (for choosing stuff, I suppose?)
 reactionOptions = {

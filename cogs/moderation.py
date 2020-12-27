@@ -14,6 +14,7 @@ class moderation(commands.Cog):
         if not channel: channel = ctx.channel
         async for message in channel.history(limit=n): await message.delete()
         embed = discord.Embed(title="Bakerbot: Message purge results.", description=f"{n} messages successfully purged!", colour=utilities.successColour)
+        embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
     @commands.Cog.listener()

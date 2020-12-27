@@ -13,9 +13,7 @@ class player(wavelink.Player):
         self.cursor = 0
 
     async def advance(self):
-        if (self.queue and self.cursor == 0) or (len(self.queue) > self.cursor):
-            await self.play(self.queue[self.cursor])
-            self.cursor += 1
+        if len(self.queue) > self.cursor: await self.play(self.queue[self.cursor])
         else: raise utilities.NoTracksFound
 
     async def addtracks(self, ctx: commands.Context, tracks: typing.Union[wavelink.TrackPlaylist, wavelink.Track, list]):
@@ -71,7 +69,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
             listing += f"**{index + 1}**. {title} ({length})\n"
 
         embed.description = listing
-        embed.set_footer(text=f"Invoked by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
+        embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
         message = await ctx.send(embed=embed)
 
         possibleReactions = list(utilities.reactionOptions.keys())[:min(len(results), len(utilities.reactionOptions))]
@@ -123,6 +121,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
     @wavelink.WavelinkMixin.listener("on_track_stuck")
     @wavelink.WavelinkMixin.listener("on_track_exception")
     async def on_player_stop(self, node: wavelink.Node, payload: typing.Union[wavelink.TrackEnd, wavelink.TrackStuck, wavelink.TrackException]):
+        payload.player.cursor += 1
         await payload.player.advance()
 
     async def startnodes(self):
