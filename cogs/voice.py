@@ -40,7 +40,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
 
     @commands.command()
     async def surpriseaudio(self, ctx: commands.Context, channel: discord.VoiceChannel, query: str):
-        """Surprise someone in another voice channel with Bakerbot's almighty presence (only accepts URLs)."""
+        """Surprise someone in another channel with Bakerbot's presence (only accepts URLs)."""
         query = query.strip("<>")
         if re.match(utilities.urlRegex, query):
             player = await self.getplayer(ctx)
@@ -148,6 +148,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
     @wavelink.WavelinkMixin.listener("on_track_stuck")
     @wavelink.WavelinkMixin.listener("on_track_exception")
     async def on_player_stop(self, node: wavelink.Node, payload: typing.Union[wavelink.TrackEnd, wavelink.TrackStuck, wavelink.TrackException]):
+        """Advances the queue cursor after every stop event."""
         payload.player.cursor += 1
         await payload.player.advance()
 
