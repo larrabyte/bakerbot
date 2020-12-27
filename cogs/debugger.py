@@ -47,7 +47,7 @@ class debugger(commands.Cog):
         if str(error) == "": errstr = type(error)
         else: errstr = str(error) if str(error)[-1] == "." else f"{error}."
 
-        embed = discord.Embed(title="Bakerbot: Unhandled exception!", colour=utilities.errorColour, timestamp=datetime.datetime.utcnow(),)
+        embed = discord.Embed(title="Bakerbot: Unhandled exception!", colour=utilities.errorColour, timestamp=datetime.datetime.utcnow())
         embed.add_field(name="The exception reads as follows:", value=errstr, inline=False)
         embed.set_footer(text=f"Raised by {ctx.author.name} while trying to run ${ctx.command}.", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)

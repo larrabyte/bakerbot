@@ -82,11 +82,18 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         if not player.is_playing: await player.advance()
 
     @commands.command()
-    async def getqueue(self, ctx: commands.Context):
+    async def queue(self, ctx: commands.Context):
         """Gets the currently active music queue."""
         player = await self.getplayer(ctx)
         embed = discord.Embed(title="Bakerbot: Current audio queue.", colour=utilities.regularColour)
-        embed.description = "\n".join([track.title for track in player.queue])
+        embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
+        if not player.queue: embed.description = "The queue is currently empty."
+        else: embed.add_field(name="Currently playing.", value=player.queue[player.cursor].title, inline=False)
+
+        if len(player.queue) > 1:
+            text = "\n".join(track.title for track in player.queue[player.cursor + 1:])
+            embed.add_field(name="Queued audio tracks.", value=text, inline=False)
+
         await ctx.send(embed=embed)
 
     @commands.command()
