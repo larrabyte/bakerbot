@@ -29,7 +29,7 @@ class games(commands.Cog):
         await asyncio.sleep(random.randint(1, 10))
 
         embed = discord.Embed(title=f"Bakerbot: {ctx.author.name}'s lottery!", colour=utilities.gamingColour)
-        embed.add_field(name="code is fucked and so is ur mum :point_right: :sunglasses: :point_right:", value=f"{winner} wins {prize}!", inline=False)
+        embed.add_field(name="code is fucked and so is ur mum :point_right: :sunglasses: :point_right:", value=f"{winner.mention} wins {prize}!", inline=False)
         embed.set_footer(text="sponsored by omega pharma", icon_url=utilities.illuminati)
         await ctx.send(embed=embed)
         self.giving = False

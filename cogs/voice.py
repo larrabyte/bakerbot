@@ -115,11 +115,15 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         player = await self.getplayer(ctx)
         embed = discord.Embed(title="Bakerbot: Current audio queue.", colour=utilities.regularColour)
         embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
-        if not player.queue: embed.description = "The queue is currently empty."
-        else: embed.add_field(name="Currently playing.", value=player.queue[player.cursor].title, inline=False)
-        upcoming = player.queue[player.cursor + 1:]
 
-        if upcoming:
+        if not player.queue or len(player.queue) <= player.cursor:
+            embed.description = "The queue is currently empty."
+        else:
+            elapsed = str(int(player.position // (1000 * 60))) + ":" + str(int((player.position // 1000) % 60)).zfill(2)
+            length = str(player.queue[player.cursor].length // (1000 * 60)) + ":" + str((player.queue[player.cursor].length // 1000) % 60).zfill(2)
+            embed.add_field(name=f"Currently playing: `[{elapsed} / {length}]`", value=player.queue[player.cursor].title, inline=False)
+
+        if upcoming := player.queue[player.cursor + 1:]:
             text = "\n".join(track.title for track in upcoming)
             embed.add_field(name="Queued audio tracks.", value=text, inline=False)
 
@@ -130,6 +134,13 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         """Pause the Bakerbot if any audio is playing."""
         player = await self.getplayer(ctx)
         await player.set_pause(True)
+
+    @commands.command()
+    async def stop(self, ctx: commands.Context):
+        """Stops the Bakerbot from playing audio and clears the active queue."""
+        player = await self.getplayer(ctx)
+        player.queue.clear()
+        await player.stop()
 
     @commands.command()
     async def connect(self, ctx: commands.Context, *, channel: typing.Optional[discord.VoiceChannel]):
@@ -151,9 +162,12 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         """Fired everytime Bakerbot is able to receive a VoiceState update."""
         if not member.bot and after.channel == None:
             if not [member for member in before.channel.members if not member.bot]:
-                # TODO: Make the player pause the music rather than disconnect.
                 player = await self.getplayer(member.guild)
-                await player.teardown()
+                if not player.is_paused: await player.set_pause(True)
+        else:
+            player = await self.getplayer(member.guild)
+            if after.channel.id == player.channel_id:
+                if player.is_paused: await player.set_pause(False)
 
     @wavelink.WavelinkMixin.listener()
     async def on_node_ready(self, node: wavelink.Node):
