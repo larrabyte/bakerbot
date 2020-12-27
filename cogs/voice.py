@@ -142,7 +142,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         if upcoming := player.queue[player.cursor + 1:]:
             await player.stop()
         else:
-            embed = discord.Embed(text="Bakerbot: Voice client status.", description="No audio tracks are currently queued.", colour=utilities.errorColour)
+            embed = discord.Embed(title="Bakerbot: Voice client status.", description="No audio tracks are currently queued.", colour=utilities.errorColour)
             embed.set_footer(text="Consider queueing some audio tracks?", icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed)
             return
@@ -156,7 +156,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
             player.cursor -= 2
             await player.stop()
         else:
-            embed = discord.Embed(text="Bakerbot: Voice client status.", description="No audio track history found.", colour=utilities.errorColour)
+            embed = discord.Embed(title="Bakerbot: Voice client status.", description="No audio track history found.", colour=utilities.errorColour)
             embed.set_footer(text="Consider queueing some audio tracks?", icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed)
             return
