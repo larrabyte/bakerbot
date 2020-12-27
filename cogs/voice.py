@@ -6,37 +6,21 @@ import asyncio
 import typing
 import re
 
-class queue:
-    def __init__(self):
-        self.internal = []
-        self.cursor = 0
-
-    @property
-    def nextTrack(self):
-        if not self.internal:
-            raise utilities.QueueIsEmpty
-        elif self.cursor == 0:
-            self.cursor = 1
-            return self.internal[0]
-        elif self.cursor + 1 > len(self.internal) - 1: 
-            return None
-
-        self.cursor += 1
-        return self.internal[self.cursor]
-
 class player(wavelink.Player):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.queue = queue()
+        self.queue = []
+        self.cursor = 0
 
     async def advance(self):
-        track = self.queue.nextTrack
-        if track != None: await self.play(track)
+        if (self.queue and self.cursor == 0) or (len(self.queue) - 1 >= self.cursor + 1):
+            await self.play(self.queue[self.cursor])
+            self.cursor += 1
 
     async def addtracks(self, ctx: commands.Context, tracks: typing.Union[wavelink.TrackPlaylist, wavelink.Track, list]):
-        if isinstance(tracks, wavelink.TrackPlaylist): self.queue.internal.extend(*tracks.tracks)
-        elif isinstance(tracks, wavelink.Track): self.queue.internal.append(tracks)
-        elif isinstance(tracks, list): self.queue.internal.extend(tracks)
+        if isinstance(tracks, wavelink.TrackPlaylist): self.queue.extend(*tracks.tracks)
+        elif isinstance(tracks, wavelink.Track): self.queue.append(tracks)
+        elif isinstance(tracks, list): self.queue.extend(tracks)
 
     async def connect(self, ctx: commands.Context, channel: discord.VoiceChannel = None):
         if (channel := getattr(ctx.author.voice, "channel", channel)) == None: raise utilities.NoChannelToConnectTo
@@ -62,7 +46,10 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         if not player.is_connected: await player.connect(ctx)
 
         query = query.strip("<>")
-        if re.match(utilities.urlRegex, query): await player.addtracks(ctx, await self.wavelink.get_tracks(query))
+        if re.match(utilities.urlRegex, query):
+            results = await self.wavelink.get_tracks(query)
+            if not results: raise utilities.NoTracksFound
+            await player.addtracks(ctx, results)
         else: await ctx.invoke(self.search, query=query)
         if not player.is_playing: await player.advance()
 
@@ -73,6 +60,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         if not player.is_connected: await player.connect(ctx)
 
         results = list(await self.wavelink.get_tracks(f"ytsearch:{query}"))[:5]
+        if not results: raise utilities.NoTracksFound
         embed = discord.Embed(title="Bakerbot: Audio search results.", colour=utilities.regularColour)
         listing = ""
 
