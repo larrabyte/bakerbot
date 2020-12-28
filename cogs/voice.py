@@ -39,12 +39,30 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         self.wavelink = wavelink.Client(bot=bot)
         self.bot.loop.create_task(self.startnodes())
 
+    def getplayer(self, obj: typing.Union[discord.Guild, commands.Context]):
+        """Retrieves the Wavelink player using either a guild or context."""
+        if isinstance(obj, commands.Context): return self.wavelink.get_player(obj.guild.id, cls=player, context=obj)
+        elif isinstance(obj, discord.Guild): return self.wavelink.get_player(obj.id, cls=player)
+
+    def gettrackembed(self, ctx: commands.Context, currentPlayer: player, track: wavelink.Track, overrideTitle: typing.Optional[str] = None):
+        embed = discord.Embed(description=f"[{track.title}]({track.uri})", colour=utilities.regularColour)
+        embed.title = "Bakerbot: In queue." if currentPlayer.is_playing else "Bakerbot: Now playing."
+        if overrideTitle: embed.title = overrideTitle
+        embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
+        embed.set_thumbnail(url=track.thumb)
+        return embed
+
+    async def startnodes(self):
+        """Starts the Wavelink nodes."""
+        await self.bot.wait_until_ready()
+        for node in utilities.wavelinkNodes.values(): await self.wavelink.initiate_node(**node)
+
     @commands.command()
     async def surpriseaudio(self, ctx: commands.Context, channel: discord.VoiceChannel, query: str):
         """Surprise someone in another channel with Bakerbot's presence (only accepts URLs)."""
         query = query.strip("<>")
         if re.match(utilities.urlRegex, query):
-            player = await self.getplayer(ctx)
+            player = self.getplayer(ctx)
             results = await self.wavelink.get_tracks(query)
             if not results: raise utilities.NoTracksFound
             await player.addtracks(ctx, results)
@@ -60,7 +78,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
     @commands.command()
     async def play(self, ctx: commands.Context, *, query: typing.Optional[str]):
         """Plays audio based on the query passed in. Can also resume playback if paused."""
-        player = await self.getplayer(ctx)
+        player = self.getplayer(ctx)
         if not player.is_connected:
             await player.connect(ctx)
         elif not query and player.is_paused:
@@ -73,13 +91,13 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         if not results: raise utilities.NoTracksFound
         await player.addtracks(ctx, results[0])
 
-        await ctx.send(embed=await self.gettrackembed(ctx, player, results[0]))
+        await ctx.send(embed=self.gettrackembed(ctx, player, results[0]))
         if not player.is_playing: await player.advance()
 
     @commands.command()
     async def search(self, ctx: commands.Context, *, query: str):
         """Search for your favourite song here."""
-        player = await self.getplayer(ctx)
+        player = self.getplayer(ctx)
         if not player.is_connected: await player.connect(ctx)
 
         results = list(await self.wavelink.get_tracks(f"ytsearch:{query}"))[:5]
@@ -107,13 +125,13 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
             return
 
         await message.delete()
-        await ctx.send(embed=await self.gettrackembed(ctx, player, selection))
+        await ctx.send(embed=self.gettrackembed(ctx, player, selection))
         if not player.is_playing: await player.advance()
 
     @commands.command()
     async def queue(self, ctx: commands.Context):
         """Gets the currently active music queue."""
-        player = await self.getplayer(ctx)
+        player = self.getplayer(ctx)
         embed = discord.Embed(title="Bakerbot: Current audio queue.", colour=utilities.regularColour)
         embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
 
@@ -138,10 +156,10 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
     @commands.command()
     async def skip(self, ctx: commands.Context):
         """Skips to the next available audio track."""
-        player = await self.getplayer(ctx)
+        player = self.getplayer(ctx)
 
         if upcoming := player.queue[player.cursor + 1:]:
-            embed = await self.gettrackembed(ctx, player, player.queue[player.cursor + 1], "Bakerbot: Now playing.")
+            embed = self.gettrackembed(ctx, player, player.queue[player.cursor + 1], "Bakerbot: Now playing.")
             await ctx.send(embed=embed)
             await player.stop()
         else:
@@ -153,10 +171,10 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
     @commands.command()
     async def rewind(self, ctx: commands.Context):
         """Rewinds to the previous audio track if available."""
-        player = await self.getplayer(ctx)
+        player = self.getplayer(ctx)
 
         if history := player.queue[:player.cursor]:
-            embed = await self.gettrackembed(ctx, player, player.queue[player.cursor - 1], "Bakerbot: Now playing.")
+            embed = self.gettrackembed(ctx, player, player.queue[player.cursor - 1], "Bakerbot: Now playing.")
             player.cursor -= 2
             await ctx.send(embed=embed)
             await player.stop()
@@ -169,20 +187,20 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
     @commands.command()
     async def pause(self, ctx: commands.Context):
         """Pause the Bakerbot if any audio is playing."""
-        player = await self.getplayer(ctx)
+        player = self.getplayer(ctx)
         await player.set_pause(True)
 
     @commands.command()
     async def stop(self, ctx: commands.Context):
         """Stops the Bakerbot from playing audio and clears the active queue."""
-        player = await self.getplayer(ctx)
+        player = self.getplayer(ctx)
         player.queue.clear()
         await player.stop()
 
     @commands.command()
     async def connect(self, ctx: commands.Context, *, channel: typing.Optional[discord.VoiceChannel]):
         """Joins the requester's voice channel or the specified channel."""
-        player = await self.getplayer(ctx)
+        player = self.getplayer(ctx)
         if channel and ctx.author.voice: ctx.author.voice.channel = None
         channel = await player.connect(ctx, channel)
         embed = discord.Embed(title="Bakerbot: Voice client status.", description=f"Successfully connected to {channel.name}.", colour=utilities.successColour)
@@ -192,7 +210,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
     @commands.command()
     async def disconnect(self, ctx: commands.Context):
         """Disconnects from a voice channel if still connected."""
-        player = await self.getplayer(ctx)
+        player = self.getplayer(ctx)
         await player.teardown()
 
     @commands.Cog.listener()
@@ -200,10 +218,10 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         """Fired everytime Bakerbot is able to receive a VoiceState update."""
         if not member.bot and after.channel == None:
             if not [member for member in before.channel.members if not member.bot]:
-                player = await self.getplayer(member.guild)
+                player = self.getplayer(member.guild)
                 if not player.is_paused: await player.set_pause(True)
         else:
-            player = await self.getplayer(member.guild)
+            player = self.getplayer(member.guild)
             if after.channel and after.channel.id == player.channel_id:
                 if player.is_paused: await player.set_pause(False)
 
@@ -219,23 +237,5 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         """Advances the queue cursor after every stop event."""
         payload.player.cursor += 1
         await payload.player.advance()
-
-    async def startnodes(self):
-        """Starts the Wavelink nodes."""
-        await self.bot.wait_until_ready()
-        for node in utilities.wavelinkNodes.values(): await self.wavelink.initiate_node(**node)
-
-    async def getplayer(self, obj: typing.Union[discord.Guild, commands.Context]):
-        """Retrieves the Wavelink player using either a guild or context."""
-        if isinstance(obj, commands.Context): return self.wavelink.get_player(obj.guild.id, cls=player, context=obj)
-        elif isinstance(obj, discord.Guild): return self.wavelink.get_player(obj.id, cls=player)
-
-    async def gettrackembed(self, ctx: commands.Context, currentPlayer: player, track: wavelink.Track, overrideTitle: typing.Optional[str] = None):
-        embed = discord.Embed(description=f"[{track.title}]({track.uri})", colour=utilities.regularColour)
-        embed.title = "Bakerbot: In queue." if currentPlayer.is_playing else "Bakerbot: Now playing."
-        if overrideTitle: embed.title = overrideTitle
-        embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
-        embed.set_thumbnail(url=track.thumb)
-        return embed
 
 def setup(bot): bot.add_cog(voice(bot))

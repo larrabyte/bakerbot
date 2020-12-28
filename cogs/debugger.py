@@ -9,6 +9,22 @@ class debugger(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    async def command_not_found(self, ctx: commands.Context, error: object):
+        """Run when on_command_error() is raised without a valid command."""
+        embed = discord.Embed(title="Bakerbot: Command not found!", description="Try a different command, or see $help for command groups.", colour=utilities.errorColour, timestamp=datetime.datetime.utcnow())
+        embed.set_footer(text=f"Raised by {ctx.author.name} while trying to run {ctx.message.content}.", icon_url=utilities.crossMark)
+        await ctx.send(embed=embed)
+
+    async def command_error_default(self, ctx: commands.Context, error: object):
+        """Run when on_command_error() when an unknown error is encountered."""
+        if str(error) == "": errstr = type(error)
+        else: errstr = str(error) if str(error)[-1] == "." else f"{error}."
+
+        embed = discord.Embed(title="Bakerbot: Unhandled exception.", colour=utilities.errorColour, timestamp=datetime.datetime.utcnow())
+        embed.add_field(name="The exception reads as follows:", value=errstr, inline=False)
+        embed.set_footer(text=f"Raised by {ctx.author.name} while trying to run ${ctx.command}.", icon_url=utilities.crossMark)
+        await ctx.send(embed=embed)
+
     @commands.is_owner()
     @commands.group(invoke_without_subcommand=True)
     async def mod(self, ctx: commands.Context):
@@ -56,21 +72,5 @@ class debugger(commands.Cog):
         elif not ctx.command: await self.command_not_found(ctx, error)
         else: await self.command_error_default(ctx, error)
         raise error
-
-    async def command_not_found(self, ctx: commands.Context, error: object):
-        """Run when on_command_error() is raised without a valid command."""
-        embed = discord.Embed(title="Bakerbot: Command not found!", description="Try a different command, or see $help for command groups.", colour=utilities.errorColour, timestamp=datetime.datetime.utcnow())
-        embed.set_footer(text=f"Raised by {ctx.author.name} while trying to run {ctx.message.content}.", icon_url=utilities.crossMark)
-        await ctx.send(embed=embed)
-
-    async def command_error_default(self, ctx: commands.Context, error: object):
-        """Run when on_command_error() when an unknown error is encountered."""
-        if str(error) == "": errstr = type(error)
-        else: errstr = str(error) if str(error)[-1] == "." else f"{error}."
-
-        embed = discord.Embed(title="Bakerbot: Unhandled exception.", colour=utilities.errorColour, timestamp=datetime.datetime.utcnow())
-        embed.add_field(name="The exception reads as follows:", value=errstr, inline=False)
-        embed.set_footer(text=f"Raised by {ctx.author.name} while trying to run ${ctx.command}.", icon_url=utilities.crossMark)
-        await ctx.send(embed=embed)
 
 def setup(bot): bot.add_cog(debugger(bot))
