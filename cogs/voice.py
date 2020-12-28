@@ -115,7 +115,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         for emojis in possibleReactions: await message.add_reaction(emojis)
 
         try:
-            checklambda = lambda event, user: event.emoji in utilities.reactionOptions.keys() and user == ctx.author and event.message.id == message.id
+            checklambda = lambda event, user: event.emoji in possibleReactions and user == ctx.author and event.message.id == message.id
             reaction, user = await self.bot.wait_for("reaction_add", timeout=30, check=checklambda)
             selection = results[utilities.reactionOptions[reaction.emoji] - 1]
             await player.addtracks(ctx, selection)
