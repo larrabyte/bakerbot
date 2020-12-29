@@ -49,7 +49,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         embed.title = "Bakerbot: In queue." if currentPlayer.is_playing else "Bakerbot: Now playing."
         if overrideTitle: embed.title = overrideTitle
         embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
-        embed.set_thumbnail(url=track.thumb)
+        if track.thumb: embed.set_thumbnail(url=track.thumb)
         return embed
 
     async def startnodes(self):
@@ -81,7 +81,7 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         player = self.getplayer(ctx)
         if not player.is_connected:
             await player.connect(ctx)
-        elif not query and player.is_paused:
+        elif not query:
             await player.set_pause(False)
             return
 
@@ -138,15 +138,15 @@ class voice(commands.Cog, wavelink.WavelinkMixin):
         if not player.queue or len(player.queue) <= player.cursor:
             embed.description = "The queue is currently empty."
         else:
+            curtrack = player.queue[player.cursor]
             elapsed = str(int(player.position // (1000 * 60))) + ":" + str(int((player.position // 1000) % 60)).zfill(2)
-            length = str(player.queue[player.cursor].length // (1000 * 60)) + ":" + str((player.queue[player.cursor].length // 1000) % 60).zfill(2)
+            length = str(curtrack.length // (1000 * 60)) + ":" + str((curtrack.length // 1000) % 60).zfill(2)
 
             if history := player.queue[:player.cursor]:
                 text = "\n".join(f"[{track.title}]({track.uri})" for track in history)
                 embed.add_field(name="Audio track history.", value=text, inline=False)
-
-            embed.add_field(name=f"Currently playing: `[{elapsed} / {length}]`", value=f"[{player.queue[player.cursor].title}]({player.queue[player.cursor].uri})", inline=False)
-
+            if not curtrack.is_stream: embed.add_field(name=f"Currently playing: `[{elapsed} / {length}]`", value=f"[{curtrack.title}]({curtrack.uri})", inline=False)
+            else: embed.add_field(name=f"Currently streaming: `[{elapsed}]`", value=f"[{curtrack.title}]({curtrack.uri})", inline=False)
             if upcoming := player.queue[player.cursor + 1:]:
                 text = "\n".join(f"[{track.title}]({track.uri})" for track in upcoming)
                 embed.add_field(name="Queued audio tracks.", value=text, inline=False)
