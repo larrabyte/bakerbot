@@ -55,11 +55,10 @@ class Debugger(commands.Cog, name="debugger"):
     async def mod(self, ctx: commands.Context) -> None:
         """Module command group fallback handler."""
         if ctx.invoked_subcommand == None:
-            embed = self.mod_embed(description="Invalid subcommand passed in. See $help debugger for valid subcommands.",
-                                   footer_text=f"Raised by {ctx.author.name} while trying to run {ctx.message.content}.",
-                                   success=False)
-
-            await ctx.send(embed=embed)
+            await ctx.send(embed=self.util.status_embed(
+                ctx=ctx, success=False, title="Bakerbot: Module injector exception.",
+                description="Invalid subcommand passed in. See $help debugger for valid subcommands."
+            ))
 
     @mod.command()
     async def load(self, ctx: commands.Context, cogname: str) -> None:

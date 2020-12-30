@@ -1,4 +1,6 @@
 from discord.ext import commands
+import datetime as dt
+import discord
 
 class Utilities(commands.Cog, name="utilities"):
     """A collection of useful constants. No actual functions here :("""
@@ -46,5 +48,15 @@ class Utilities(commands.Cog, name="utilities"):
             "8️⃣": 8,
             "9️⃣": 9
         }
+
+    def status_embed(self, ctx: commands.Context, title: str, success: bool, description:str=None) -> discord.Embed:
+        """Returns a Discord Embed useful for displaying statuses."""
+        colour = self.success_colour if success else self.error_colour
+        icon = self.tick_icon if success else self.cross_icon
+
+        embed = discord.Embed(title=title, colour=colour, timestamp=dt.datetime.utcnow())
+        embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=icon)
+        if description is not None: embed.description = description
+        return embed
 
 def setup(bot): bot.add_cog(Utilities())

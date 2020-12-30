@@ -133,14 +133,6 @@ class Voice(commands.Cog, wavelink.WavelinkMixin, name="voice"):
         embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
         return embed
 
-    def status_embed(self, ctx: commands.Context, title: str, description: str, success: bool) -> discord.Embed:
-        """Returns a Discord Embed useful for displaying statuses."""
-        colour = self.util.success_colour if success else self.util.error_colour
-        icon = self.util.tick_icon if success else self.util.cross_icon
-        embed = discord.Embed(title=title, description=description, colour=colour, timestamp=dt.datetime.utcnow())
-        embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=icon)
-        return embed
-
     def track_embed(self, title: str, ctx: commands.Context, track: wavelink.Track) -> discord.Embed:
         """Returns a Discord Embed useful for displaying track information."""
         embed = self.voice_embed(ctx=ctx, title=title, description=f"[{track.title}]({track.uri})")
@@ -208,7 +200,7 @@ class Voice(commands.Cog, wavelink.WavelinkMixin, name="voice"):
                 h_text += f"**{index + 1}**. [{track.title}]({track.uri})\n"
 
             embed.add_field(name="Audio track history.", value=h_text, inline=False)
-        
+
         if (cur := self.player.queue.current_track) is not None:
             elapsed = f"{int(self.player.position) // (1000 * 60)}:{str((int(self.player.position) // 1000) % 60).zfill(2)}"
             length = f"{cur.length // (1000 * 60)}:{str((cur.length // 1000) % 60).zfill(2)}"
@@ -233,12 +225,10 @@ class Voice(commands.Cog, wavelink.WavelinkMixin, name="voice"):
         elif mode == "all": self.player.queue.repeat_mode = 2
         else: raise VoiceError(VoiceError.INVALID_REPEAT_MODE)
 
-        embed = self.status_embed(title="Bakerbot: Queue repeat mode.",
-                                  description=f"Successfully changed the repeat mode to `{mode}`.",
-                                  success=True,
-                                  ctx=ctx)
-
-        await ctx.send(embed=embed)
+        await ctx.send(embed=self.util.status_embed(
+            ctx=ctx, success=True, title="Bakerbot: Queue repeat mode.",
+            description=f"Successfully changed the repeat mode to `{mode}`."
+        ))
 
     @commands.command()
     async def skip(self, ctx: commands.Context) -> None:
@@ -275,12 +265,10 @@ class Voice(commands.Cog, wavelink.WavelinkMixin, name="voice"):
         """Pauses the voice client if any audio is currently playing."""
         if not self.player.is_paused:
             await self.player.set_pause(True)
-            embed = self.status_embed(title="Bakerbot: Voice client status.",
-                                      description="Audio successfully paused!",
-                                      success=True,
-                                      ctx=ctx)
-
-            await ctx.send(embed=embed)
+            await ctx.send(embed=self.util.status_embed(
+                ctx=ctx, success=True, title="Bakerbot: Voice client status.",
+                description="Audio successfully paused!"
+            ))
 
     @commands.command()
     async def stop(self, ctx: commands.Context) -> None:
@@ -288,35 +276,30 @@ class Voice(commands.Cog, wavelink.WavelinkMixin, name="voice"):
         if not self.player.queue.is_empty:
             self.player.queue.clear_queue()
             await self.player.stop()
-            embed = self.status_embed(title="Bakerbot: Queue status.",
-                                      description="Queue successfully cleared!",
-                                      success=True,
-                                      ctx=ctx)
 
-            await ctx.send(embed=embed)
+            await ctx.send(embed=self.util.status_embed(
+                ctx=ctx, success=True, title="Bakerbot: Queue status.",
+                description="Queue successfully cleared!"
+            ))
 
     @commands.command()
     async def connect(self, ctx: commands.Context, *, channel: t.Optional[discord.VoiceChannel]) -> None:
         """Connects to the requester's voice channel, or a channel of their choice."""
         channel = await self.player.connect(ctx, channel)
-        embed = self.status_embed(title="Bakerbot: Voice client status.",
-                                    description=f"Successfully connected to {channel.name}.",
-                                    success=True,
-                                    ctx=ctx)
-
-        await ctx.send(embed=embed)
+        await ctx.send(embed=self.util.status_embed(
+            ctx=ctx, success=True, title="Bakerbot: Voice client status.",
+            description=f"Successfully connected to {channel.name}."
+        ))
 
     @commands.command()
     async def disconnect(self, ctx: commands.Context) -> None:
         """Disconnect the voice client from any voice channels."""
         if self.player.is_connected:
             await self.player.teardown()
-            embed = self.status_embed(title="Bakerbot: Voice client status.",
-                                      description="Successfully disconnected.",
-                                      success=True,
-                                      ctx=ctx)
-
-            await ctx.send(embed=embed)
+            await ctx.send(embed=self.util.status_embed(
+                ctx=ctx, success=True, title="Bakerbot: Voice client status.",
+                description="Successfully disconnected."
+            ))
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):

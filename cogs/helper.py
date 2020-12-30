@@ -35,7 +35,7 @@ class Helper(commands.Cog, name="helper"):
         if cogname is None:
             cogs = [self.bot.cogs[name] for name in self.bot.cogs]
             embed = self.help_embed(title="Bakerbot: List of command groups.",
-                                    footer_text="Note: typing $help [cogname] will display available commands in that cog.")
+                                    footer_text="Note: typing $help [cogname] will display commands in that cog.")
 
             for cog in cogs:
                 embed.add_field(name=cog.qualified_name, value=cog.description, inline=False)

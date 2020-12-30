@@ -21,13 +21,10 @@ class Moderation(commands.Cog, name="moderation"):
         async for message in channel.history(limit=n):
             await message.delete()
 
-        embed = discord.Embed(title="Bakerbot: Message purger.",
-                              description=f"{n} messages successfully purged!",
-                              colour=self.util.success_colour,
-                              timestamp=dt.datetime.utcnow())
-
-        embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=self.util.tick_icon)
-        await ctx.send(embed=embed)
+        await ctx.send(embed=self.util.status_embed(
+            ctx=ctx, success=True, title="Bakerbot: Message purger.",
+            description=f"{n} messages successfully purged!"
+        ))
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
