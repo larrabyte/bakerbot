@@ -1,241 +1,346 @@
 from discord.ext import commands
-import utilities
+import datetime as dt
+import typing as t
 import wavelink
-import datetime
 import discord
 import asyncio
-import typing
 import re
 
-class player(wavelink.Player):
-    def __init__(self, *args, **kwargs):
+class VoiceError(commands.CommandError):
+    QUEUE_EMPTY             = (0, "Queue is currently empty.")
+    ALREADY_CONNECTED       = (1, "Already connected to a voice channel.")
+    NO_CHANNEL              = (2, "No channel to connect to.")
+    INVALID_REPEAT_MODE     = (3, "Invalid repeat mode.")
+    NO_UPCOMING_TRACKS      = (4, "No upcoming tracks to skip to.")
+    NO_PREVIOUS_TRACKS      = (5, "No previous tracks to rewind to.")
+    NO_TRACKS_FOUND         = (6, "No tracks found.")
+    ASYNCIO_TIMEOUT         = (7, "Search timed out.")
+
+    def __init__(self, error: tuple) -> None: self.error = error
+    def __str__(self) -> str: return f"VoiceError({self.error[0]}) raised: {self.error[1]}"
+
+class Queue:
+    def __init__(self) -> None:
+        self.internal = []
+        self.repeat_mode = 0
+        self.index = 0
+
+    @property
+    def length(self) -> int:
+        return len(self.internal)
+
+    @property
+    def is_empty(self) -> bool:
+        return not self.internal
+
+    @property
+    def current_track(self) -> wavelink.Track:
+        if self.is_empty: raise VoiceError(VoiceError.QUEUE_EMPTY)
+        elif self.index < len(self.internal): return self.internal[self.index]
+        return None
+
+    @property
+    def upcoming(self) -> list:
+        if self.is_empty: raise VoiceError(VoiceError.QUEUE_EMPTY)
+        return self.internal[self.index + 1:]
+
+    @property
+    def history(self) -> list:
+        if self.is_empty: raise VoiceError(VoiceError.QUEUE_EMPTY)
+        return self.internal[:self.index]
+
+    def get_next_track(self) -> t.Optional[wavelink.Track]:
+        if self.is_empty: raise VoiceError(VoiceError.QUEUE_EMPTY)
+
+        self.index += 1
+        if self.index < 0: return None
+        elif self.index > len(self.internal) - 1:
+            if self.repeat_mode == 2: self.index = 0
+            else: return None
+
+        return self.internal[self.index]
+
+    def clear_queue(self) -> None:
+        self.internal.clear()
+        self.index = 0
+
+class Player(wavelink.Player):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.queue = []
-        self.cursor = 0
+        self.queue = Queue()
 
-    async def advance(self):
-        if len(self.queue) > self.cursor: await self.play(self.queue[self.cursor])
-        else: self.cursor -= 1
+    async def playback(self) -> None:
+        await self.play(self.queue.current_track)
 
-    async def addtracks(self, ctx: commands.Context, tracks: typing.Union[wavelink.TrackPlaylist, wavelink.Track, list]):
-        if isinstance(tracks, wavelink.TrackPlaylist): self.queue.extend(*tracks.tracks)
-        elif isinstance(tracks, wavelink.Track): self.queue.append(tracks)
-        elif isinstance(tracks, list): self.queue.extend(tracks)
+    async def advance(self) -> None:
+        next_track = self.queue.get_next_track()
+        if next_track is None: await self.stop()
+        else: await self.play(next_track)
 
-    async def connect(self, ctx: commands.Context, requested: discord.VoiceChannel = None):
-        if (channel := getattr(ctx.author.voice, "channel", requested)) == None and (channel := requested) == None: raise utilities.NoChannelToConnectTo
-        if self.is_connected: raise utilities.AlreadyConnectedToChannel
-        await super().connect(channel.id)
-        return channel
+    async def add_tracks(self, ctx: commands.Context, tracks: t.Union[list, wavelink.Track]) -> None:
+        if isinstance(tracks, wavelink.Track): self.queue.internal.append(tracks)
+        elif isinstance(tracks, list): self.queue.internal.extend(tracks.tracks)
+        if not self.is_playing and not self.queue.is_empty: await self.playback()
 
-    async def teardown(self):
+    async def connect(self, ctx: commands.Context, channel: discord.VoiceChannel=None) -> discord.VoiceChannel:
+        if self.is_connected: raise VoiceError(VoiceError.ALREADY_CONNECTED)
+        candidate = getattr(ctx.author.voice, "channel", channel)
+        if candidate is None: raise VoiceError(VoiceError.NO_CHANNEL)
+
+        await super().connect(candidate.id)
+        return candidate
+
+    async def teardown(self) -> None:
         try: await self.destroy()
         except KeyError: pass
 
-class voice(commands.Cog, wavelink.WavelinkMixin):
-    """Bakerbot's voice client can be found here."""
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
+class Voice(commands.Cog, wavelink.WavelinkMixin, name="voice"):
+    """Bakerbot's voice client can be found here!"""
+    def __init__(self, bot: commands.Bot) -> None:
         self.wavelink = wavelink.Client(bot=bot)
-        self.bot.loop.create_task(self.startnodes())
+        bot.loop.create_task(self.startup())
+        self.bot = bot
 
-    def getplayer(self, obj: typing.Union[discord.Guild, commands.Context]):
-        """Retrieves the Wavelink player using either a guild or context."""
-        if isinstance(obj, commands.Context): return self.wavelink.get_player(obj.guild.id, cls=player, context=obj)
-        elif isinstance(obj, discord.Guild): return self.wavelink.get_player(obj.id, cls=player)
+    async def startup(self) -> None:
+        """Manages any cog prerequisites."""
+        await self.bot.wait_until_ready()
+        self.util = self.bot.get_cog("utilities")
 
-    def gettrackembed(self, ctx: commands.Context, currentPlayer: player, track: wavelink.Track, overrideTitle: typing.Optional[str] = None):
-        embed = discord.Embed(description=f"[{track.title}]({track.uri})", colour=utilities.regularColour)
-        embed.title = "Bakerbot: In queue." if currentPlayer.is_playing else "Bakerbot: Now playing."
-        if overrideTitle: embed.title = overrideTitle
+        for node in self.util.wavelink_nodes.values():
+            await self.wavelink.initiate_node(**node)
+
+    async def cog_check(self, ctx: commands.Context) -> None:
+        """Run before any command is invoked. Listeners are exempt."""
+        self.player = self.get_player(ctx)
+        return True
+
+    async def get_tracks(self, query: str, search: bool) -> list:
+        """A helper function to get tracks from Wavelink."""
+        query = f"ytsearch:{query}" if search else query
+        results = await self.wavelink.get_tracks(query)
+        if results is None: raise VoiceError(VoiceError.NO_TRACKS_FOUND)
+        return list(results)
+
+    def get_player(self, obj: t.Union[commands.Context, discord.Guild]) -> Player:
+        """Returns the Guild's Player instance."""
+        if isinstance(obj, commands.Context): return self.wavelink.get_player(obj.guild.id, cls=Player, context=obj)
+        elif isinstance(obj, discord.Guild): return self.wavelink.get_player(obj.id, cls=Player)
+
+    def voice_embed(self, ctx: commands.Context, title: str, description: str) -> discord.Embed:
+        """Returns a Discord Embed useful for voice information."""
+        embed = discord.Embed(title=title, colour=self.util.regular_colour, timestamp=dt.datetime.utcnow())
+        if description is not None: embed.description = description
         embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
-        if track.thumb: embed.set_thumbnail(url=track.thumb)
         return embed
 
-    async def startnodes(self):
-        """Starts the Wavelink nodes."""
-        await self.bot.wait_until_ready()
-        for node in utilities.wavelinkNodes.values(): await self.wavelink.initiate_node(**node)
+    def status_embed(self, ctx: commands.Context, title: str, description: str, success: bool) -> discord.Embed:
+        """Returns a Discord Embed useful for displaying statuses."""
+        colour = self.util.success_colour if success else self.util.error_colour
+        icon = self.util.tick_icon if success else self.util.cross_icon
+        embed = discord.Embed(title=title, description=description, colour=colour, timestamp=dt.datetime.utcnow())
+        embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=icon)
+        return embed
+
+    def track_embed(self, title: str, ctx: commands.Context, track: wavelink.Track) -> discord.Embed:
+        """Returns a Discord Embed useful for displaying track information."""
+        embed = self.voice_embed(ctx=ctx, title=title, description=f"[{track.title}]({track.uri})")
+        if track.thumb is not None: embed.set_thumbnail(url=track.thumb)
+        return embed
 
     @commands.command()
-    async def surpriseaudio(self, ctx: commands.Context, channel: discord.VoiceChannel, query: str):
-        """Surprise someone in another channel with Bakerbot's presence (only accepts URLs)."""
-        query = query.strip("<>")
-        if re.match(utilities.urlRegex, query):
-            player = self.getplayer(ctx)
-            results = await self.wavelink.get_tracks(query)
-            if not results: raise utilities.NoTracksFound
-            await player.addtracks(ctx, results)
-
-            if ctx.author.voice: ctx.author.voice.channel = None
-            await player.connect(ctx, channel)
-            await player.advance()
-        else:
-            embed = discord.Embed(title="Bakerbot: Audio search exception.", description="The query must be a URL.", colour=utilities.errorColour, timestamp=datetime.datetime.utcnow())
-            embed.set_footer(text=f"Raised by {ctx.author.name} while trying to run ${ctx.command}.", icon_url=utilities.crossMark)
-            await ctx.send(embed=embed)
-
-    @commands.command()
-    async def play(self, ctx: commands.Context, *, query: typing.Optional[str]):
-        """Plays audio based on the query passed in. Can also resume playback if paused."""
-        player = self.getplayer(ctx)
-        if not player.is_connected:
-            await player.connect(ctx)
-        elif not query:
-            await player.set_pause(False)
-            return
+    async def play(self, ctx: commands.Context, *, query: t.Optional[str]) -> None:
+        """Play some tunes! Also works as the resume command."""
+        if not self.player.is_connected: await self.player.connect(ctx)
+        elif query is None: await self.player.set_pause(False)
 
         query = query.strip("<>")
-        if not re.match(utilities.urlRegex, query): query = f"ytsearch:{query}"
-        results = list(await self.wavelink.get_tracks(query))
-        if not results: raise utilities.NoTracksFound
-        await player.addtracks(ctx, results[0])
+        search = True if re.match(self.util.url_regex, query) is None else False
+        result = await self.get_tracks(query, search)
 
-        await ctx.send(embed=self.gettrackembed(ctx, player, results[0]))
-        if not player.is_playing: await player.advance()
+        title = "Bakerbot: Now playing." if not self.player.is_playing else "Bakerbot: Now queued."
+        embed = self.track_embed(ctx=ctx, title=title, track=result[0])
+        await ctx.send(embed=embed)
+        await self.player.add_tracks(ctx, result[0])
 
     @commands.command()
-    async def search(self, ctx: commands.Context, *, query: str):
-        """Search for your favourite song here."""
-        player = self.getplayer(ctx)
-        if not player.is_connected: await player.connect(ctx)
+    async def search(self, ctx: commands.Context, *, query: str) -> None:
+        """Search for your favourite tunes!"""
+        if not self.player.is_connected: await self.player.connect(ctx)
 
-        results = list(await self.wavelink.get_tracks(f"ytsearch:{query}"))[:5]
-        if not results: raise utilities.NoTracksFound
-        listing = ""
+        results = await self.get_tracks(query, True)
+        results = results[:5]
+        list_text = ""
 
         for index, track in enumerate(results):
-            length = str(track.length // (1000 * 60)) + ":" + str((track.length // 1000) % 60).zfill(2)
-            listing += f"**{index + 1}**. [{track.title}]({track.uri}) ({length})\n"
+            length = f"{track.length // (1000 * 60)}:{str((track.length // 1000) % 60).zfill(2)}"
+            list_text += f"**{index + 1}**. [{track.title}]({track.uri}) ({length})\n"
 
-        embed = discord.Embed(title="Bakerbot: Audio search results.", description=listing, colour=utilities.regularColour)
-        embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
-        message = await ctx.send(embed=embed)
-        possibleReactions = list(utilities.reactionOptions.keys())[:min(len(results), len(utilities.reactionOptions))]
-        for emojis in possibleReactions: await message.add_reaction(emojis)
+        check = lambda e, u: e.emoji in reactions and u == ctx.author and e.message.id == msg.id
+        reactions = list(self.util.react_options.keys())[:min(len(results), len(self.util.react_options))]
+        embed = self.voice_embed(ctx=ctx, title="Bakerbot: Audio search results.", description=list_text)
+
+        msg = await ctx.send(embed=embed)
+        for emoji in reactions:
+            await msg.add_reaction(emoji)
 
         try:
-            checklambda = lambda event, user: event.emoji in possibleReactions and user == ctx.author and event.message.id == message.id
-            reaction, user = await self.bot.wait_for("reaction_add", timeout=30, check=checklambda)
-            selection = results[utilities.reactionOptions[reaction.emoji] - 1]
-            await player.addtracks(ctx, selection)
+            reaction, user = await self.bot.wait_for("reaction_add", timeout=30, check=check)
+            selection = results[self.util.react_options[reaction.emoji] - 1]
         except asyncio.TimeoutError:
-            await ctx.message.delete()
-            await message.delete()
-            return
+            await msg.delete()
+            raise VoiceError(VoiceError.ASYNCIO_TIMEOUT)
 
-        await message.delete()
-        await ctx.send(embed=self.gettrackembed(ctx, player, selection))
-        if not player.is_playing: await player.advance()
+        await msg.delete()
+        title = "Bakerbot: Now playing." if not self.player.is_playing else "Bakerbot: Now queued."
+        embed = self.track_embed(ctx=ctx, title=title, track=selection)
+        await ctx.send(embed=embed)
+        await self.player.add_tracks(ctx, selection)
 
     @commands.command()
-    async def queue(self, ctx: commands.Context):
-        """Gets the currently active music queue."""
-        player = self.getplayer(ctx)
-        embed = discord.Embed(title="Bakerbot: Current audio queue.", colour=utilities.regularColour)
-        embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
+    async def queue(self, ctx: commands.Context) -> None:
+        """Check out the current audio queue."""
+        if self.player.queue.is_empty: raise VoiceError(VoiceError.QUEUE_EMPTY)
+        embed = self.voice_embed(ctx=ctx, title="Bakerbot: Current audio queue.", description=None)
 
-        if not player.queue or len(player.queue) <= player.cursor:
-            embed.description = "The queue is currently empty."
-        else:
-            curtrack = player.queue[player.cursor]
-            elapsed = str(int(player.position // (1000 * 60))) + ":" + str(int((player.position // 1000) % 60)).zfill(2)
-            length = str(curtrack.length // (1000 * 60)) + ":" + str((curtrack.length // 1000) % 60).zfill(2)
+        h_text = ""
+        if self.player.queue.history:
+            for index, track in enumerate(self.player.queue.history):
+                h_text += f"**{index + 1}**. [{track.title}]({track.uri})\n"
 
-            if history := player.queue[:player.cursor]:
-                text = "\n".join(f"[{track.title}]({track.uri})" for track in history)
-                embed.add_field(name="Audio track history.", value=text, inline=False)
-            if not curtrack.is_stream: embed.add_field(name=f"Currently playing: `[{elapsed} / {length}]`", value=f"[{curtrack.title}]({curtrack.uri})", inline=False)
-            else: embed.add_field(name=f"Currently streaming: `[{elapsed}]`", value=f"[{curtrack.title}]({curtrack.uri})", inline=False)
-            if upcoming := player.queue[player.cursor + 1:]:
-                text = "\n".join(f"[{track.title}]({track.uri})" for track in upcoming)
-                embed.add_field(name="Queued audio tracks.", value=text, inline=False)
+            embed.add_field(name="Audio track history.", value=h_text, inline=False)
+        
+        if (cur := self.player.queue.current_track) is not None:
+            elapsed = f"{int(self.player.position) // (1000 * 60)}:{str((int(self.player.position) // 1000) % 60).zfill(2)}"
+            length = f"{cur.length // (1000 * 60)}:{str((cur.length // 1000) % 60).zfill(2)}"
+            name = f"Currently streaming: `[{elapsed}]`" if cur.is_stream else f"Currently playing: `[{elapsed} / {length}]`"
+            embed.add_field(name=name, value=f"[{cur.title}]({cur.uri})", inline=False)
+            if cur.thumb is not None: embed.set_thumbnail(url=cur.thumb)
+
+        u_text = ""
+        if self.player.queue.upcoming:
+            for index, track in enumerate(self.player.queue.upcoming):
+                u_text += f"**{index + 1}**. [{track.title}]({track.uri})\n"
+
+            embed.add_field(name="Queued audio tracks.", value=u_text, inline=False)
 
         await ctx.send(embed=embed)
 
     @commands.command()
-    async def skip(self, ctx: commands.Context):
-        """Skips to the next available audio track."""
-        player = self.getplayer(ctx)
+    async def repeat(self, ctx: commands.Context, mode: t.Optional[str]) -> None:
+        """Change the current repeat mode. Valid options include `none`, `one` and `all`."""
+        if mode == "none": self.player.queue.repeat_mode = 0
+        elif mode == "one": self.player.queue.repeat_mode = 1
+        elif mode == "all": self.player.queue.repeat_mode = 2
+        else: raise VoiceError(VoiceError.INVALID_REPEAT_MODE)
 
-        if upcoming := player.queue[player.cursor + 1:]:
-            embed = self.gettrackembed(ctx, player, player.queue[player.cursor + 1], "Bakerbot: Now playing.")
-            await ctx.send(embed=embed)
-            await player.stop()
-        else:
-            embed = discord.Embed(title="Bakerbot: Voice client status.", description="No audio tracks are currently queued.", colour=utilities.errorColour)
-            embed.set_footer(text="Consider queueing some audio tracks?", icon_url=ctx.author.avatar_url)
-            await ctx.send(embed=embed)
-            return
+        embed = self.status_embed(title="Bakerbot: Queue repeat mode.",
+                                  description=f"Successfully changed the repeat mode to `{mode}`.",
+                                  success=True,
+                                  ctx=ctx)
 
-    @commands.command()
-    async def rewind(self, ctx: commands.Context):
-        """Rewinds to the previous audio track if available."""
-        player = self.getplayer(ctx)
-
-        if history := player.queue[:player.cursor]:
-            embed = self.gettrackembed(ctx, player, player.queue[player.cursor - 1], "Bakerbot: Now playing.")
-            player.cursor -= 2
-            await ctx.send(embed=embed)
-            await player.stop()
-        else:
-            embed = discord.Embed(title="Bakerbot: Voice client status.", description="No audio track history found.", colour=utilities.errorColour)
-            embed.set_footer(text="Consider queueing some audio tracks?", icon_url=ctx.author.avatar_url)
-            await ctx.send(embed=embed)
-            return
-
-    @commands.command()
-    async def pause(self, ctx: commands.Context):
-        """Pause the Bakerbot if any audio is playing."""
-        player = self.getplayer(ctx)
-        await player.set_pause(True)
-
-    @commands.command()
-    async def stop(self, ctx: commands.Context):
-        """Stops the Bakerbot from playing audio and clears the active queue."""
-        player = self.getplayer(ctx)
-        player.queue.clear()
-        await player.stop()
-
-    @commands.command()
-    async def connect(self, ctx: commands.Context, *, channel: typing.Optional[discord.VoiceChannel]):
-        """Joins the requester's voice channel or the specified channel."""
-        player = self.getplayer(ctx)
-        if channel and ctx.author.voice: ctx.author.voice.channel = None
-        channel = await player.connect(ctx, channel)
-        embed = discord.Embed(title="Bakerbot: Voice client status.", description=f"Successfully connected to {channel.name}.", colour=utilities.successColour)
-        embed.set_footer(text=f"Requested by {ctx.author.name}.", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
     @commands.command()
-    async def disconnect(self, ctx: commands.Context):
-        """Disconnects from a voice channel if still connected."""
-        player = self.getplayer(ctx)
-        await player.teardown()
+    async def skip(self, ctx: commands.Context) -> None:
+        """Skips the current audio track."""
+        if self.player.queue.repeat_mode != 1:
+            if self.player.queue.upcoming: track = self.player.queue.upcoming[0]
+            else: raise VoiceError(VoiceError.NO_UPCOMING_TRACKS)
+        else: track = self.player.queue.current_track
+
+        embed = self.track_embed(ctx=ctx, title="Bakerbot: Skipping to next track.", track=track)
+        await ctx.send(embed=embed)
+
+        if self.player.is_playing: await self.player.stop()
+        else: await self.player.advance()
+
+    @commands.command()
+    async def rewind(self, ctx: commands.Context) -> None:
+        """Rewinds to the previous audio track."""
+        if self.player.queue.repeat_mode != 1:
+            if self.player.queue.history:
+                track = self.player.queue.history[-1]
+                self.player.queue.index -= 2
+            else: raise VoiceError(VoiceError.NO_PREVIOUS_TRACKS)
+        else: track = self.player.queue.current_track
+
+        embed = self.track_embed(ctx=ctx, title="Bakerbot: Rewinding to previous track.", track=track)
+        await ctx.send(embed=embed)
+
+        if self.player.is_playing: await self.player.stop()
+        else: await self.player.advance()
+
+    @commands.command()
+    async def pause(self, ctx: commands.Context) -> None:
+        """Pauses the voice client if any audio is currently playing."""
+        if not self.player.is_paused:
+            await self.player.set_pause(True)
+            embed = self.status_embed(title="Bakerbot: Voice client status.",
+                                      description="Audio successfully paused!",
+                                      success=True,
+                                      ctx=ctx)
+
+            await ctx.send(embed=embed)
+
+    @commands.command()
+    async def stop(self, ctx: commands.Context) -> None:
+        """Stops playback and clears the audio queue."""
+        if not self.player.queue.is_empty:
+            self.player.queue.clear_queue()
+            await self.player.stop()
+            embed = self.status_embed(title="Bakerbot: Queue status.",
+                                      description="Queue successfully cleared!",
+                                      success=True,
+                                      ctx=ctx)
+
+            await ctx.send(embed=embed)
+
+    @commands.command()
+    async def connect(self, ctx: commands.Context, *, channel: t.Optional[discord.VoiceChannel]) -> None:
+        """Connects to the requester's voice channel, or a channel of their choice."""
+        channel = await self.player.connect(ctx, channel)
+        embed = self.status_embed(title="Bakerbot: Voice client status.",
+                                    description=f"Successfully connected to {channel.name}.",
+                                    success=True,
+                                    ctx=ctx)
+
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def disconnect(self, ctx: commands.Context) -> None:
+        """Disconnect the voice client from any voice channels."""
+        if self.player.is_connected:
+            await self.player.teardown()
+            embed = self.status_embed(title="Bakerbot: Voice client status.",
+                                      description="Successfully disconnected.",
+                                      success=True,
+                                      ctx=ctx)
+
+            await ctx.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-        """Fired everytime Bakerbot is able to receive a VoiceState update."""
-        if not member.bot and after.channel == None:
+        """Called when someone leaves or joins the voice channel."""
+        if not member.bot and after.channel is None:
             if not [member for member in before.channel.members if not member.bot]:
-                player = self.getplayer(member.guild)
+                player = self.get_player(member.guild)
                 if not player.is_paused: await player.set_pause(True)
         else:
-            player = self.getplayer(member.guild)
-            if after.channel and after.channel.id == player.channel_id:
+            player = self.get_player(member.guild)
+            if after.channel is not None and after.channel.id == player.channel_id:
                 if player.is_paused: await player.set_pause(False)
 
     @wavelink.WavelinkMixin.listener()
-    async def on_node_ready(self, node: wavelink.Node):
-        """Fired after each Wavelink node has been setup."""
-        print(f"Wavelink node \"{node.identifier}\" ready.")
+    async def on_node_ready(self, node: wavelink.Node) -> None:
+        """Called when a Wavelink node is ready for use."""
+        print(f"Wavelink node {node.identifier} ready.")
 
     @wavelink.WavelinkMixin.listener("on_track_end")
     @wavelink.WavelinkMixin.listener("on_track_stuck")
     @wavelink.WavelinkMixin.listener("on_track_exception")
-    async def on_player_stop(self, node: wavelink.Node, payload: typing.Union[wavelink.TrackEnd, wavelink.TrackStuck, wavelink.TrackException]):
-        """Advances the queue cursor after every stop event."""
-        payload.player.cursor += 1
-        await payload.player.advance()
+    async def on_player_stop(self, node: wavelink.Node, payload: object):
+        """Called when the player stops playing audio."""
+        if payload.player.queue.repeat_mode == 1: await payload.player.playback()
+        else: await payload.player.advance()
 
-def setup(bot): bot.add_cog(voice(bot))
+def setup(bot): bot.add_cog(Voice(bot))
