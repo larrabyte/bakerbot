@@ -111,14 +111,24 @@ class Voice(commands.Cog, wavelink.WavelinkMixin, name="voice"):
 
     async def cog_check(self, ctx: commands.Context) -> None:
         """Run before any command is invoked. Listeners are exempt."""
-        self.player = self.get_player(ctx)
-        return True
+        if isinstance(ctx.channel, discord.DMChannel):
+            await ctx.send(embed=self.util.status_embed(
+                ctx=ctx, success=False, title="Bakerbot: Voice client exception.",
+                description="Voice commands are not available in DMs."
+            ))
+
+            return False
+
+        else:
+            self.player = self.get_player(ctx)
+            return True
 
     async def get_tracks(self, query: str, search: bool) -> list:
         """A helper function to get tracks from Wavelink."""
         query = f"ytsearch:{query}" if search else query
         results = await self.wavelink.get_tracks(query)
         if results is None: raise VoiceError(VoiceError.NO_TRACKS_FOUND)
+        elif isinstance(results, wavelink.TrackPlaylist): return results.tracks
         return list(results)
 
     def get_player(self, obj: t.Union[commands.Context, discord.Guild]) -> Player:
