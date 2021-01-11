@@ -5,9 +5,9 @@ import asyncio
 import discord
 
 class ExternError(commands.CommandError):
-    NO_FILE_ATTACHED    = 0
-    COMPILER_ERROR      = 1
-    ASYNCIO_TIMEOUT     = 2
+    NO_FILE_ATTACHED = 0
+    COMPILER_ERROR   = 1
+    ASYNCIO_TIMEOUT  = 2
 
     def __init__(self, exception_type: int, message: str=None) -> None:
         self.exception_type = exception_type
