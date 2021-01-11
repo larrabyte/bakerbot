@@ -97,7 +97,8 @@ class Debugger(commands.Cog, name="debugger"):
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: object) -> None:
         """Throws any uncaught exceptions to Discord."""
-        if not ctx.command: await self.command_not_found(ctx, error)
+        if ctx.message.content[1].isdigit(): pass
+        elif not ctx.command: await self.command_not_found(ctx, error)
         else: await self.command_error_default(ctx, error)
         raise error
 

@@ -28,7 +28,7 @@ class Games(commands.Cog, name="games"):
                               colour=self.util.gaming_colour,
                               timestamp=dt.datetime.utcnow())
 
-        embed.set_footer("sponsored by omega pharma", icon_url=self.util.illuminati)
+        embed.set_footer(text="sponsored by omega pharma", icon_url=self.util.illuminati_icon)
         return embed
 
     @commands.command()
