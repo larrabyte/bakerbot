@@ -1,21 +1,30 @@
 from discord.ext import commands
-from btoken import token
+from pathlib import Path
 import discord
-import glob
-
-intents = discord.Intents.default()
-intents.members = True
-bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True, intents=intents)
-
-@bot.event
-async def on_ready():
-    print(f"Connected to Discord (latency: {int(bot.latency * 1000)}ms).")
-    await bot.change_presence(activity=discord.Game("with the API."))
+import logging
+import btoken
 
 if __name__ == "__main__":
-    for filename in glob.glob("cogs/*.py"):
-        filename = filename.replace("\\", ".").replace("/", ".").replace(".py", "")
-        try: bot.load_extension(filename)
-        except Exception: raise
+    # Discord intents (helps reduce API requests).
+    intents = discord.Intents.default()
+    intents.presences = False
+    intents.typing = False
+    intents.members = True
 
-    bot.run(token)
+    # Setup the logger to output messages to log.txt.
+    handler = logging.FileHandler(filename=Path("./log.txt"), encoding="utf-8", mode="w")
+    handler.setFormatter(logging.Formatter("[%(levelname)s @ %(asctime)s] %(message)s"))
+    logger = logging.getLogger()
+    logger.setLevel(logging.WARNING)
+    logger.addHandler(handler)
+
+    # Bot object, kinda important to keep around :p
+    bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True, intents=intents)
+
+    # Load extensions from the cogs folder.
+    for path in Path("./cogs").glob("**/*.py"):
+        try: bot.load_extension(f"cogs.{path.stem}")
+        except: raise
+
+    # Start the bot.
+    bot.run(btoken.token)

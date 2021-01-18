@@ -4,8 +4,9 @@ data/
 # Visual Studio Code: settings folder
 .vscode/
 
-# Token file
+# Token and log file
 btoken.py
+log.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
