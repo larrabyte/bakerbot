@@ -18,7 +18,7 @@ class Regexes:
 
     @classmethod
     def url(cls, string: str) -> bool:
-        return re.match(cls.urlrx, string)
+        return bool(re.match(cls.urlrx, string))
 
 class Icons:
     tick = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Flat_tick_icon.svg/500px-Flat_tick_icon.svg.png"

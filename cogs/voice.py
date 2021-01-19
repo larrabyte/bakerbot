@@ -63,7 +63,8 @@ class Voice(commands.Cog, wavelink.WavelinkMixin):
             return await ctx.send(embed=embed)
 
         query = query.strip("<>")
-        if (result := await self.get_tracks(query, Regexes.url(query), True)) is not None:
+        search = not Regexes.url(query)
+        if (result := await self.get_tracks(query, search, True)) is not None:
             # Ensure that we're connected before playing.
             player = self.get_player(ctx.guild)
             await ctx.invoke(self.connect, channel=None)
