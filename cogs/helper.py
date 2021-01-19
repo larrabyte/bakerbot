@@ -1,12 +1,13 @@
 from libs.utilities import Embeds, Colours, Icons
-
+from libs.models import Bakerbot
 from discord.ext import commands
+
 import typing as t
 import discord
 
 class Helper(commands.Cog):
     """Bakerbot's documentation lives here."""
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Bakerbot) -> None:
         self.bot = bot
 
     @commands.command()

@@ -1,26 +1,39 @@
 from libs.utilities import Embeds, Colours, Icons, Regexes, Choices
 from libs.audio import Nodes, Queue, Player, Action, RepeatMode
-
+from libs.models import Bakerbot
 from discord.ext import commands
+
 import logging as log
 import typing as t
 import wavelink
 import discord
 import asyncio
-import re
 
 class Voice(commands.Cog, wavelink.WavelinkMixin):
     """Controls the voice client for Bakerbot. Audio commands can be found here."""
-    def __init__(self, bot: commands.Bot) -> None:
-        self.wavelink = wavelink.Client(bot=bot)
-        bot.loop.create_task(self.node_startup())
+    def __init__(self, bot: Bakerbot) -> None:
         self.bot = bot
+        self.bot.loop.create_task(self.cog_setup())
 
-    async def node_startup(self) -> None:
-        # Ensures the Wavelink nodes are setup.
-        await self.bot.wait_until_ready()
+    def cog_unload(self) -> None:
+        # Destroy any active players before reloading.
+        for player in self.bot.wavelink.players.values():
+            self.bot.loop.create_task(player.destroy())
+
+    def get_formatted_length(self, milliseconds: int, fixed: bool) -> t.Tuple[int]:
+        # Get a formatted time string as a tuple of (minutes, seconds).
+        minutes = str(int(milliseconds // (1000 * 60)))
+        seconds = str(int((milliseconds // 1000) % 60))
+        return (minutes, seconds.zfill(2) if fixed else seconds)
+
+    def get_player(self, guild: discord.Guild) -> Player:
+        # Returns the guild's associated player.
+        return self.bot.wavelink.get_player(guild.id, cls=Player)
+
+    async def cog_setup(self) -> None:
+        # Setup the Wavelink nodes.
         for node in Nodes.dictionary.values():
-            await self.wavelink.initiate_node(**node)
+            await self.bot.wavelink.initiate_node(**node)
 
     async def cog_check(self, ctx: commands.Context) -> None:
         # Cog check ensures that voice commands can't be executed in DMs.
@@ -32,27 +45,12 @@ class Voice(commands.Cog, wavelink.WavelinkMixin):
         return True
 
     async def get_tracks(self, query: str, search: bool, single: bool) -> t.Union[list, wavelink.Track, None]:
-        # Wraps around self.wavelink.get_tracks() for searches/direct URLs.
-        results = await self.wavelink.get_tracks(f"ytsearch:{query}" if search else query)
+        # Wraps around self.bot.wavelink.get_tracks() for searches/direct URLs.
+        results = await self.bot.wavelink.get_tracks(f"ytsearch:{query}" if search else query)
 
         if results is None: return None
         elif single: return results[0]
         return list(results)
-
-    def cog_unload(self) -> None:
-        # Destroy any active players before reloading.
-        for player in self.wavelink.players.values():
-            self.bot.loop.create_task(player.destroy())
-
-    def get_formatted_length(self, milliseconds: int, fixed: bool) -> t.Tuple[int]:
-        # Get a formatted time string as a tuple of (minutes, seconds).
-        minutes = str(int(milliseconds // (1000 * 60)))
-        seconds = str(int((milliseconds // 1000) % 60))
-        return (minutes, seconds.zfill(2) if fixed else seconds)
-
-    def get_player(self, guild: discord.Guild) -> Player:
-        # Returns the guild's associated player.
-        return self.wavelink.get_player(guild.id, cls=Player)
 
     @commands.command()
     async def play(self, ctx: commands.Context, *, query: t.Optional[str]) -> None:
@@ -65,8 +63,7 @@ class Voice(commands.Cog, wavelink.WavelinkMixin):
             return await ctx.send(embed=embed)
 
         query = query.strip("<>")
-        search = True if re.match(Regexes.url, query) is None else False
-        if (result := await self.get_tracks(query, search, True)) is not None:
+        if (result := await self.get_tracks(query, Regexes.url(query), True)) is not None:
             # Ensure that we're connected before playing.
             player = self.get_player(ctx.guild)
             await ctx.invoke(self.connect, channel=None)

@@ -1,6 +1,7 @@
 from libs.utilities import Embeds, Colours, Icons
-
+from libs.models import Bakerbot
 from discord.ext import commands
+
 import traceback as trace
 import logging as log
 import typing as t
@@ -8,7 +9,7 @@ import discord
 
 class Debugger(commands.Cog):
     """Provides a built-in debugger for Bakerbot."""
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Bakerbot) -> None:
         self.bot = bot
 
     @commands.is_owner()

@@ -1,8 +1,10 @@
 from discord.ext import commands
+
 import datetime as dt
 import typing as t
 import discord
 import asyncio
+import re
 
 class Colours:
     regular = 0xF5CC00  # Used for everything else.
@@ -12,7 +14,11 @@ class Colours:
 
 class Regexes:
     # Used to detect URLs.
-    url = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+    urlrx = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+
+    @classmethod
+    def url(cls, string: str) -> bool:
+        return re.match(cls.urlrx, string)
 
 class Icons:
     tick = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Flat_tick_icon.svg/500px-Flat_tick_icon.svg.png"

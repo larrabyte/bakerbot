@@ -1,19 +1,15 @@
 from libs.utilities import Embeds, Colours, Icons, Paginator
-from libs.mangadex import Mangadex, Manga
-
+from libs.mangadex import Mangadex
+from libs.models import Bakerbot
 from discord.ext import commands
+
 import discord
 import asyncio
 
 class Media(commands.Cog):
     """Experimental media viewer. Currently home to the manga reader."""
-    def __init__(self, bot: commands.Bot) -> None:
-        bot.loop.create_task(Mangadex.create())
+    def __init__(self, bot: Bakerbot) -> None:
         self.bot = bot
-
-    def cog_unload(self) -> None:
-        # Be sure to close the client session before unloading.
-        self.bot.loop.create_task(Mangadex.client.close())
 
     @commands.group(invoke_without_subcommand=True)
     async def manga(self, ctx: commands.Context) -> None:
@@ -31,7 +27,7 @@ class Media(commands.Cog):
     @manga.command()
     async def info(self, ctx: commands.Context, id: int) -> None:
         """Get information about a manga given its Mangadex identifier."""
-        if (manga := await Manga.create(id=id, lang="gb")) is not None:
+        if (manga := await Mangadex.create(id=id, lang="gb")) is not None:
             embed = discord.Embed(description=f"[{manga.title}](https://mangadex.org/title/{manga.id})",
                                   colour=Colours.regular,
                                   timestamp=Embeds.now())
@@ -52,7 +48,7 @@ class Media(commands.Cog):
     @manga.command()
     async def read(self, ctx: commands.Context, id: int) -> None:
         """Start reading manga! Takes a Mangadex ID to start."""
-        if (manga := await Manga.create(id=id, lang="gb")) is not None:
+        if (manga := await Mangadex.create(id=id, lang="gb")) is not None:
             # Setup the paginator and a template embed for listing chapters.
             paginator = Paginator(embeds=None, message=None)
             paginator.template = discord.Embed(colour=Colours.regular, timestamp=Embeds.now())

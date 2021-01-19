@@ -1,5 +1,6 @@
-from discord.ext import commands
+from libs.models import Bakerbot
 from pathlib import Path
+
 import discord
 import logging
 import btoken
@@ -19,7 +20,7 @@ if __name__ == "__main__":
     logger.addHandler(handler)
 
     # Bot object, kinda important to keep around :p
-    bot = commands.Bot(command_prefix="$", help_command=None, case_insensitive=True, intents=intents)
+    bot = Bakerbot(command_prefix="$", help_command=None, case_insensitive=True, intents=intents)
 
     # Load extensions from the cogs folder.
     for path in Path("./cogs").glob("**/*.py"):

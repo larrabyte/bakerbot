@@ -16,22 +16,6 @@ class Chapter:
         self.chapter = metadata["chapter"]
         self.title = metadata["title"]
 
-    async def images(self) -> t.AsyncGenerator[str, None]:
-        # Return a list of URLs pointing to the images in this chapter.
-        metadata = await Mangadex.request(f"/chapter/{self.id}")
-        server = metadata.get("serverFallback", metadata["server"])[:-1]
-        pages = metadata["pages"]
-
-        for page in pages:
-            yield f"{server}/{self.hash}/{page}"
-
-    def sort_function(self) -> float:
-        # Used by list.sort() to sort chapters.
-        if self.chapter:
-            return float(self.chapter)
-
-        return float(0)
-
     def __str__(self) -> str:
         # Return the title of this chapter.
         volume = f"Vol. {self.volume}" if self.volume else ""
@@ -40,61 +24,67 @@ class Chapter:
 
         return f"{volume} {chapter} {title}"
 
+    async def images(self) -> t.AsyncGenerator[str, None]:
+        # Return a list of URLs pointing to the images in this chapter.
+        metadata = await Mangadex.request(f"chapter/{self.id}")
+        server = metadata.get("serverFallback", metadata["server"])
+        pages = metadata["pages"]
+
+        for page in pages:
+            yield f"{server}/{self.hash}/{page}"
+
 class Manga:
-    @classmethod
-    async def create(cls, id: int, lang: str) -> object:
-        # Use this method to create a Manga object using data from the Mangadex API.
-        metadata = await Mangadex.request(f"/manga/{id}")
-        if metadata is None: return None
-        instance = Manga()
+    def __init__(self, metadata: dict, chapters: dict, lang: str) -> None:
+        self.id = metadata["id"]
+        self.title = metadata["title"]
+        self.authorlist = metadata["author"]
+        self.views = metadata["views"]
+        self.follows = metadata["follows"]
+        self.cover = metadata["mainCover"]
 
-        # Request a list of chapters from the API and cache them in a list.
-        chapters = await Mangadex.request(f"/manga/{id}/chapters")
-        instance.chapters = [Chapter(data) for data in chapters["chapters"] if data["language"] == lang]
-        instance.chapters.sort(key=operator.methodcaller("sort_function"))
-
-        # Set the remaining properties from the metadata.
-        instance.id = metadata["id"]
-        instance.title = metadata["title"]
-        instance.authorlist = metadata["author"]
-        instance.taglist = [Mangadex.tags[tag] for tag in metadata["tags"]]
-        instance.ratings = Ratings(metadata["rating"])
-        instance.views = metadata["views"]
-        instance.follows = metadata["follows"]
-        instance.cover = metadata["mainCover"]
-        return instance
+        # Custom classes and/or processing required.
+        self.ratings = Ratings(metadata["rating"])
+        self.taglist = [Mangadex.tags[str(tag)] for tag in metadata["tags"]]
+        self.chapters = [Chapter(data) for data in chapters["chapters"] if data["language"] == lang]
+        self.chapters.sort(key=lambda c: float(c.chapter) if c.chapter else float(0))
 
     @property
     def authors(self) -> str:
+        # Return a string of authors.
         return ", ".join(self.authorlist)
 
     @property
     def tags(self) -> str:
+        # Return a string of formatted tags.
         formatted = "`Unknown`" if not self.taglist else ""
         for index, tag in enumerate(self.taglist, 1):
-            name = tag["name"]
-            formatted += f"`{name}` "
-            if index % 3 == 0:
-                formatted += "\n"
+            formatted += f"`{tag['name']}` "
+            if index % 3 == 0: formatted += "\n"
 
         return formatted
 
 class Mangadex:
     @classmethod
-    async def create(cls) -> None:
-        cls.client = aiohttp.ClientSession()
-        cls.base = "https://mangadex.org/api/v2"
-
-        # Convert keys to integers to make accessing easier.
-        tagdict = await Mangadex.request("/tag")
-        cls.tags = {int(k): v for k, v in tagdict.items()}
+    async def setup(cls, session: aiohttp.ClientSession) -> None:
+        cls.base = "https://mangadex.org/api/v2/"
+        cls.session = session
+        cls.tags = await Mangadex.request("tag")
 
     @classmethod
     async def request(cls, path: str) -> t.Optional[dict]:
         # Make a HTTP GET request to the Mangadex API.
-        async with cls.client.get(f"{cls.base}{path}") as resp:
+        async with cls.session.get(f"{cls.base}{path}") as resp:
             if resp.status != 200:
                 return None
 
             data = await resp.json()
             return data["data"]
+
+    @classmethod
+    async def create(cls, id: int, lang: str) -> t.Optional[Manga]:
+        # Create and return a Manga object using the ID and langauge passed in.
+        if (metadata := await Mangadex.request(f"manga/{id}")) is not None:
+            chapters = await Mangadex.request(f"manga/{id}/chapters")
+            return Manga(metadata=metadata, chapters=chapters, lang="gb")
+
+        return None
