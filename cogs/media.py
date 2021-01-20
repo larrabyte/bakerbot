@@ -38,7 +38,7 @@ class Media(commands.Cog):
             embed.add_field(name="✍️  Authors", value=manga.authors)
             embed.add_field(name="💴  Themes and Genres", value=manga.tags)
 
-            embed.set_footer(text=f"To start reading, type $manga read <id>.", icon_url=Icons.info)
+            embed.set_footer(text="To start reading, type $manga read <id>.", icon_url=Icons.info)
             if manga.cover: embed.set_thumbnail(url=manga.cover)
             await ctx.send(embed=embed)
         else:

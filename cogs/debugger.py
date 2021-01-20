@@ -81,7 +81,7 @@ class Debugger(commands.Cog):
         if isinstance(exobj, commands.CommandNotFound):
             if (ctx.message.content[1]).isdigit(): return
             fail = Embeds.status(success=False, desc=f"`{ctx.message.content}` is not a valid command.")
-            fail.set_footer(text=f"Try $help for a list of command groups.", icon_url=Icons.cross)
+            fail.set_footer(text="Try $help for a list of command groups.", icon_url=Icons.cross)
             return await ctx.send(embed=fail)
         elif isinstance(exobj, commands.MissingRequiredArgument):
             fail = Embeds.status(success=False, desc=f"`{exobj.param.name}` is a required argument that is missing.")
