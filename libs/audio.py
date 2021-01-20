@@ -78,11 +78,11 @@ class Queue:
         if not self.empty:
             if self.repeating == RepeatMode.one:
                 return self.current_track
-            elif 0 <= self.index + 1 < self.length:
+            if 0 <= self.index + 1 < self.length:
                 result = self.internal[self.index + 1]
                 if affect: self.index += 1
                 return result
-            elif self.repeating == RepeatMode.all:
+            if self.repeating == RepeatMode.all:
                 result = self.internal[0]
                 if affect: self.index = 0
                 return result
@@ -94,11 +94,11 @@ class Queue:
         if not self.empty:
             if self.repeating == RepeatMode.one:
                 return self.current_track
-            elif 0 <= self.index - 1 < self.length:
+            if 0 <= self.index - 1 < self.length:
                 result = self.internal[self.index - 1]
                 if affect: self.index -= 1
                 return result
-            elif self.repeating == RepeatMode.all:
+            if self.repeating == RepeatMode.all:
                 result = self.internal[self.length - 1]
                 if affect: self.index = self.length - 1
                 return result
@@ -120,7 +120,7 @@ class Player(wavelink.Player):
         # Returns the track to be played in the future depending on the current action.
         if self.action == Action.normal or self.action == Action.skip:
             return self.queue.get_next_track(affect=False)
-        elif self.action == Action.rewind:
+        if self.action == Action.rewind:
             return self.queue.get_previous_track(affect=False)
 
     async def playback(self) -> None:
