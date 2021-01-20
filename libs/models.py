@@ -1,6 +1,5 @@
 from discord.ext import commands
 from libs.mangadex import Mangadex
-from libs.audio import Nodes
 
 import wavelink
 import aiohttp

@@ -1,5 +1,4 @@
 import typing as t
-import operator
 import aiohttp
 
 class Ratings:

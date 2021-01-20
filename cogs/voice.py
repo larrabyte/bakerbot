@@ -1,5 +1,5 @@
 from libs.utilities import Embeds, Colours, Icons, Regexes, Choices
-from libs.audio import Nodes, Queue, Player, Action, RepeatMode
+from libs.audio import Nodes, Player, Action, RepeatMode
 from libs.models import Bakerbot
 from discord.ext import commands
 
