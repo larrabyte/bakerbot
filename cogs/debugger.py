@@ -6,11 +6,19 @@ import traceback as trace
 import logging as log
 import typing as t
 import discord
+import inspect
 
 class Debugger(commands.Cog):
     """Provides a built-in debugger for Bakerbot."""
     def __init__(self, bot: Bakerbot) -> None:
         self.bot = bot
+
+    @commands.command()
+    async def source(self, ctx: commands.Context, *, command: str) -> None:
+        """View the source code of a command."""
+        coroutine = self.bot.get_command(command)
+        code = inspect.getsource(coroutine.callback)
+        await ctx.send(f"```py\n{code}```")
 
     @commands.is_owner()
     @commands.group(invoke_without_subcommand=True)
@@ -67,9 +75,9 @@ class Debugger(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
-        # Prints some debug information to the console.
-        print(f"Connected to Discord (latency: {int(self.bot.latency * 1000)}ms).")
-        await self.bot.change_presence(activity=discord.Game("with the API."))
+        # Log some information to the console as the bot comes online.
+        log.warning("on_ready() event fired! See debug information below:")
+        log.warning(f"Connected to Discord (latency: {int(self.bot.latency * 1000)}ms).")
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: object) -> None:

@@ -1,5 +1,4 @@
 import typing as t
-import operator
 import aiohttp
 
 class Ratings:
@@ -85,6 +84,6 @@ class Mangadex:
         # Create and return a Manga object using the ID and langauge passed in.
         if (metadata := await Mangadex.request(f"manga/{id}")) is not None:
             chapters = await Mangadex.request(f"manga/{id}/chapters")
-            return Manga(metadata=metadata, chapters=chapters, lang="gb")
+            return Manga(metadata=metadata, chapters=chapters, lang=lang)
 
         return None

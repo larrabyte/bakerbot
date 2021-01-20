@@ -1,5 +1,5 @@
 from libs.utilities import Embeds, Colours, Icons, Regexes, Choices
-from libs.audio import Nodes, Queue, Player, Action, RepeatMode
+from libs.audio import Nodes, Player, Action, RepeatMode
 from libs.models import Bakerbot
 from discord.ext import commands
 
@@ -20,7 +20,8 @@ class Voice(commands.Cog, wavelink.WavelinkMixin):
         for player in self.bot.wavelink.players.values():
             self.bot.loop.create_task(player.destroy())
 
-    def get_formatted_length(self, milliseconds: int, fixed: bool) -> t.Tuple[int]:
+    @staticmethod
+    def get_formatted_length(milliseconds: int, fixed: bool) -> t.Tuple[int]:
         # Get a formatted time string as a tuple of (minutes, seconds).
         minutes = str(int(milliseconds // (1000 * 60)))
         seconds = str(int((milliseconds // 1000) % 60))
@@ -47,9 +48,8 @@ class Voice(commands.Cog, wavelink.WavelinkMixin):
     async def get_tracks(self, query: str, search: bool, single: bool) -> t.Union[list, wavelink.Track, None]:
         # Wraps around self.bot.wavelink.get_tracks() for searches/direct URLs.
         results = await self.bot.wavelink.get_tracks(f"ytsearch:{query}" if search else query)
-
         if results is None: return None
-        elif single: return results[0]
+        if single: return results[0]
         return list(results)
 
     @commands.command()
@@ -141,36 +141,35 @@ class Voice(commands.Cog, wavelink.WavelinkMixin):
             embed = discord.Embed(description="Queue is currently empty.", colour=Colours.regular, timestamp=Embeds.now())
             embed.set_footer(text="Try playing some tracks!", icon_url=ctx.author.avatar_url)
             return await ctx.send(embed=embed)
-        else:
-            embed = discord.Embed(colour=Colours.regular, timestamp=Embeds.now())
-            embed.set_footer(text=f"Current repeat mode: {player.queue.repeating.name}.", icon_url=ctx.author.avatar_url)
 
-            # Add a history field if we have tracks in the queue history.
-            if player.queue.history and (text := "") is not None:
-                for index, track in enumerate(player.queue.history):
-                    text += f"**{index + 1}**. [{track.title}]({track.uri})\n"
+        embed = discord.Embed(colour=Colours.regular, timestamp=Embeds.now())
+        embed.set_footer(text=f"Current repeat mode: {player.queue.repeating.name}.", icon_url=ctx.author.avatar_url)
 
-                embed.add_field(name="Queue history:", value=text, inline=False)
+        # Add a history field if we have tracks in the queue history.
+        if player.queue.history and (text := "") is not None:
+            for index, track in enumerate(player.queue.history):
+                text += f"**{index + 1}**. [{track.title}]({track.uri})\n"
+
+            embed.add_field(name="Queue history:", value=text, inline=False)
 
             # Add an upcoming field if we have tracks ahead.
-            if player.queue.upcoming and (text := "") is not None:
-                for index, track in enumerate(player.queue.upcoming):
-                    text += f"**{index + 1}**. [{track.title}]({track.uri})\n"
+        if player.queue.upcoming and (text := "") is not None:
+            for index, track in enumerate(player.queue.upcoming):
+                text += f"**{index + 1}**. [{track.title}]({track.uri})\n"
 
-                embed.add_field(name="Upcoming tracks:", value=text, inline=False)
+            embed.add_field(name="Upcoming tracks:", value=text, inline=False)
 
-            # Add the current track's field and its current status.
-            if (current := player.queue.current_track) is not None:
-                if not player.is_paused:
-                    em, es = self.get_formatted_length(player.position, True)
-                    tm, ts = self.get_formatted_length(current.length, True)
-                    if current.is_stream: title = f"Currently streaming: ```[{em}:{es}]```"
-                    else: title = f"Currently playing: ```[{em}:{es} / {tm}:{ts}]```"
-                else: title = "Currently paused."
+        # Add the current track's field and its current status.
+        if (current := player.queue.current_track) is not None:
+            if not player.is_paused:
+                em, es = self.get_formatted_length(player.position, True)
+                tm, ts = self.get_formatted_length(current.length, True)
+                if current.is_stream: title = f"Currently streaming: ```[{em}:{es}]```"
+                else: title = f"Currently playing: ```[{em}:{es} / {tm}:{ts}]```"
+            else: title = "Currently paused."
 
-                embed.add_field(name=title, value=f"[{current.title}]({current.uri})", inline=False)
-
-            await ctx.send(embed=embed)
+        embed.add_field(name=title, value=f"[{current.title}]({current.uri})", inline=False)
+        await ctx.send(embed=embed)
 
     @commands.command()
     async def repeat(self, ctx: commands.Context, mode: t.Optional[str]) -> None:
@@ -185,7 +184,7 @@ class Voice(commands.Cog, wavelink.WavelinkMixin):
             return await ctx.send(embed=embed)
 
         # Otherwise, just set the mode and display a success message.
-        elif mode == "none": player.queue.repeating = RepeatMode.none
+        if mode == "none": player.queue.repeating = RepeatMode.none
         elif mode == "one": player.queue.repeating = RepeatMode.one
         elif mode == "all": player.queue.repeating = RepeatMode.all
 
