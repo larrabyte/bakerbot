@@ -48,7 +48,12 @@ class Voice(commands.Cog, wavelink.WavelinkMixin):
     async def get_tracks(self, query: str, search: bool, single: bool) -> t.Union[list, wavelink.Track, None]:
         # Wraps around self.bot.wavelink.get_tracks() for searches/direct URLs.
         results = await self.bot.wavelink.get_tracks(f"ytsearch:{query}" if search else query)
-        if results is None: return None
+        if results is None:
+            return None
+
+        if isinstance(results, wavelink.TrackPlaylist):
+            return results.tracks
+
         if single: return results[0]
         return list(results)
 

@@ -3,6 +3,7 @@ from libs.models import Bakerbot
 from discord.ext import commands
 
 import discord
+import random
 
 class Magic(commands.Cog):
     """You can find dumb ideas from Team Magic here."""
@@ -35,6 +36,18 @@ class Magic(commands.Cog):
         """Enable/disable the message sniper."""
         self.omd_enable = not self.omd_enable
         embed = Embeds.status(success=True, desc=f"on_message_delete() listener set to: `{self.omd_enable}`")
+        await ctx.send(embed=embed)
+
+    @magic.command()
+    async def tribute(self, ctx: commands.Context) -> None:
+        """Plays a random tribute from the dinosaur tribute playlist. Thanks Ethan."""
+        playlist = "https://www.youtube.com/playlist?list=PLwHlud7W_cz-yWZOvfQVeg21H018zPIk3"
+        tracks = await self.bot.get_cog("Voice").get_tracks(query=playlist, search=False, single=False)
+        track = random.choice(tracks)
+
+        embed = discord.Embed(colour=Colours.regular, timestamp=Embeds.now())
+        embed.description = f"[{track.title}]({track.uri})"
+        embed.set_footer(text="Enjoy your fetish.", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
     @commands.Cog.listener()
