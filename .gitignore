@@ -6,6 +6,7 @@ data/
 
 # Token and log file
 btoken.py
+diary.txt
 log.txt
 
 # Byte-compiled / optimized / DLL files

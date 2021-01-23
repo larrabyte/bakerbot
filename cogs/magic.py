@@ -42,11 +42,14 @@ class Magic(commands.Cog):
     async def tribute(self, ctx: commands.Context) -> None:
         """Plays a random tribute from the dinosaur tribute playlist. Thanks Ethan."""
         playlist = "https://www.youtube.com/playlist?list=PLwHlud7W_cz-yWZOvfQVeg21H018zPIk3"
-        tracks = await self.bot.get_cog("Voice").get_tracks(query=playlist, search=False, single=False)
+        voice = self.bot.get_cog("Voice")
+
+        tracks = await voice.get_tracks(query=playlist, search=False, single=False)
         track = random.choice(tracks)
+        m, s = voice.get_formatted_length(track.length, fixed=True)
 
         embed = discord.Embed(colour=Colours.regular, timestamp=Embeds.now())
-        embed.description = f"[{track.title}]({track.uri})"
+        embed.description = f"[{track.title}]({track.uri}) `[{m}:{s}]`"
         embed.set_footer(text="Enjoy your fetish.", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 

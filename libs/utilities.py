@@ -14,11 +14,18 @@ class Colours:
 
 class Regexes:
     # Used to detect URLs.
-    urlrx = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+    urls = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+    markdown = re.compile(r"([*_~`|>])")
 
     @classmethod
     def url(cls, string: str) -> bool:
-        return bool(re.match(cls.urlrx, string))
+        # Return whether a given string is a URL or not.
+        return bool(re.match(cls.urls, string))
+
+    @classmethod
+    def escape_markdown(cls, string: str) -> str:
+        # Return a string with escaped markdown characters.
+        return cls.markdown.sub(r"\\\1", string)
 
 class Icons:
     tick = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Flat_tick_icon.svg/500px-Flat_tick_icon.svg.png"
