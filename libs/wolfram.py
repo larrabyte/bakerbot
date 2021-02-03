@@ -23,7 +23,7 @@ class Query:
         # Return a list of tips using self.rawtips.
         if self.rawtips is None:
             return []
-    
+
         if isinstance(self.rawtips, list):
             return [f"-> {tip['text']}." for tip in self.rawtips]
 
@@ -41,41 +41,46 @@ class Wolfram:
     def digest(queries: dict) -> str:
         # Create a digest for a dictionary of queries.
         salt = "vFdeaRwBTVqdc5CL"
-        queries["input"] = urllib.parse.quote_plus(queries["input"])
         for k, v in queries.items(): salt += f"{k}{v}"
 
         # Undo the canonisation done to the input entry and hash.
         signature = hashlib.md5(salt.encode(encoding="utf-8"))
-        queries["input"] = urllib.parse.unquote_plus(queries["input"])
         return signature.hexdigest().upper()
+
+    @staticmethod
+    def nothing(string: str, safe: str, encoding: str=None, errors: object=None) -> str:
+        # Skip URL encoding, don't do anything.
+        return string
 
     @classmethod
     async def request(cls, path: str) -> t.Optional[dict]:
         # Make a HTTP GET request to WolframAlpha's API.
         async with cls.session.get(URL(f"{cls.base}{path}", encoded=True)) as resp:
-            data = await resp.read()
-            data = json.loads(data)
-
             if resp.status != 200:
                 return None
 
+            data = await resp.read()
+            data = json.loads(data)
             return data["queryresult"]
 
     @classmethod
-    async def query(cls, userinput: str) -> t.Optional[Query]:
-        # Handle the setup for sending a query off to the API.
-        # This dictionary must be sorted by the key's alphabetical order!
+    async def query(cls, query: str, formats: str, **kwargs) -> t.Optional[Query]:
         queries = {
             "appid": cls.id,
-            "input": userinput,
+            "format": formats,
+            "input": urllib.parse.quote_plus(query),
             "output": "json",
-            "podstate": "Step-by-step",
+            "podstate": "Step-by-step+solution",
             "reinterpret": "true"
         }
 
+        queries.update(kwargs) # Add any extra kwargs available and sort.
+        queries = {k: v for k, v in sorted(queries.items())}
+
         # Calculate the MD5 signature for this specific query.
         queries.update({"sig": Wolfram.digest(queries)})
-        path = f"query.jsp?{urllib.parse.urlencode(queries)}"
+        encoded = urllib.parse.urlencode(queries, quote_via=Wolfram.nothing)
+        path = f"query.jsp?{encoded}"
 
         if (data := await Wolfram.request(path)) is not None:
             return Query(link=f"{cls.base}{path}", results=data)

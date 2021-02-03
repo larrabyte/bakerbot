@@ -1,10 +1,10 @@
 from libs.models import Bakerbot
 from pathlib import Path
 
-import datetime as dt
 import discord
 import logging
 import btoken
+import sys
 
 if __name__ == "__main__":
     # Discord intents (helps reduce API requests).
@@ -14,7 +14,8 @@ if __name__ == "__main__":
     intents.members = True
 
     # Setup the bot's activity.
-    activity = discord.Game(name="with the API.", start=dt.datetime.utcnow())
+    name = f"Python {sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
+    activity = discord.Streaming(name=name, url="https://www.twitch.tv/larrabyte")
 
     # Setup the logger to output messages to log.txt.
     handler = logging.FileHandler(filename=Path("./log.txt"), encoding="utf-8", mode="w")

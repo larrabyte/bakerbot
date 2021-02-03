@@ -1,10 +1,8 @@
-# Data folder
-data/
-
-# Visual Studio Code: settings folder
+# Things I don't want to be tracked.
+.stfolder/
 .vscode/
-
-# Token and log file
+data/
+.DS_Store
 btoken.py
 diary.txt
 log.txt
