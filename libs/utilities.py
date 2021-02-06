@@ -115,6 +115,14 @@ class Paginator:
             current.description = line
         else: current.description += line
 
+    def add_field(self, name: str, value: str, inline: bool) -> None:
+        # Add fields while respecting the embed's character limit.
+        current = self.embeds[-1] if self.embeds else self.newembed
+        if len(current) + len(name) + len(value) > 6000 or len(current.fields) > 24:
+            current = self.newembed
+
+        current.add_field(name=name, value=value if len(value) < 1024 else f"{value[0:1021]}...", inline=inline)
+
     async def start(self, ctx: commands.Context, users: t.Union[discord.User, t.List[discord.User]]) -> None:
         # Format our embeds before starting the paginator.
         for index, embed in enumerate(self.embeds, 1):

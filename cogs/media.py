@@ -7,7 +7,7 @@ import discord
 import asyncio
 
 class Media(commands.Cog):
-    """Experimental media viewer. Currently home to the manga reader."""
+    """Bakerbot's collection of media. Currently home to the manga reader."""
     def __init__(self, bot: Bakerbot) -> None:
         self.bot = bot
 
