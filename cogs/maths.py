@@ -1,4 +1,4 @@
-from libs.utilities import Embeds, Colours, Icons, Paginator, Regexes
+from libs.utilities import Embeds, Colours, Icons, Regexes
 from libs.wolfram import Wolfram, Query
 from libs.models import Bakerbot
 from discord.ext import commands
@@ -13,7 +13,8 @@ class Maths(commands.Cog):
         self.bot = bot
 
     def checkquery(self, query: Query) -> t.Optional[discord.Embed]:
-        if query is None: # Validate the passed in query (return an Embed if checks fail).
+        # Validate the passed in query (return an Embed if checks fail).
+        if query is None or query.pods is None:
             return Embeds.status(success=False, desc="WolframAlpha failed to respond.")
 
         if query.success == False:
@@ -84,8 +85,10 @@ class Maths(commands.Cog):
         for pod in response.pods:
             for subpod in pod["subpods"]:
                 if (value := subpod.get("plaintext", "")) != "":
+                    if len(value) > 1024:
+                        value = f"{value[0:1021]}..."
+
                     title = string.capwords(subpod["title"] or pod["title"])
-                    value = value if len(value) < 1024 else f"{value[0:1021]}..."
                     embed.add_field(name=title, value=value, inline=False)
 
         await ctx.send(embed=embed)

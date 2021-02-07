@@ -1,6 +1,7 @@
 from libs.mangadex import Mangadex
 from libs.wolfram import Wolfram
 from discord.ext import commands
+from libs.jisho import Jisho
 
 import wavelink
 import aiohttp
@@ -14,3 +15,4 @@ class Bakerbot(commands.Bot):
         # Create tasks to setup other libraries.
         self.loop.create_task(Mangadex.setup(session=self.session))
         self.loop.create_task(Wolfram.setup(session=self.session))
+        self.loop.create_task(Jisho.setup(session=self.session))
