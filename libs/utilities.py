@@ -23,7 +23,7 @@ class Regexes:
         return bool(re.match(cls.urls, string))
 
     @classmethod
-    def escape_markdown(cls, string: str) -> str:
+    def escapemd(cls, string: str) -> str:
         # Return a string with escaped markdown characters.
         return cls.markdown.sub(r"\\\1", string)
 
@@ -86,7 +86,7 @@ class Choices:
         return Choices.emojis.index(reaction.emoji)
 
 class Paginator:
-    emojis = ['⏮', '◀', '▶', '⏭', '⏹']
+    emojis = ["⏮", "◀", "▶", "⏭", "⏹"]
 
     def __init__(self, embeds: t.Optional[t.List[discord.Embed]], message: t.Optional[discord.Message]) -> None:
         self.embeds = embeds if embeds else []

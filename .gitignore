@@ -4,7 +4,6 @@
 data/
 .DS_Store
 btoken.py
-diary.txt
 log.txt
 
 # Byte-compiled / optimized / DLL files

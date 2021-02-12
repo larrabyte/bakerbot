@@ -1,34 +1,61 @@
-from yarl import URL
+from libs.utilities import Regexes
 
 import typing as t
 import aiohttp
 import hashlib
 import urllib
+import yarl
 import json
+
+class Subpod:
+    def __init__(self, title: str, data: object) -> None:
+        self.title = title
+        self.data = data
+
+    @property
+    def plaintext(self) -> t.Optional[str]:
+        # Returns the plaintext for this subpod if available.
+        if (text := self.data.get("plaintext", "")) != "":
+            if len(text) > 1024:
+                return f"{text[0:1021]}..."
+
+            return text
+
+        return None
+
+    @property
+    def image(self) -> t.Optional[str]:
+        # Returns the image for this subpod if available.
+        if (image := self.data.get("img"), None) is not None:
+            return image["src"]
+
+        return None
+
+class Pod:
+    def __init__(self, data: dict) -> None:
+        self.title = data["title"]
+        self.scanner = data["scanner"]
+        self.position = data["position"]
+        self.error = data["error"]
+
+        self.subpods = [Subpod(title=subpod["title"] or self.title, data=subpod) for subpod in data["subpods"]]
 
 class Query:
     def __init__(self, link: str, results: dict) -> None:
         self.success = results["success"]
-        self.error = results["error"]
-        self.return_time = results["timing"]
-        self.process_time = results["parsetiming"]
+        self.timing = results["timing"]
+
+        self.error = True if isinstance(results["error"], dict) else False
+        self.errmsg = results["error"]["msg"] if self.error else ""
+        self.pods = [Pod(pod) for pod in results.get("pods", [])]
+        self.tips = [tip["text"] for tip in results.get("tips", [])]
         self.link = link
 
-        # Attributes that may not necessarily exist.
-        self.rawtips = results.get("tips", None)
-        self.pods = results.get("pods", None)
-
     @property
-    def tips(self) -> t.List[str]:
-        # Return a list of tips using self.rawtips.
-        if self.rawtips is None:
-            return []
-
-        if isinstance(self.rawtips, list):
-            return [f"-> {tip['text']}." for tip in self.rawtips]
-
-        if isinstance(self.rawtips, dict):
-            return [f"-> {self.rawtips['text']}."]
+    def formattedtips(self) -> str:
+        # Return a formatted string of tips.
+        raw = "\n".join([f"-> {tip}." for tip in self.tips])
+        return Regexes.escapemd(raw)
 
 class Wolfram:
     @classmethod
@@ -55,7 +82,7 @@ class Wolfram:
     @classmethod
     async def request(cls, path: str) -> t.Optional[dict]:
         # Make a HTTP GET request to WolframAlpha's API.
-        async with cls.session.get(URL(f"{cls.base}{path}", encoded=True)) as resp:
+        async with cls.session.get(yarl.URL(f"{cls.base}{path}", encoded=True)) as resp:
             if resp.status != 200:
                 return None
 
@@ -70,7 +97,6 @@ class Wolfram:
             "format": formats,
             "input": urllib.parse.quote_plus(query),
             "output": "json",
-            "podstate": "Step-by-step+solution",
             "reinterpret": "true"
         }
 
