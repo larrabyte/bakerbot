@@ -1,10 +1,11 @@
 from libs.utilities import Regexes
+from yarl import URL
 
 import typing as t
 import aiohttp
+import secrets
 import hashlib
 import urllib
-import yarl
 import json
 
 class Subpod:
@@ -45,10 +46,12 @@ class Query:
         self.success = results["success"]
         self.timing = results["timing"]
 
+        tips = results.get("tips", [])
+        self.tips = [tips["text"]] if isinstance(tips, dict) else [tip["text"] for tip in tips]
+
         self.error = True if isinstance(results["error"], dict) else False
         self.errmsg = results["error"]["msg"] if self.error else ""
         self.pods = [Pod(pod) for pod in results.get("pods", [])]
-        self.tips = [tip["text"] for tip in results.get("tips", [])]
         self.link = link
 
     @property
@@ -59,9 +62,10 @@ class Query:
 
 class Wolfram:
     @classmethod
-    async def setup(cls, session: aiohttp.ClientSession) -> None:
+    async def setup(cls, session: aiohttp.ClientSession, signing: bool) -> None:
         cls.base = "https://api.wolframalpha.com/v2/"
-        cls.id = "3H4296-5YPAGQUJK7"
+        cls.id = secrets.wakey
+        cls.signing = signing
         cls.session = session
 
     @staticmethod
@@ -82,7 +86,7 @@ class Wolfram:
     @classmethod
     async def request(cls, path: str) -> t.Optional[dict]:
         # Make a HTTP GET request to WolframAlpha's API.
-        async with cls.session.get(yarl.URL(f"{cls.base}{path}", encoded=True)) as resp:
+        async with cls.session.get(URL(f"{cls.base}{path}", encoded=True)) as resp:
             if resp.status != 200:
                 return None
 
@@ -104,7 +108,7 @@ class Wolfram:
         queries = {k: v for k, v in sorted(queries.items())}
 
         # Calculate the MD5 signature for this specific query.
-        queries.update({"sig": Wolfram.digest(queries)})
+        if cls.signing: queries.update({"sig": Wolfram.digest(queries)})
         encoded = urllib.parse.urlencode(queries, quote_via=Wolfram.nothing)
         path = f"query.jsp?{encoded}"
 

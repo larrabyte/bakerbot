@@ -14,5 +14,5 @@ class Bakerbot(commands.Bot):
 
         # Create tasks to setup other libraries.
         self.loop.create_task(Mangadex.setup(session=self.session))
-        self.loop.create_task(Wolfram.setup(session=self.session))
+        self.loop.create_task(Wolfram.setup(session=self.session, signing=True))
         self.loop.create_task(Jisho.setup(session=self.session))

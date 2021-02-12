@@ -3,7 +3,7 @@ from pathlib import Path
 
 import discord
 import logging
-import btoken
+import secrets
 import sys
 
 if __name__ == "__main__":
@@ -32,4 +32,4 @@ if __name__ == "__main__":
         bot.load_extension(f"cogs.{path.stem}")
 
     # Start the bot.
-    bot.run(btoken.token)
+    bot.run(secrets.dpytoken)

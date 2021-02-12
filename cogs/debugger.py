@@ -7,11 +7,22 @@ import logging as log
 import typing as t
 import discord
 import inspect
+import psutil
 
 class Debugger(commands.Cog):
     """Provides a built-in debugger for Bakerbot."""
     def __init__(self, bot: Bakerbot) -> None:
         self.bot = bot
+
+    @commands.command()
+    async def statistics(self, ctx: commands.Context) -> None:
+        """Print out statistics for this process."""
+        embed = discord.Embed(colour=Colours.regular, timestamp=Embeds.now())
+        embed.set_footer(text="Information gathered using psutil.", icon_url=ctx.author.avatar_url)
+
+        memstats = psutil.Process().memory_full_info()
+        embed.add_field(name="Memory", value=f"{memstats.uss / 1048576:.2f}MiB in use.")
+        await ctx.send(embed=embed)
 
     @commands.command()
     async def source(self, ctx: commands.Context, *, command: str) -> None:

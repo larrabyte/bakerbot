@@ -3,7 +3,7 @@
 .vscode/
 data/
 .DS_Store
-btoken.py
+secrets.py
 log.txt
 
 # Byte-compiled / optimized / DLL files
