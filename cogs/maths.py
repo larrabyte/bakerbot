@@ -40,38 +40,7 @@ class Maths(commands.Cog):
         return None
 
     @commands.command()
-    async def render(self, ctx: commands.Context, *, query: str) -> None:
-        """Render WolframAlpha's interpretation of your query."""
-        async with ctx.typing():
-            response = await Wolfram.query(query=query, formats="image", mag="3", width="1500", podindex="1")
-            if (check := self.checkquery(query=response)) is not None:
-                return await ctx.send(embed=check)
-
-        if (inputpod := next((pod for pod in response.pods if pod.title == "Input"), None)) is None:
-            fail = Embeds.status(success=False, desc="Couldn't find a rendered pod.")
-            return await ctx.send(embed=fail)
-
-        await ctx.send(inputpod.subpods[0].image)
-
-    @commands.command()
-    async def solve(self, ctx: commands.Context, *, query: str) -> None:
-        """Provide step-by-step solutions to the query passed in."""
-        async with ctx.typing():
-            response = await Wolfram.query(query=query, formats="image", mag="3", width="1500", podstate="Step-by-step+solution")
-            if (check := self.checkquery(query=response)) is not None:
-                return await ctx.send(embed=check)
-
-        for pod in response.pods:
-            for subpod in pod.subpods:
-                if subpod.title == "Possible intermediate steps":
-                    return await ctx.send(subpod.image)
-
-        # If we're at this point in code, there were no step-by-step pods found.
-        fail = Embeds.status(success=False, desc="No step-by-step solutions found.")
-        await ctx.send(embed=fail)
-
-    @commands.command()
-    async def wolfram(self, ctx: commands.Context, *, query: str) -> None:
+    async def wa(self, ctx: commands.Context, *, query: str) -> None:
         """Generic WolframAlpha. Ask anything you want!"""
         async with ctx.typing():
             response = await Wolfram.query(query=query, formats="plaintext")
@@ -93,8 +62,8 @@ class Maths(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
-    async def wolfimages(self, ctx: commands.Context, *, query: str) -> None:
-        """WolframAlpha, but it spits out images instead."""
+    async def waimages(self, ctx: commands.Context, *, query: str) -> None:
+        """Generic WolframAlpha, but it spits out images instead of text."""
         async with ctx.typing():
             response = await Wolfram.query(query=query, formats="image", mag="3", width="1500")
             if (check := self.checkquery(query=response)) is not None:
@@ -104,5 +73,36 @@ class Maths(commands.Cog):
             for subpod in pod.subpods:
                 if (image := subpod.image) is not None:
                     await ctx.send(image)
+
+    @commands.command()
+    async def warender(self, ctx: commands.Context, *, query: str) -> None:
+        """Spits out what WolframAlpha thought your query was. Useful for rendering equations."""
+        async with ctx.typing():
+            response = await Wolfram.query(query=query, formats="image", mag="3", width="1500", podindex="1")
+            if (check := self.checkquery(query=response)) is not None:
+                return await ctx.send(embed=check)
+
+        if (inputpod := next((pod for pod in response.pods if pod.title == "Input"), None)) is None:
+            fail = Embeds.status(success=False, desc="Couldn't find a rendered pod.")
+            return await ctx.send(embed=fail)
+
+        await ctx.send(inputpod.subpods[0].image)
+
+    @commands.command()
+    async def wasteps(self, ctx: commands.Context, *, query: str) -> None:
+        """Provide step-by-step solutions to the query passed in. Useful for solving equations."""
+        async with ctx.typing():
+            response = await Wolfram.query(query=query, formats="image", mag="3", width="1500", podstate="Step-by-step+solution")
+            if (check := self.checkquery(query=response)) is not None:
+                return await ctx.send(embed=check)
+
+        for pod in response.pods:
+            for subpod in pod.subpods:
+                if subpod.title == "Possible intermediate steps":
+                    return await ctx.send(subpod.image)
+
+        # If we're at this point in code, there were no step-by-step pods found.
+        fail = Embeds.status(success=False, desc="No step-by-step solutions found.")
+        await ctx.send(embed=fail)
 
 def setup(bot): bot.add_cog(Maths(bot))
