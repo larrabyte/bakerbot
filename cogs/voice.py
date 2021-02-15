@@ -117,8 +117,9 @@ class Voice(commands.Cog, wavelink.WavelinkMixin):
                 embed.description += f"**{index + 1}**. [{track.title}]({track.uri}) ({m}:{s})\n"
 
             # Get a integer selection using Choice.prompt().
-            choice = await Choices.prompt(ctx=ctx, embed=embed, n=5, author_only=True)
-            if choice is None: return await ctx.invoke(self.disconnect)
+            if (choice := await Choices.prompt(ctx=ctx, embed=embed, n=5, author_only=True)) is None:
+                if player.queue.empty: await ctx.invoke(self.disconnect)
+                return
 
             embed = discord.Embed(title="Now queued." if player.is_playing else "Now playing.",
                                   description=f"[{results[choice].title}]({results[choice].uri})",
@@ -183,7 +184,7 @@ class Voice(commands.Cog, wavelink.WavelinkMixin):
 
         # Show a helpful embed if an invalid mode was passed.
         if mode not in ["none", "one", "all"]:
-            embed = discord.Embed(colours=Colours.regular, timestamp=Embeds.now())
+            embed = discord.Embed(colour=Colours.regular, timestamp=Embeds.now())
             embed.description = "Valid repeat modes are: `none`, `one` and `all`."
             embed.set_footer(text=f"The current repeat mode is {player.queue.repeating.name}.", icon_url=Icons.info)
             return await ctx.send(embed=embed)

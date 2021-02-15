@@ -39,7 +39,7 @@ class Maths(commands.Cog):
         # If the query was successful.
         return None
 
-    @commands.command()
+    @commands.command(aliases=["wolfram"])
     async def wa(self, ctx: commands.Context, *, query: str) -> None:
         """Generic WolframAlpha. Ask anything you want!"""
         async with ctx.typing():
@@ -61,7 +61,7 @@ class Maths(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=["wolfimages"])
     async def waimages(self, ctx: commands.Context, *, query: str) -> None:
         """Generic WolframAlpha, but it spits out images instead of text."""
         async with ctx.typing():
@@ -74,7 +74,7 @@ class Maths(commands.Cog):
                 if (image := subpod.image) is not None:
                     await ctx.send(image)
 
-    @commands.command()
+    @commands.command(aliases=["render"])
     async def warender(self, ctx: commands.Context, *, query: str) -> None:
         """Spits out what WolframAlpha thought your query was. Useful for rendering equations."""
         async with ctx.typing():
@@ -88,7 +88,7 @@ class Maths(commands.Cog):
 
         await ctx.send(inputpod.subpods[0].image)
 
-    @commands.command()
+    @commands.command(aliases=["solve"])
     async def wasteps(self, ctx: commands.Context, *, query: str) -> None:
         """Provide step-by-step solutions to the query passed in. Useful for solving equations."""
         async with ctx.typing():
