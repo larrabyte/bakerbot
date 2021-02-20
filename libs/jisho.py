@@ -42,7 +42,7 @@ class Jisho:
 
     @classmethod
     async def request(cls, path: str) -> t.Optional[dict]:
-        # Make a HTTP GET request to the Mangadex API.
+        # Make a HTTP GET request to Jisho's API.
         async with cls.session.get(f"{cls.base}{path}") as resp:
             data = await resp.json()
 
@@ -52,7 +52,7 @@ class Jisho:
             return data["data"]
 
     @classmethod
-    async def search(self, query: str) -> t.Optional[dict]:
+    async def search(cls, query: str) -> t.Optional[dict]:
         # Search the Jisho API for a specific query.
         if (response := await Jisho.request(f"search/words?keyword={query}")) is not None:
             return [Word(words) for words in response[:9]]

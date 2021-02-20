@@ -23,7 +23,7 @@ class Magic(commands.Cog):
     async def magic(self, ctx: commands.Context) -> None:
         """The parent command for all things Team Magic related."""
         if ctx.invoked_subcommand is None:
-            # Since there was no subcommand, inform the user about the module manager and its subcommands.
+            # Since there was no subcommand, inform the user about the group and its subcommands.
             desc = ("Welcome to the Team Magic command group. You can find dumb stuff here.\n"
                     "See `$help magic` for available subcommands.")
 

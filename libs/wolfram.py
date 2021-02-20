@@ -69,10 +69,10 @@ class Wolfram:
         cls.session = session
 
     @staticmethod
-    def digest(queries: dict) -> str:
-        # Create a digest for a dictionary of queries.
+    def digest(params: dict) -> str:
+        # Create a digest for a dictionary of params.
         salt = "vFdeaRwBTVqdc5CL"
-        for k, v in queries.items(): salt += f"{k}{v}"
+        for k, v in params.items(): salt += f"{k}{v}"
 
         # Undo the canonisation done to the input entry and hash.
         signature = hashlib.md5(salt.encode(encoding="utf-8"))
@@ -96,7 +96,7 @@ class Wolfram:
 
     @classmethod
     async def query(cls, query: str, formats: str, **kwargs) -> t.Optional[Query]:
-        queries = {
+        params = {
             "appid": cls.id,
             "format": formats,
             "input": urllib.parse.quote_plus(query),
@@ -104,12 +104,12 @@ class Wolfram:
             "reinterpret": "true"
         }
 
-        queries.update(kwargs) # Add any extra kwargs available and sort.
-        queries = {k: v for k, v in sorted(queries.items())}
+        params.update(kwargs) # Add any extra kwargs available and sort.
+        params = {k: v for k, v in sorted(params.items())}
 
-        # Calculate the MD5 signature for this specific query.
-        if cls.signing: queries.update({"sig": Wolfram.digest(queries)})
-        encoded = urllib.parse.urlencode(queries, quote_via=Wolfram.nothing)
+        # Calculate the MD5 signature for these specific parameters.
+        if cls.signing: params.update({"sig": Wolfram.digest(params)})
+        encoded = urllib.parse.urlencode(params, quote_via=Wolfram.nothing)
         path = f"query.jsp?{encoded}"
 
         if (data := await Wolfram.request(path)) is not None:
