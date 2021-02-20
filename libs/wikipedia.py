@@ -1,5 +1,6 @@
 import typing as t
 import aiohttp
+import urllib
 import html
 
 class Page:
@@ -7,12 +8,14 @@ class Page:
         self.title = metadata["title"]
         self.pageid = metadata["pageid"]
         self.extract = metadata["extract"]
+        self.thumb = metadata.get("thumbnail", {})
 
-        # Thumbnail data.
-        thumb = metadata.get("thumbnail", {})
-        self.thumbnail = thumb.get("source", None)
+    @property
+    def thumbnail(self) -> t.Optional[str]:
+        # Return the thumbnail for this page if available.
+        return self.thumb.get("source", None)
 
-class Results:
+class Result:
     def __init__(self, metadata: dict) -> None:
         self.title = metadata["title"]
         self.pageid = metadata["pageid"]
@@ -20,8 +23,14 @@ class Results:
 
     @property
     def summary(self) -> str:
+        # Return the result's summary with an elipsis.
         snipped = self.snippet.replace("<span class=\"searchmatch\">", "").replace("</span>", "")
         return html.unescape(f"{snipped}...")
+
+    @property
+    def link(self) -> str:
+        # Return a link to this result on Wikipedia.
+        return f"https://en.wikipedia.org/?curid={self.pageid}"
 
 class Wikipedia:
     @classmethod
@@ -47,12 +56,12 @@ class Wikipedia:
             "action": "query",
             "list": "search",
             "srsearch": query,
-            "srlimit": 9,
+            "srlimit": 5,
             "format": "json"
         }
 
         if (response := await Wikipedia.request(path="api.php", params=params)) is not None:
-            return [Results(result) for result in response["search"]]
+            return [Result(result) for result in response["search"]]
 
         return None
 
@@ -71,6 +80,6 @@ class Wikipedia:
         }
 
         if (response := await Wikipedia.request(path="api.php", params=params)) is not None:
-            return Page(response["pages"][f"{pageid}"])
+            return Page(response["pages"][str(pageid)])
 
         return None

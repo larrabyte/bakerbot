@@ -112,9 +112,9 @@ class Voice(commands.Cog, wavelink.WavelinkMixin):
             embed.description = ""
             results = results[:5]
 
-            for index, track in enumerate(results):
+            for index, track in enumerate(results, 1):
                 m, s = self.get_formatted_length(track.length, True)
-                embed.description += f"**{index + 1}**. [{track.title}]({track.uri}) ({m}:{s})\n"
+                embed.description += f"**{index}**. [{track.title}]({track.uri}) ({m}:{s})\n"
 
             # Get a integer selection using Choice.prompt().
             if (choice := await Choices.prompt(ctx=ctx, embed=embed, n=5, author_only=True)) is None:
