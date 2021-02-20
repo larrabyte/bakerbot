@@ -1,3 +1,4 @@
+from libs.wikipedia import Wikipedia
 from libs.mangadex import Mangadex
 from libs.wolfram import Wolfram
 from discord.ext import commands
@@ -16,3 +17,4 @@ class Bakerbot(commands.Bot):
         self.loop.create_task(Mangadex.setup(session=self.session))
         self.loop.create_task(Wolfram.setup(session=self.session, signing=True))
         self.loop.create_task(Jisho.setup(session=self.session))
+        self.loop.create_task(Wikipedia.setup(session=self.session))

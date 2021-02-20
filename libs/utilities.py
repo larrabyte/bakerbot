@@ -33,6 +33,7 @@ class Icons:
     info = "https://icon-library.com/images/info-icon-svg/info-icon-svg-5.jpg"
     illuminati = "https://upload.wikimedia.org/wikipedia/commons/a/a9/Illuminati_triangle_eye.png"
     rfa = "https://upload.wikimedia.org/wikipedia/commons/4/40/Radio_Free_Asia_%28logo%29.png"
+    wikipedia = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Wikipedia-logo-v2.svg/500px-Wikipedia-logo-v2.svg.png"
 
 class Embeds:
     @staticmethod
