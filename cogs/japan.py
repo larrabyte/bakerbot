@@ -22,7 +22,8 @@ class Japan(commands.Cog):
         embed.set_footer(text="こんにちは！", icon_url=ctx.author.avatar_url)
 
         for word in response:
-            description = f"{word.kana}\n**{word.types}:** {word.definitions}"
+            description = f"{word.kana}\n" if word.kana != word.written else ""
+            description += f"**{word.types}:** {word.definitions}"
             embed.add_field(name=f"{word.written}", value=description)
 
         await ctx.send(embed=embed)

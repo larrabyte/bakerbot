@@ -7,16 +7,18 @@ class Word:
         self.tags = metadata["tags"]
         self.jlpt = metadata["jlpt"]
 
-        # Word sense (definition, parts of speech, other info).
-        senses = metadata["senses"][0]
-        self.meanings = senses["english_definitions"]
-        self.speech = senses["parts_of_speech"]
-        self.info = senses["info"]
-
-        # This is where the optional entries come in.
+        # Get the pronunciation and writing of the word.
         furigana = metadata["japanese"][0]
         self.kana = furigana.get("reading", "")
         self.written = furigana.get("word", self.kana)
+
+        # Word senses (definition, parts of speech, readings, etc).
+        self.meanings = set()
+        self.speech = set()
+
+        for sense in metadata["senses"]:
+            self.meanings.update(sense["english_definitions"])
+            self.speech.update(sense["parts_of_speech"])
 
     @property
     def types(self) -> str:
@@ -26,7 +28,11 @@ class Word:
     @property
     def definitions(self) -> str:
         # Return the meanings of this word in a comma-separated list.
-        return ", ".join(self.meanings)
+        meanings = ", ".join(self.meanings)
+        if len(meanings) > 60:
+            return f"{meanings[0:60]}..."
+
+        return meanings
 
 class Jisho:
     @classmethod
