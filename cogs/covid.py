@@ -41,14 +41,14 @@ class Covid(commands.Cog):
         now = datetime.datetime.now()
         execat = datetime.time(20, 30)
         delay = datetime.datetime.combine(now, execat)
-        delta = delay - now
 
-        if delta.days < 0:
+        if (delay - now).days < 0:
             extra = datetime.timedelta(days=1)
             delay = datetime.datetime.combine(now + extra, execat)
 
         # Sleep until 8:30pm.
-        await asyncio.sleep(delta.total_seconds())
+        seconds = (delay - now).total_seconds()
+        await asyncio.sleep(seconds)
 
         channel = self.bot.get_channel(473426067823263753)
         results = await self.backend.request("datafiles/statsLocations.json")
