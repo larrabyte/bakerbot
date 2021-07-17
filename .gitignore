@@ -1,10 +1,53 @@
 # Things I don't want to be tracked.
 .stfolder/
 .vscode/
-data/
 .DS_Store
-secrets.py
-log.txt
+secrets.json
+
+# Music files
+*.3gp
+*.aa
+*.aac
+*.aax
+*.act
+*.aiff
+*.alac
+*.amr
+*.ape
+*.au
+*.awb
+*.dss
+*.dvf
+*.flac
+*.gsm
+*.iklax
+*.ivs
+*.m4a
+*.m4b
+*.m4p
+*.mmf
+*.mp3
+*.mpc
+*.msv
+*.nmf
+*.ogg
+*.oga
+*.mogg
+*.opus
+*.ra
+*.rm
+*.raw
+*.rf64
+*.sln
+*.tta
+*.voc
+*.vox
+*.wav
+*.wma
+*.wv
+*.webm
+*.8svx
+*.cda
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

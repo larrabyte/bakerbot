@@ -1,127 +1,118 @@
-from libs.utilities import Embeds, Colours, Icons
-from libs.models import Bakerbot
-from discord.ext import commands
-
+import discord.ext.commands as commands
 import traceback as trace
-import logging as log
 import typing as t
 import discord
-import inspect
-import psutil
+import model
 
 class Debugger(commands.Cog):
     """Provides a built-in debugger for Bakerbot."""
-    def __init__(self, bot: Bakerbot) -> None:
+    def __init__(self, bot: model.Bakerbot):
+        self.colours = bot.utils.Colours
+        self.icons = bot.utils.Icons
+        self.embeds = bot.utils.Embeds
         self.bot = bot
-
-    @commands.command()
-    async def statistics(self, ctx: commands.Context) -> None:
-        """Print out statistics for this process."""
-        embed = discord.Embed(colour=Colours.regular, timestamp=Embeds.now())
-        embed.set_footer(text="Information gathered using psutil.", icon_url=ctx.author.avatar_url)
-
-        memstats = psutil.Process().memory_full_info()
-        embed.add_field(name="Memory", value=f"{memstats.uss / 1048576:.2f}MiB in use.")
-        await ctx.send(embed=embed)
-
-    @commands.command()
-    async def source(self, ctx: commands.Context, *, command: str) -> None:
-        """View the source code of a command."""
-        coroutine = self.bot.get_command(command)
-        code = inspect.getsource(coroutine.callback)
-        await ctx.send(f"```py\n{code}```")
 
     @commands.is_owner()
     @commands.group(invoke_without_subcommand=True)
-    async def mod(self, ctx: commands.Context) -> None:
+    async def mod(self, ctx: commands.Context):
         """The parent command for the module manager."""
         if ctx.invoked_subcommand is None:
-            # Since there was no subcommand, inform the user about the module manager and its subcommands.
-            desc = ("Welcome to the module manager. This command group is responsible for providing "
-                    "a front end to Bakerbot's extension loading, unloading and reloading functions.\n"
-                    "See `$help debugger` for a full list of available subcommands.")
+            if ctx.subcommand_passed is None:
+                # There is no subcommand: inform the user about the module manager.
+                summary = """Welcome to the module manager. This command group is responsible
+                            for providing a front end to Bakerbot's extension loader/unloader.
+                            See `$help debugger` for a full list of available subcommands."""
 
-            embed = discord.Embed(description=desc, colour=Colours.regular, timestamp=Embeds.now())
-            embed.set_footer(text="Only approved users may execute module manager commands.", icon_url=Icons.info)
-            await ctx.send(embed=embed)
-
-    @mod.command()
-    async def load(self, ctx: commands.Context, cogname: str) -> None:
-        """Extension loader. Pass in `cogname` to load a cog."""
-        self.bot.load_extension(f"cogs.{cogname}")
-        embed = Embeds.status(success=True, desc=f"{cogname} has been loaded.")
-        await ctx.send(embed=embed)
-
-    @mod.command()
-    async def unload(self, ctx: commands.Context, cogname: str) -> None:
-        """Extension unloader. Pass in `cogname` to unload a cog."""
-        self.bot.unload_extension(f"cogs.{cogname}")
-        embed = Embeds.status(success=True, desc=f"{cogname} has been unloaded.")
-        await ctx.send(embed=embed)
+                footer = "Only approved users may execute module manager commands."
+                embed = discord.Embed(colour=self.colours.regular, timestamp=self.embeds.now())
+                embed.description = summary
+                embed.set_footer(text=footer, icon_url=self.icons.info)
+                await ctx.reply(embed=embed)
+            else:
+                # The subcommand was not valid: throw a fit.
+                command = f"${ctx.command.name} {ctx.subcommand_passed}"
+                summary = f"`{command}` is not a valid command."
+                footer = "Try $help debugger for a full list of available subcommands."
+                embed = self.embeds.status(False, summary)
+                embed.set_footer(text=footer, icon_url=self.icons.cross)
+                await ctx.reply(embed=embed)
 
     @mod.command()
-    async def reload(self, ctx: commands.Context, cogname: t.Optional[str]) -> None:
-        """Extension reloader. Reloads all cogs or `cogname` if passed in."""
-        if cogname is None:
-            cogs = [f"cogs.{names.lower()}" for names in self.bot.cogs]
-            for cog in cogs: self.bot.reload_extension(cog)
-        else: self.bot.reload_extension(f"cogs.{cogname}")
-
-        desc = "All modules reloaded." if cogname is None else f"{cogname} has been reloaded."
-        embed = Embeds.status(success=True, desc=desc)
-        await ctx.send(embed=embed)
+    async def load(self, ctx: commands.Context, cog: str):
+        """Extension loader, requires a fully qualified module name."""
+        self.bot.load_extension(cog)
+        embed = self.embeds.status(True, f"{cog} has been loaded.")
+        await ctx.reply(embed=embed)
 
     @mod.command()
-    async def running(self, ctx: commands.Context) -> None:
-        """Get a list of the currently running cogs."""
-        # Get a formatted string of the cog objects (<Cog object at 0xFFFFFFFF>).
-        formatted = "\n".join([str(self.bot.cogs[name]) for name in self.bot.cogs])
-        embed = discord.Embed(title="Currently running cogs:",
-                              description=f"```{formatted}```",
-                              colour=Colours.regular,
-                              timestamp=Embeds.now())
+    async def unload(self, ctx: commands.Context, cog: str):
+        """Extension unloader, requires a fully qualified module name."""
+        self.bot.unload_extension(cog)
+        embed = self.embeds.status(True, f"{cog} has been unloaded.")
+        await ctx.reply(embed=embed)
 
-        embed.set_footer(text=f"{len(self.bot.cogs)} cogs active.", icon_url=Icons.info)
-        await ctx.send(embed=embed)
+    @mod.command()
+    async def reload(self, ctx: commands.Context, cog: t.Optional[str]) -> None:
+        """Extension reloader, reloads all cogs or `cog` if passed in."""
+        if cog is not None:
+            self.bot.reload_extension(cog)
+
+        else: # Refresh the bot's internal state.
+            self.bot.utils = self.bot.loadutils()
+            self.bot.secrets = self.bot.loadsecrets()
+            cache = [c for c in self.bot.cogs]
+
+            for cogs in cache:
+                name = f"cogs.{cogs.lower()}"
+                self.bot.reload_extension(name)
+
+        summary = f"{cog} has been reloaded." if cog is not None else "All modules reloaded."
+        embed = self.embeds.status(True, summary)
+        await ctx.reply(embed=embed)
 
     @commands.Cog.listener()
-    async def on_ready(self) -> None:
-        # Log some information to the console as the bot comes online.
-        log.warning("on_ready() event fired! See debug information below:")
-        log.warning(f"Connected to Discord (latency: {int(self.bot.latency * 1000)}ms).")
-
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx: commands.Context, error: object) -> None:
-        # Catch our exception, perform some Discord magic and send it to the log file.
-        exobj = error.original if isinstance(error, commands.CommandInvokeError) else error
-        log.exception("Exception raised!", exc_info=exobj)
+    async def on_command_error(self, ctx: commands.Context, error: commands.CommandError) -> None:
+        """Catches any exceptions thrown from commands and forwards them to Discord."""
+        ex = error.original if isinstance(error, commands.CommandInvokeError) else error
 
         # Perform custom error handling depending on the type of exception.
-        if isinstance(exobj, commands.CommandNotFound):
-            if (ctx.message.content[1]).isdigit(): return
-            fail = Embeds.status(success=False, desc=f"`{ctx.message.content}` is not a valid command.")
-            fail.set_footer(text=f"Try $help for a list of command groups.", icon_url=Icons.cross)
-            return await ctx.send(embed=fail)
-        elif isinstance(exobj, commands.MissingRequiredArgument):
-            fail = Embeds.status(success=False, desc=f"`{exobj.param.name}` is a required argument that is missing.")
-            fail.set_footer(text=f"Expected an argument of type {exobj.param.annotation.__name__}.", icon_url=Icons.cross)
-            return await ctx.send(embed=fail)
+        if isinstance(ex, commands.CommandNotFound) and not ctx.message.content[1].isdigit():
+            reason = f"`{ctx.message.content}` is not a valid command."
+            footer = f"Try $help for a list of command groups."
+            fail = self.embeds.status(False, reason)
+            fail.set_footer(text=footer, icon_url=self.icons.cross)
+            await ctx.reply(embed=fail)
 
-        # Otherwise, we perform generic error handling.
-        embed = Embeds.status(success=False, desc=None)
-        embed.title = "Exception raised. See below for more information." 
-        embed.description = ""
+        elif isinstance(ex, commands.MissingRequiredArgument):
+            reason = f"`{ex.param.name}` is a required argument that is missing."
+            footer = f"Expected an argument of type {ex.param.annotation.__name__}."
+            fail = self.embeds.status(False, reason)
+            fail.set_footer(text=footer, icon_url=self.icons.cross)
+            await ctx.reply(embed=fail)
 
-        # Extract traceback information if available.
-        if exobj.__traceback__ is not None:
-            embed.title = "Exception raised. Traceback reads as follows:"
-            tb = trace.extract_tb(exobj.__traceback__)
-            embed.description += "".join([f"Error occured in {l[2]}, line {l[1]}:\n   {l[3]}\n" for l in tb])
+        else: # Otherwise, we perform generic error handling.
+            embed = self.embeds.status(False, "")
+            embed.title = "Exception raised. See below for more information." 
 
-        # Package the text/traceback data into an embed field and send it off.
-        if str(exobj) != "": embed.description += str(exobj)
-        else: embed.description += type(exobj).__name__
-        embed.description = f"```{embed.description}```"
-        await ctx.send(embed=embed)
+            # Extract traceback information if available.
+            if (traceback := ex.__traceback__) is not None:
+                embed.title = "Exception raised. Traceback reads as follows:"
 
-def setup(bot): bot.add_cog(Debugger(bot))
+                for l in trace.extract_tb(traceback):
+                    embed.description += f"Error occured in {l[2]}, line {l[1]}:\n"
+                    embed.description += f"    {l[3]}\n"
+
+            # Package the text/traceback data into an embed field and send it off.
+            readable = str(ex) or type(ex).__name__
+            embed.description += readable
+
+            maximum = 6000 - (len(embed.title) + 6)
+            if len(embed.description) > maximum:
+                embed.description = embed.description[:maximum]
+
+            embed.description = f"```{embed.description}```"
+            await ctx.reply(embed=embed)
+
+def setup(bot: model.Bakerbot) -> None:
+    cog = Debugger(bot)
+    bot.add_cog(cog)
