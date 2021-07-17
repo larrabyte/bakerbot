@@ -113,21 +113,31 @@ class SelectionView(discord.ui.View):
     def create(cls, cog: Voice) -> "SelectionView":
         """Creates and returns an instance of `SelectionView`."""
         instance = SelectionView()
+        instance.ids = cog.bot.utils.Identifiers
         instance.colours = cog.bot.utils.Colours
         instance.embeds = cog.bot.utils.Embeds
         instance.icons = cog.bot.utils.Icons
         instance.cog = cog
 
-        # Setup the selection menu.
-        menu = discord.ui.Select(placeholder="Click me!")
+        # Setup the selection menus.
         folder = pathlib.Path("music")
+        filelist = [files for files in folder.iterdir()]
+        tracks = [filelist[i:i + 25] for i in range(0, len(filelist), 25)]
+        cursor = 0
 
-        for files in folder.iterdir():
-            path = str(files)
-            menu.add_option(label=path[:25], value=path)
+        # Use ceiling division to ensure we have enough menus.
+        for i in range(-(-len(filelist) // 25)):
+            id = instance.ids.generate(i)
+            menu = discord.ui.Select(custom_id=id, placeholder=f"Menu #{i + 1}")
+            menu.callback = instance.menu_callback
 
-        menu.callback = instance.menu_callback
-        instance.add_item(menu)
+            for track in tracks[i]:
+                s, t = f"Option #{cursor + 1}", f"{track}"
+                menu.add_option(label=s, value=t, description=t)
+                cursor += 1
+
+            instance.add_item(menu)
+
         return instance
 
     async def menu_callback(self, interaction: discord.Interaction) -> None:
