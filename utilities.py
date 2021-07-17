@@ -47,5 +47,5 @@ class Embeds:
 
     @staticmethod
     def now() -> dt.datetime:
-        """Returns the current UTC time."""
-        return dt.datetime.utcnow()
+        """Returns the current local time."""
+        return dt.datetime.now()

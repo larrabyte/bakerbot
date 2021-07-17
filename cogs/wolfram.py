@@ -200,7 +200,6 @@ class WolframBackend:
     async def request(self, path: str) -> str:
         """Sends a HTTP GET request to the WolframAlpha API."""
         url = yarl.URL(path, encoded=True)
-        print(url)
 
         async with self.session.get(url) as resp:
             data = await resp.read()
