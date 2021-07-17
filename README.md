@@ -10,12 +10,12 @@ $ pip install -r requirements.txt
 Once all the prerequisites are installed, create a `secrets.json` file and format it like so:
 ```json
 {
-    "discord-token": <YOUR DISCORD TOKEN HERE>,
+    "discord-token": "YOUR DISCORD TOKEN HERE",
 
     // Optional fields, you may leave these out.
-    "wolfram-id": <YOUR WOLFRAM ID HERE>,
-    "wolfram-salt": <YOUR WOLFRAM SALT HERE>,
-    "wolfram-hash": <true/false>
+    "wolfram-id": "YOUR WOLFRAM ID HERE",
+    "wolfram-salt": "YOUR WOLFRAM SALT HERE",
+    "wolfram-hash": "true/false"
 }
 ```
 
