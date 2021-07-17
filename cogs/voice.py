@@ -12,6 +12,16 @@ class Voice(commands.Cog):
         self.embeds = bot.utils.Embeds
         self.bot = bot
 
+    def cog_unload(self) -> None:
+        """Ensures a clean disconnect from any voice clients on unload."""
+        for client in self.bot.voice_clients:
+            coro = self.cog_unload_disconnect(client)
+            self.bot.loop.create_task(coro)
+
+    async def cog_unload_disconnect(self, client: discord.VoiceClient) -> None:
+        """Asynchronous unloading task for disconnecting voice clients."""
+        await client.disconnect()
+
     async def connect(self, channel: discord.VoiceChannel) -> None:
         """Either connects or moves the bot to a specific voice channel."""
         client = channel.guild.voice_client
