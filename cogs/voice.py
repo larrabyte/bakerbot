@@ -121,7 +121,7 @@ class SelectionView(discord.ui.View):
 
         # Setup the selection menus.
         folder = pathlib.Path("music")
-        files = folder.iterdir()
+        files = list(folder.iterdir())
         tracks = [files[i:i + 25] for i in range(0, len(files), 25)]
         cursor = 0
 
@@ -146,7 +146,9 @@ class SelectionView(discord.ui.View):
             fail = self.embeds.status(False, "Unable to join a channel.")
             return await interaction.response.edit_message(content=None, embed=fail, view=None)
 
-        choice = self.children[0].values[0]
+        menu = interaction.data["custom_id"]
+        menu = int(self.ids.extract(menu))
+        choice = self.children[menu].values[0]
         track = await discord.FFmpegOpusAudio.from_probe(choice)
 
         client = interaction.guild.voice_client
