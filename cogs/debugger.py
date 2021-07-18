@@ -58,8 +58,8 @@ class Debugger(commands.Cog):
             self.bot.reload_extension(cog)
 
         else: # Refresh the bot's internal state.
-            self.bot.utils = self.bot.loadutils()
-            self.bot.secrets = self.bot.loadsecrets()
+            self.bot.utils = model.Bakerbot.load_utils()
+            self.bot.secrets = model.Bakerbot.load_secrets()
             cache = [c for c in self.bot.cogs]
 
             for cogs in cache:
@@ -78,7 +78,7 @@ class Debugger(commands.Cog):
         # Perform custom error handling depending on the type of exception.
         if isinstance(ex, commands.CommandNotFound) and not ctx.message.content[1].isdigit():
             reason = f"`{ctx.message.content}` is not a valid command."
-            footer = f"Try $help for a list of command groups."
+            footer = "Try $help for a list of command groups."
             fail = self.embeds.status(False, reason)
             fail.set_footer(text=footer, icon_url=self.icons.cross)
             await ctx.reply(embed=fail)

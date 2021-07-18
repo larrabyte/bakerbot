@@ -121,12 +121,12 @@ class SelectionView(discord.ui.View):
 
         # Setup the selection menus.
         folder = pathlib.Path("music")
-        filelist = [files for files in folder.iterdir()]
-        tracks = [filelist[i:i + 25] for i in range(0, len(filelist), 25)]
+        files = folder.iterdir()
+        tracks = [files[i:i + 25] for i in range(0, len(files), 25)]
         cursor = 0
 
         # Use ceiling division to ensure we have enough menus.
-        for i in range(-(-len(filelist) // 25)):
+        for i in range(-(-len(files) // 25)):
             id = instance.ids.generate(i)
             menu = discord.ui.Select(custom_id=id, placeholder=f"Menu #{i + 1}")
             menu.callback = instance.menu_callback

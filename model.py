@@ -8,15 +8,17 @@ class Bakerbot(commands.Bot):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.session = aiohttp.ClientSession()
-        self.secrets = self.loadsecrets()
-        self.utils = self.loadutils()
+        self.secrets = Bakerbot.load_secrets()
+        self.utils = Bakerbot.load_utils()
 
-    def loadsecrets(self) -> dict:
+    @staticmethod
+    def load_secrets() -> dict:
         """Refreshes the bot's secrets dictionary."""
         with open("secrets.json", "r") as file:
             return json.load(file)
 
-    def loadutils(self) -> utilities:
+    @staticmethod
+    def load_utils() -> utilities:
         """Refreshes the bot's utility module."""
         return importlib.reload(utilities)
 

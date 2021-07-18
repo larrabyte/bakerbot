@@ -38,7 +38,7 @@ class WolframView(discord.ui.View):
         """Creates and returns an instance of `WolframView`."""
         instance = WolframView()
         instance.results = await cog.backend.fullresults(params)
-        if not cog.backend.valid(instance.results):
+        if not WolframBackend.valid(instance.results):
             return None
 
         instance.ids = cog.bot.utils.Identifiers
@@ -52,7 +52,8 @@ class WolframView(discord.ui.View):
         instance.add_pod_buttons()
         return instance
 
-    def images(self, pod: dict) -> str:
+    @staticmethod
+    def images(pod: dict) -> str:
         """Returns available image links inside a pod."""
         links = [s["img"]["src"] for s in pod["subpods"]]
         return "\n".join(links)
@@ -107,7 +108,7 @@ class WolframView(discord.ui.View):
         self.params["podindex"] = str(self.cursor + 1)
 
         results = await self.cog.backend.fullresults(self.params)
-        if not self.cog.backend.valid(results):
+        if not WolframBackend.valid(results):
             fail = self.embeds.status(False, "WolframAlpha couldn't answer your query.")
             return await interaction.edit_original_message(content=None, embed=fail, view=None)
 
@@ -118,7 +119,7 @@ class WolframView(discord.ui.View):
         if (states := pod.get("states", None)) is not None:
             self.add_podstate_buttons(states)
 
-        data = self.images(pod)
+        data = WolframView.images(pod)
         await interaction.edit_original_message(content=data, embed=None, view=self)
 
     async def pod_callback(self, interaction: discord.Interaction) -> None:
@@ -134,7 +135,7 @@ class WolframView(discord.ui.View):
         if (states := pod.get("states", None)) is not None:
             self.add_podstate_buttons(states)
 
-        data = self.images(pod)
+        data = WolframView.images(pod)
         await interaction.response.edit_message(content=data, embed=None, view=self)
 
     async def control_callback(self, interaction: discord.Interaction) -> None:
@@ -156,6 +157,13 @@ class WolframBackend:
         self.hashing = bot.secrets.get("wolfram-hash", False)
         self.session = bot.session
 
+    @staticmethod
+    def valid(results: dict) -> bool:
+        """Checks whether WolframAlpha gave a successful response."""
+        success = results.get("success", False)
+        error = results.get("error", True)
+        return success and not error
+
     @property
     def available(self) -> bool:
         """Checks whether the backend is available for use."""
@@ -163,12 +171,6 @@ class WolframBackend:
         hashoff = self.hashing is False
         hashon = self.hashing is True and self.salt is not None
         return token and (hashon or hashoff)
-
-    def valid(self, results: dict) -> bool:
-        """Checks whether WolframAlpha gave a successful response."""
-        success = results.get("success", False)
-        error = results.get("error", True)
-        return success and not error
 
     def digest(self, results: dict) -> str:
         """Returns an MD5 digest of `results`."""
