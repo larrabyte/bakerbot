@@ -20,6 +20,10 @@ class Covid(commands.Cog):
         # Start the statistics task.
         self.covid_task.start()
 
+    def cog_unload(self):
+        """Handles task cancellation on cog unload."""
+        self.covid_task.cancel()
+
     def covid_embed(self, results: dict) -> discord.Embed:
         """Creates and returns a COVID-19 statistics embed."""
         time = datetime.datetime.utcnow().strftime("%A, %d %B %Y")
