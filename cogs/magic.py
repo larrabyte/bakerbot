@@ -10,13 +10,13 @@ class Magic(commands.Cog):
         self.colours = bot.utils.Colours
         self.icons = bot.utils.Icons
         self.embeds = bot.utils.Embeds
-        self.guildID = 473426067823263749
+        self.magic = 473426067823263749
         self.omdsnipe = False
         self.bot = bot
 
     async def cog_check(self, ctx: commands.Context) -> None:
         # Ensure that these commands can only be run from Team Magic.
-        if ctx.guild.id == self.guildID:
+        if ctx.guild.id == self.magic:
             return True
 
         return False
@@ -72,7 +72,7 @@ class Magic(commands.Cog):
     @commands.Cog.listener()
     async def on_message_delete(self, message: discord.Message) -> None:
         """Resends deleted messages. Triggered by the nodelete command."""
-        if self.omdsnipe and message.guild.id == self.guildID:
+        if self.omdsnipe and message.guild.id == self.magic:
             await message.channel.send(f"> Sent by {message.author.mention}\n{message.content}")
 
 def setup(bot):

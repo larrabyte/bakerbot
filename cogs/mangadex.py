@@ -20,7 +20,7 @@ class Mangadex(commands.Cog):
         """The parent command for the manga reader."""
         if ctx.invoked_subcommand is None:
             if ctx.subcommand_passed is None:
-                # There is no subcommand: inform the user about the module manager.
+                # There is no subcommand: inform the user about the manga reader.
                 summary = """Hi! Welcome to Bakerbot's manga reader.
                             This cog houses commands for searching and reading manga.
                             See `$help mangadex` for a full list of available subcommands."""
@@ -41,7 +41,7 @@ class Mangadex(commands.Cog):
     @manga.command()
     async def info(self, ctx: commands.Context, *, title: str) -> None:
         """Get information on a manga given a `title` as the search query."""
-        with ctx.typing():
+        async with ctx.typing():
             searches = await self.backend.search(title, 1)
             manga = searches["results"][0]
             thumbnail = await self.backend.cover(manga)

@@ -20,7 +20,7 @@ class Textgen(commands.Cog):
         """The parent command for the text generation API."""
         if ctx.invoked_subcommand is None:
             if ctx.subcommand_passed is None:
-                # There is no subcommand: inform the user about the module manager.
+                # There is no subcommand: inform the user about the text generator.
                 summary = """Hi! Welcome to Bakerbot's text generation command group.
                             This cog houses commands that interface with the Hugging Face API.
                             See `$help textgen` for a full list of available subcommands."""
@@ -41,10 +41,9 @@ class Textgen(commands.Cog):
     @text.command()
     async def generate(self, ctx: commands.Context, *, query: str) -> None:
         """Generates text, using `query` as the base."""
-        with ctx.typing():
+        async with ctx.typing():
             model = "EleutherAI/gpt-neo-2.7B"
             data = await self.backend.generate(model, query, self.maximum)
-            data = data[0:1024]
 
         await ctx.reply(data)
 

@@ -42,7 +42,7 @@ class Voice(commands.Cog):
         """The parent command for voice client management."""
         if ctx.invoked_subcommand is None:
             if ctx.subcommand_passed is None:
-                # There is no subcommand: inform the user about the module manager.
+                # There is no subcommand: inform the user about voice clients.
                 summary = """Hi! Welcome to Bakerbot's voice client command group.
                             This cog houses commands related to audio.
                             See `$help voice` for a full list of available subcommands."""
@@ -66,7 +66,7 @@ class Voice(commands.Cog):
         embed = self.embeds.status(True, None)
         saved = 0
 
-        with ctx.typing():
+        async with ctx.typing():
             for attachment in ctx.message.attachments:
                 filepath = f"music/{attachment.filename}"
                 if pathlib.Path(filepath).is_file():
