@@ -1,9 +1,7 @@
 import discord.ext.commands as commands
 import secrets
-import aiohttp
 import asyncio
 import discord
-import random
 import model
 
 class Magic(commands.Cog):

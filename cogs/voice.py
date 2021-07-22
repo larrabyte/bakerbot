@@ -61,6 +61,22 @@ class Voice(commands.Cog):
                 await ctx.reply(embed=embed)
 
     @vc.command()
+    async def upload(self, ctx: commands.Context) -> None:
+        """Uploads a file to Bakerbot's music repository."""
+        embed = self.embeds.status(True, None)
+        saved = 0
+
+        with ctx.typing():
+            for attachment in ctx.message.attachments:
+                filepath = f"music/{attachment.filename}"
+                if pathlib.Path(filepath).is_file():
+                    await attachment.save(filepath)
+                    saved += 1
+
+        embed.description = f"Uploaded {saved} files!"
+        await ctx.reply(embed=embed)
+
+    @vc.command()
     async def play(self, ctx: commands.Context, track: t.Optional[str]) -> None:
         """Plays audio tracks from the music folder."""
         if track is None:

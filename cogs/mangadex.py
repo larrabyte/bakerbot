@@ -99,7 +99,6 @@ class MangadexBackend:
         return f"https://uploads.mangadex.org/covers/{mangaUUID}/{filename}"
 
 def setup(bot: model.Bakerbot) -> None:
-
     backend = MangadexBackend(bot)
     cog = Mangadex(bot, backend)
     bot.add_cog(cog)
