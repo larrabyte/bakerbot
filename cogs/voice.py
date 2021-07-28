@@ -127,7 +127,6 @@ class SelectionView(discord.ui.View):
     """A discord.ui.View subclass for audio selection."""
     def __init__(self, cog: Voice) -> None:
         super().__init__()
-
         self.ids = cog.bot.utils.Identifiers
         self.colours = cog.bot.utils.Colours
         self.embeds = cog.bot.utils.Embeds
