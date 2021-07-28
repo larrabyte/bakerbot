@@ -80,7 +80,7 @@ class Voice(commands.Cog):
     async def play(self, ctx: commands.Context, track: t.Optional[str]) -> None:
         """Plays audio tracks from the music folder."""
         if track is None:
-            view = SelectionView.create(self)
+            view = SelectionView(self)
             content = "Please select a track from the dropdown menu."
             return await ctx.reply(content, view=view)
 
@@ -125,36 +125,32 @@ class Voice(commands.Cog):
 
 class SelectionView(discord.ui.View):
     """A discord.ui.View subclass for audio selection."""
-    @classmethod
-    def create(cls, cog: Voice) -> "SelectionView":
-        """Creates and returns an instance of `SelectionView`."""
-        instance = SelectionView()
-        instance.ids = cog.bot.utils.Identifiers
-        instance.colours = cog.bot.utils.Colours
-        instance.embeds = cog.bot.utils.Embeds
-        instance.icons = cog.bot.utils.Icons
-        instance.cog = cog
+    def __init__(self, cog: Voice) -> None:
+        super().__init__()
+
+        self.ids = cog.bot.utils.Identifiers
+        self.colours = cog.bot.utils.Colours
+        self.embeds = cog.bot.utils.Embeds
+        self.icons = cog.bot.utils.Icons
+        self.cog = cog
 
         # Setup the selection menus.
-        folder = pathlib.Path("music")
-        files = list(folder.iterdir())
+        files = list(pathlib.Path("music").iterdir())
         tracks = [files[i:i + 25] for i in range(0, len(files), 25)]
         cursor = 0
 
         # Use ceiling division to ensure we have enough menus.
         for i in range(-(-len(files) // 25)):
-            id = instance.ids.generate(i)
+            id = self.ids.generate(i)
             menu = discord.ui.Select(custom_id=id, placeholder=f"Menu #{i + 1}")
-            menu.callback = instance.menu_callback
+            menu.callback = self.menu_callback
 
             for track in tracks[i]:
                 s, t = f"Option #{cursor + 1}", f"{track}"
                 menu.add_option(label=s, value=t, description=t)
                 cursor += 1
 
-            instance.add_item(menu)
-
-        return instance
+            self.add_item(menu)
 
     async def menu_callback(self, interaction: discord.Interaction) -> None:
         """Handles menu interactions."""
