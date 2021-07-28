@@ -7,6 +7,9 @@ import model
 class Shulong(commands.Cog):
     """You can find scrumptious ideas from Shulong here."""
     def __init__(self, bot: model.Bakerbot) -> None:
+        self.colours = bot.utils.Colours
+        self.icons = bot.utils.Icons
+        self.embeds = bot.utils.Embeds
         self.bot = bot
 
     @commands.group(invoke_without_subcommand=True)
@@ -40,16 +43,16 @@ class Shulong(commands.Cog):
         await ctx.reply(character)
 
     @shulong.command()
-    async def dyslexify(self, ctx: commands.Context, category: t.Optional[discord.CategoryChannel]) -> None:
+    async def dyslexify(self, ctx: commands.Context, guild: t.Optional[discord.Guild]) -> None:
         """Turns server layouts into mush. Surprisingly, doesn't leave logs behind!"""
-        categories = [category] if category is not None else ctx.guild.categories
+        guild = guild or ctx.guild
 
-        for group in categories:
-            outside = random.randint(0, len(categories))
+        for group in guild.categories:
+            outside = random.randint(0, len(guild.categories))
             await group.move(beginning=True, offset=outside)
 
             for channel in group.channels:
-                inside = random.randint(0, len(ctx.guild.categories))
+                inside = random.randint(0, len(group.channels))
                 await channel.move(beginning=True, offset=inside)
 
         await ctx.reply("Swag!")
