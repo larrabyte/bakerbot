@@ -1,4 +1,3 @@
-from discord import interactions
 import discord.ext.commands as commands
 import discord.ext.tasks as tasks
 import typing as t
@@ -51,17 +50,17 @@ class Shulong(commands.Cog):
         await ctx.reply(character)
 
     @shulong.command()
-    async def dyslexify(self, ctx: commands.Context) -> None:
-        """Turns server layouts into mush. Surprisingly, doesn't leave logs behind!"""
-        view = DyslexifierView(self, self.bot.guilds, 0)
-        await ctx.reply("Who has wronged you today?", view=view)
+    async def special(self, ctx: commands.Context, mode: str) -> None:
+        """For people who you wish to punish (but in a discreet way)."""
+        if mode == "start":
+            response = "Who has wronged you today?"
+            guilds = self.bot.guilds
+        elif mode == "stop":
+            response = "Who is spared from the wrath of the Shulong Special?"
+            guilds = self.dyslexifier.guilds(self.bot)
 
-    @shulong.command()
-    async def undyslexify(self, ctx: commands.Context) -> None:
-        """Stops the server layout musher."""
-        guilds = [self.bot.get_guild(id) for id in self.dyslexifier.guilds()]
-        view = DyslexifierView(self, guilds, 1)
-        await ctx.reply("Who is spared from the wrath of the Shulong Special?", view=view)
+        view = DyslexifierView(self, guilds, mode)
+        await ctx.reply(response, view=view)
 
 class DyslexifierView(discord.ui.View):
     """A subclass of `discord.ui.View` for the Dyslexifier."""
@@ -99,11 +98,10 @@ class DyslexifierView(discord.ui.View):
         guild = int(menu.values[0])
         guild = self.cog.bot.get_guild(guild)
 
-        if self.mode == 0:
-            # Zero corresponds to adding.
+        if self.mode == "start":
             self.cog.dyslexifier.add(guild)
             embed = self.embeds.status(True, f"`{guild.name}` is now experiencing the Shulong Special.")
-        elif self.mode == 1:
+        elif self.mode == "stop":
             # One corresponds to removing.
             self.cog.dyslexifier.remove(guild)
             embed = self.embeds.status(True, f"`{guild.name}` is no longer experiencing the Shulong Special.")
@@ -140,9 +138,9 @@ class Dyslexifier:
 
         self.internal.clear()
 
-    def guilds(self) -> t.List[int]:
+    def guilds(self, bot: model.Bakerbot) -> t.List[discord.Guild]:
         """Returns a list of guild IDs that this Dyslexifier is managing."""
-        return [guild for guild in self.internal.keys()]
+        return [bot.get_guild(guild) for guild in self.internal.keys()]
 
     def get_random_category(self, guild: discord.Guild) -> t.Optional[discord.CategoryChannel]:
         """Returns a random category from the guild."""
