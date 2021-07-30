@@ -1,6 +1,8 @@
 import discord.ext.commands as commands
+import discord.ext.tasks as tasks
 import typing as t
 import discord
+import asyncio
 import random
 import model
 
@@ -10,7 +12,12 @@ class Shulong(commands.Cog):
         self.colours = bot.utils.Colours
         self.icons = bot.utils.Icons
         self.embeds = bot.utils.Embeds
+        self.dyslexifier = Dyslexifier()
         self.bot = bot
+
+    def cog_unload(self) -> None:
+        """Ensure that all tasks are cancelled on unload."""
+        self.dyslexifier.clear()
 
     @commands.group(invoke_without_subcommand=True)
     async def shulong(self, ctx: commands.Context) -> None:
@@ -43,19 +50,66 @@ class Shulong(commands.Cog):
         await ctx.reply(character)
 
     @shulong.command()
-    async def dyslexify(self, ctx: commands.Context, guild: t.Optional[discord.Guild]) -> None:
+    async def dyslexify(self, ctx: commands.Context, guild: discord.Guild) -> None:
         """Turns server layouts into mush. Surprisingly, doesn't leave logs behind!"""
-        guild = guild or ctx.guild
+        self.dyslexifier.add(guild)
+        await ctx.reply(f"Dyslexifier started for `{guild.name}`!")
 
-        for group in guild.categories:
-            outside = random.randint(0, len(guild.categories))
-            await group.move(beginning=True, offset=outside)
+    @shulong.command()
+    async def undyslexify(self, ctx: commands.Context, guild: discord.Guild) -> None:
+        """Stop the dyslexifier."""
+        self.dyslexifier.remove(guild)
+        await ctx.reply(f"Dyslexifier removed for `{guild.name}`!")
 
-            for channel in group.channels:
-                inside = random.randint(0, len(group.channels))
-                await channel.move(beginning=True, offset=inside)
+class Dyslexifier:
+    """A class that abstracts the dyslexification tasks."""
+    def __init__(self) -> None:
+        self.internal = {}
 
-        await ctx.reply("Swag!")
+    def add(self, guild: discord.Guild) -> None:
+        """Adds a dyslexifier task for `guild`."""
+        cache = self.internal.get(guild.id, None)
+        if cache is not None and not cache.is_running():
+            cache.start(guild)
+
+        task = tasks.loop(seconds=1)(self.routine)
+        self.internal[guild.id] = task
+        task.start(guild)
+
+    def remove(self, guild: discord.Guild) -> None:
+        """Removes the dyslexifier task for `guild`."""
+        if guild.id in self.internal:
+            task = self.internal[guild.id]
+            task.cancel()
+
+            del self.internal[guild.id]
+
+    def clear(self) -> None:
+        """Stops all dyslexifier tasks."""
+        for task in self.internal.values():
+            task.cancel()
+
+        self.internal.clear()
+
+    def get_random_category(self, guild: discord.Guild) -> t.Optional[discord.CategoryChannel]:
+        """Returns a random category from the guild."""
+        if not guild.categories:
+            return None
+
+        return random.choice(guild.categories)
+
+    def get_random_index(self, guild: discord.Guild, category: t.Optional[discord.CategoryChannel]) -> int:
+        """Returns an appropriate random index for a channel in `category`."""
+        maximum = len(guild.channels) if category is None else len(category.channels)
+        return random.randint(0, maximum)
+
+    async def routine(self, guild: discord.Guild) -> None:
+        """The dyslexification routine run for each guild."""
+        for channel in guild.channels:
+            category = self.get_random_category(guild)
+            index = self.get_random_index(guild, category)
+            await channel.move(beginning=True, category=category, index=index)
+            await asyncio.sleep(1)
 
 def setup(bot: model.Bakerbot) -> None:
     cog = Shulong(bot)
