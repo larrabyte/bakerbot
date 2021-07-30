@@ -1,6 +1,12 @@
 import datetime as dt
+import typing as t
 import discord
 import os
+
+def chunk(lst: list, n: int) -> t.Generator:
+    """Yields successive n-sized chunks from `lst`."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
 
 class Colours:
     regular = 0xF5CC00

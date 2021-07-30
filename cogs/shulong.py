@@ -1,3 +1,4 @@
+from discord import interactions
 import discord.ext.commands as commands
 import discord.ext.tasks as tasks
 import typing as t
@@ -50,16 +51,64 @@ class Shulong(commands.Cog):
         await ctx.reply(character)
 
     @shulong.command()
-    async def dyslexify(self, ctx: commands.Context, guild: discord.Guild) -> None:
+    async def dyslexify(self, ctx: commands.Context) -> None:
         """Turns server layouts into mush. Surprisingly, doesn't leave logs behind!"""
-        self.dyslexifier.add(guild)
-        await ctx.reply(f"Dyslexifier started for `{guild.name}`!")
+        view = DyslexifierView(self, self.bot.guilds, 0)
+        await ctx.reply("Who has wronged you today?", view=view)
 
     @shulong.command()
-    async def undyslexify(self, ctx: commands.Context, guild: discord.Guild) -> None:
-        """Stop the dyslexifier."""
-        self.dyslexifier.remove(guild)
-        await ctx.reply(f"Dyslexifier removed for `{guild.name}`!")
+    async def undyslexify(self, ctx: commands.Context) -> None:
+        """Stops the server layout musher."""
+        guilds = [self.bot.get_guild(id) for id in self.dyslexifier.guilds()]
+        view = DyslexifierView(self, guilds, 1)
+        await ctx.reply("Who is spared from the wrath of the Shulong Special?", view=view)
+
+class DyslexifierView(discord.ui.View):
+    """A subclass of `discord.ui.View` for the Dyslexifier."""
+    def __init__(self, cog: Shulong, guilds: t.List[discord.Guild], mode: int) -> None:
+        super().__init__()
+        self.ids = cog.bot.utils.Identifiers
+        self.colours = cog.bot.utils.Colours
+        self.embeds = cog.bot.utils.Embeds
+        self.icons = cog.bot.utils.Icons
+        self.mode = mode
+        self.cog = cog
+
+        # Use ceiling division to ensure we have enough menus.
+        chunked = cog.bot.utils.chunk(guilds, 25)
+        menus = -(-len(guilds) // 25)
+
+        for i in range(menus):
+            identifier = self.ids.generate(i)
+            placeholder = f"Menu #{i + 1}"
+            menu = discord.ui.Select(custom_id=identifier, placeholder=placeholder)
+            menu.callback = self.menu_callback
+
+            for guild in next(chunked):
+                label = f"{guild.name[0:22]}..." if len(guild.name) > 25 else guild.name
+                description = guild.description or "No description available."
+                menu.add_option(label=label, value=guild.id, description=description)
+
+            self.add_item(menu)
+
+    async def menu_callback(self, interaction: discord.Interaction) -> None:
+        """Called when a user selects a guild."""
+        identifier = interaction.data["custom_id"]
+        identifier = int(self.ids.extract(identifier))
+        menu = self.children[identifier]
+        guild = int(menu.values[0])
+        guild = self.cog.bot.get_guild(guild)
+
+        if self.mode == 0:
+            # Zero corresponds to adding.
+            self.cog.dyslexifier.add(guild)
+            embed = self.embeds.status(True, f"`{guild.name}` is now experiencing the Shulong Special.")
+        elif self.mode == 1:
+            # One corresponds to removing.
+            self.cog.dyslexifier.remove(guild)
+            embed = self.embeds.status(True, f"`{guild.name}` is no longer experiencing the Shulong Special.")
+
+        await interaction.response.edit_message(content=None, embed=embed, view=None)
 
 class Dyslexifier:
     """A class that abstracts the dyslexification tasks."""
@@ -90,6 +139,10 @@ class Dyslexifier:
             task.cancel()
 
         self.internal.clear()
+
+    def guilds(self) -> t.List[int]:
+        """Returns a list of guild IDs that this Dyslexifier is managing."""
+        return [guild for guild in self.internal.keys()]
 
     def get_random_category(self, guild: discord.Guild) -> t.Optional[discord.CategoryChannel]:
         """Returns a random category from the guild."""

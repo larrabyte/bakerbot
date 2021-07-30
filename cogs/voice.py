@@ -133,13 +133,13 @@ class SelectionView(discord.ui.View):
         self.icons = cog.bot.utils.Icons
         self.cog = cog
 
-        # Setup the selection menus.
+        # Use ceiling division to ensure we have enough menus.
         files = list(pathlib.Path("music").iterdir())
-        tracks = [files[i:i + 25] for i in range(0, len(files), 25)]
+        tracks = cog.bot.utils.chunk(files, 25)
+        menus = -(-len(files) // 25)
         cursor = 0
 
-        # Use ceiling division to ensure we have enough menus.
-        for i in range(-(-len(files) // 25)):
+        for i in range(menus):
             id = self.ids.generate(i)
             menu = discord.ui.Select(custom_id=id, placeholder=f"Menu #{i + 1}")
             menu.callback = self.menu_callback
