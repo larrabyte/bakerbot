@@ -24,7 +24,7 @@ class Debugger(commands.Cog):
                             See `$help debugger` for a full list of available subcommands."""
 
                 footer = "Only approved users may execute module manager commands."
-                embed = discord.Embed(colour=self.colours.regular, timestamp=self.embeds.now())
+                embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
                 embed.description = summary
                 embed.set_footer(text=footer, icon_url=self.icons.info)
                 await ctx.reply(embed=embed)

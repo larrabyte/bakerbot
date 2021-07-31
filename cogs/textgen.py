@@ -25,7 +25,7 @@ class Textgen(commands.Cog):
                             This cog houses commands that interface with the Hugging Face API.
                             See `$help textgen` for a full list of available subcommands."""
 
-                embed = discord.Embed(colour=self.colours.regular, timestamp=self.embeds.now())
+                embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
                 embed.description = summary
                 embed.set_footer(text="Powered by the Hugging Face API.", icon_url=self.icons.info)
                 await ctx.reply(embed=embed)
@@ -51,7 +51,7 @@ class Textgen(commands.Cog):
     async def maxlen(self, ctx: commands.Context, maximum: t.Optional[int]) -> None:
         """Query or set the maximum number of characters returned by the API."""
         info = f"The maximum is currently `{self.maximum}`." if maximum is None else f"The maximum has been set to `{maximum}`."
-        embed = discord.Embed(description=info, colour=self.colours.regular, timestamp=self.embeds.now())
+        embed = discord.Embed(description=info, colour=self.colours.regular, timestamp=discord.utils.utcnow())
         embed.set_footer(text="Powered by the Hugging Face API.", icon_url=self.icons.info)
         self.maximum = maximum or self.maximum
         await ctx.reply(embed=embed)

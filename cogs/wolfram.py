@@ -67,10 +67,10 @@ class WolframView(discord.ui.View):
             else:
                 name = state["name"]
                 param = state["input"]
-                id = self.ids.generate(param)
+                identifier = self.ids.generate(param)
                 label = tcase.titlecase(name)
 
-                button = discord.ui.Button(label=label, custom_id=id)
+                button = discord.ui.Button(label=label, custom_id=identifier)
                 button.callback = self.podstate_callback
                 self.add_item(button)
 
@@ -80,31 +80,31 @@ class WolframView(discord.ui.View):
 
         for index, pod in enumerate(pods):
             title = pod["title"]
-            id = self.ids.generate(index)
+            identifier = self.ids.generate(index)
             title = tcase.titlecase(title)
 
-            button = discord.ui.Button(label=title, custom_id=id)
+            button = discord.ui.Button(label=title, custom_id=identifier)
             button.callback = self.pod_callback
             self.add_item(button)
 
     def add_control_buttons(self) -> None:
         """Adds control buttons to the view's item list."""
-        id = self.ids.generate("back")
-        back = discord.ui.Button(label="Back", custom_id=id)
+        identifier = self.ids.generate("back")
+        back = discord.ui.Button(label="Back", custom_id=identifier)
         back.callback = self.control_callback
         self.add_item(back)
 
     async def podstate_callback(self, interaction: discord.Interaction) -> None:
         """Handles podstate button presses."""
         # Defer the interaction as we need to make another request.
-        embed = discord.Embed(colour=self.colours.regular, timestamp=self.embeds.now())
+        embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
         embed.description = "Please wait as another WolframAlpha API request is made."
         embed.set_footer(text="Interaction deferred.", icon_url=self.icons.info)
         await interaction.response.edit_message(content=None, embed=embed, view=None)
 
-        id = interaction.data["custom_id"]
-        id = self.ids.extract(id)
-        self.params["podstate"] = id
+        identifier = interaction.data["custom_id"]
+        identifier = self.ids.extract(identifier)
+        self.params["podstate"] = identifier
         self.params["podindex"] = str(self.cursor + 1)
 
         results = await self.cog.backend.fullresults(self.params)
@@ -124,9 +124,9 @@ class WolframView(discord.ui.View):
 
     async def pod_callback(self, interaction: discord.Interaction) -> None:
         """Handles pod-based button presses."""
-        id = interaction.data["custom_id"]
-        id = self.ids.extract(id)
-        self.cursor = int(id)
+        identifier = interaction.data["custom_id"]
+        identifier = self.ids.extract(identifier)
+        self.cursor = int(identifier)
 
         self.clear_items()
         self.add_control_buttons()
@@ -140,11 +140,11 @@ class WolframView(discord.ui.View):
 
     async def control_callback(self, interaction: discord.Interaction) -> None:
         """Handles control button presses."""
-        id = interaction.data["custom_id"]
-        id = self.ids.extract(id)
+        identifier = interaction.data["custom_id"]
+        identifier = self.ids.extract(identifier)
         data = "Press any button to view its content."
 
-        if id == "back":
+        if identifier == "back":
             self.clear_items()
             self.add_pod_buttons()
             await interaction.response.edit_message(content=data, embed=None, view=self)

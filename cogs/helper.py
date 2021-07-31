@@ -17,7 +17,7 @@ class Helper(commands.Cog):
             fail = self.embeds.status(False, f"Could not find the `{cogname}` cog.")
             return fail
 
-        embed = discord.Embed(colour=self.colours.regular, timestamp=self.embeds.now())
+        embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
         footer = "Arguments enclosed in <> are required while [] are optional."
         embed.set_footer(text=footer, icon_url=self.icons.info)
 
@@ -31,7 +31,7 @@ class Helper(commands.Cog):
 
     def general_help(self) -> discord.Embed:
         """Returns documentation for Bakerbot."""
-        embed = discord.Embed(colour=self.colours.regular, timestamp=self.embeds.now())
+        embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
         footer = "Typing $help [cogname] will display commands in that cog."
         embed.set_footer(text=footer, icon_url=self.icons.info)
 

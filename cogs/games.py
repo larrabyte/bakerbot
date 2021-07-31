@@ -24,7 +24,7 @@ class Games(commands.Cog):
                             This cog houses swag and epic commands related to gaming.
                             See `$help games` for a full list of available subcommands."""
 
-                embed = discord.Embed(colour=self.colours.regular, timestamp=self.embeds.now())
+                embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
                 embed.description = summary
                 embed.set_footer(text="Powered by the Hugging Face API.", icon_url=self.icons.info)
                 await ctx.reply(embed=embed)
@@ -200,7 +200,7 @@ class MonopolyPlayerJoiner(discord.ui.View):
 
         self.embed.title = "Bakerbot: Monopoly, but it's open-source!"
         self.embed.colour = self.game.cog.colours.regular
-        self.embed.timestamp = self.game.cog.embeds.now()
+        self.embed.timestamp = discord.utils.utcnow()
         await ctx.reply(embed=self.embed, view=self)
 
 class MonopolyPlayer:

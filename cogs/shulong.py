@@ -29,7 +29,7 @@ class Shulong(commands.Cog):
                             This cog houses commands that are scrumptious (his words).
                             See `$help shulong` for a full list of available subcommands."""
 
-                embed = discord.Embed(colour=self.colours.regular, timestamp=self.embeds.now())
+                embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
                 embed.set_footer(text="Powered by sheer stupidity.", icon_url=self.icons.info)
                 embed.description = summary
                 await ctx.reply(embed=embed)
@@ -74,7 +74,7 @@ class DyslexifierView(discord.ui.View):
         self.cog = cog
 
         # Use ceiling division to ensure we have enough menus.
-        chunked = cog.bot.utils.chunk(guilds, 25)
+        chunked = discord.utils.as_chunks(guilds, 25)
         menus = -(-len(guilds) // 25)
 
         for i in range(menus):

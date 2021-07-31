@@ -25,7 +25,7 @@ class Mangadex(commands.Cog):
                             This cog houses commands for searching and reading manga.
                             See `$help mangadex` for a full list of available subcommands."""
 
-                embed = discord.Embed(colour=self.colours.regular, timestamp=self.embeds.now())
+                embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
                 embed.set_footer(text="Powered by the Mangadex API.", icon_url=self.icons.info)
                 embed.description = summary
                 await ctx.reply(embed=embed)
@@ -47,7 +47,7 @@ class Mangadex(commands.Cog):
             thumbnail = await self.backend.cover(manga)
             manga = manga["data"]["attributes"]
 
-        embed = discord.Embed(colour=self.colours.regular, timestamp=self.embeds.now())
+        embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
         embed.set_footer(text="Powered by the Mangadex API.", icon_url=self.icons.info)
         embed.set_thumbnail(url=thumbnail)
 

@@ -28,7 +28,7 @@ class Covid(commands.Cog):
         """Creates and returns a COVID-19 statistics embed."""
         time = datetime.datetime.utcnow().strftime("%A, %d %B %Y")
 
-        embed = discord.Embed(colour=self.colours.regular, timestamp=self.embeds.now())
+        embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
         footer = "Data taken from the NSW Data Analytics Centre."
         embed.set_footer(text=footer, icon_url=self.icons.info)
         embed.title = f"COVID-19 Statistics as of {time}:"

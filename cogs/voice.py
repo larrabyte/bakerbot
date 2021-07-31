@@ -47,7 +47,7 @@ class Voice(commands.Cog):
                             This cog houses commands related to audio.
                             See `$help voice` for a full list of available subcommands."""
 
-                embed = discord.Embed(colour=self.colours.regular, timestamp=self.embeds.now())
+                embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
                 embed.description = summary
                 embed.set_footer(text="Dunno what to put here.", icon_url=self.icons.info)
                 await ctx.reply(embed=embed)
@@ -94,7 +94,7 @@ class Voice(commands.Cog):
             return await ctx.reply(embed=fail)
 
         track = await discord.FFmpegOpusAudio.from_probe(str(filepath))
-        embed = discord.Embed(colour=self.colours.regular, timestamp=self.embeds.now())
+        embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
         embed.set_footer(text="Interaction complete.", icon_url=self.icons.info)
         embed.description = f"Now playing `{filepath}`."
 
@@ -135,13 +135,14 @@ class SelectionView(discord.ui.View):
 
         # Use ceiling division to ensure we have enough menus.
         files = list(pathlib.Path("music").iterdir())
-        tracks = cog.bot.utils.chunk(files, 25)
+        tracks = discord.utils.as_chunks(files, 25)
         menus = -(-len(files) // 25)
         cursor = 0
 
         for i in range(menus):
-            id = self.ids.generate(i)
-            menu = discord.ui.Select(custom_id=id, placeholder=f"Menu #{i + 1}")
+            text = f"Menu #{i + 1}"
+            identifier = self.ids.generate(i)
+            menu = discord.ui.Select(custom_id=identifier, placeholder=text)
             menu.callback = self.menu_callback
 
             for track in tracks[i]:
@@ -163,7 +164,7 @@ class SelectionView(discord.ui.View):
         track = await discord.FFmpegOpusAudio.from_probe(choice)
 
         client = interaction.guild.voice_client
-        embed = discord.Embed(colour=self.colours.regular, timestamp=self.embeds.now())
+        embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
         embed.set_footer(text="Interaction complete.", icon_url=self.icons.info)
         embed.description = f"Now playing `{choice}`."
 
