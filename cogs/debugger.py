@@ -76,7 +76,10 @@ class Debugger(commands.Cog):
         ex = error.original if isinstance(error, commands.CommandInvokeError) else error
 
         # Perform custom error handling depending on the type of exception.
-        if isinstance(ex, commands.CommandNotFound) and not ctx.message.content[1].isdigit():
+        if ctx.message.content[1].isdigit():
+            pass
+
+        elif isinstance(ex, commands.CommandNotFound):
             reason = f"`{ctx.message.content}` is not a valid command."
             footer = "Try $help for a list of command groups."
             fail = self.embeds.status(False, reason)
