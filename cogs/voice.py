@@ -82,7 +82,13 @@ class Voice(commands.Cog):
         if track is None:
             view = SelectionView(self)
             content = "Please select a track from the dropdown menu."
-            return await ctx.reply(content, view=view)
+            await ctx.reply(content, view=view)
+
+            # If the view timed out, simply return.
+            if (await view.wait()):
+                return
+
+            track = view.selection
 
         filepath = pathlib.Path(f"music/{track}")
         if not filepath.is_file():
@@ -133,45 +139,30 @@ class SelectionView(discord.ui.View):
         self.icons = cog.bot.utils.Icons
         self.cog = cog
 
-        # Use ceiling division to ensure we have enough menus.
-        files = list(pathlib.Path("music").iterdir())
-        tracks = discord.utils.as_chunks(files, 25)
-        menus = -(-len(files) // 25)
-        cursor = 0
+        # Return values go here.
+        self.selection = None
 
-        for i in range(menus):
-            text = f"Menu #{i + 1}"
+        files = list(pathlib.Path("music").iterdir())
+        tracks = [chunk for chunk in discord.utils.as_chunks(files, 25)]
+        cursor = 1
+
+        for i in range(len(tracks)):
             identifier = self.ids.generate(i)
-            menu = discord.ui.Select(custom_id=identifier, placeholder=text)
+            menu = discord.ui.Select(custom_id=identifier, placeholder=f"Menu #{i + 1}")
             menu.callback = self.menu_callback
 
             for track in tracks[i]:
-                s, t = f"Option #{cursor + 1}", f"{track}"
-                menu.add_option(label=s, value=t, description=t)
+                label = f"{track.name[0:22]}..." if len(track.name) > 25 else track.name
+                menu.add_option(label=label, value=track.name, description=str(track))
                 cursor += 1
 
             self.add_item(menu)
 
     async def menu_callback(self, interaction: discord.Interaction) -> None:
-        """Handles menu interactions."""
-        if not (await self.cog.ensure_client(interaction.user.voice)):
-            fail = self.embeds.status(False, "Unable to join a channel.")
-            return await interaction.response.edit_message(content=None, embed=fail, view=None)
-
+        """Handles menu selections and returns the selected value."""
         index = self.ids.extract(interaction, int)
-        choice = self.children[index].values[0]
-        track = await discord.FFmpegOpusAudio.from_probe(choice)
-
-        client = interaction.guild.voice_client
-        embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
-        embed.set_footer(text="Interaction complete.", icon_url=self.icons.info)
-        embed.description = f"Now playing `{choice}`."
-
-        if client.is_playing() or client.is_paused():
-            client.stop()
-
-        await interaction.response.edit_message(content=None, embed=embed, view=None)
-        client.play(track)
+        self.selection = self.children[index].values[0]
+        self.stop()
 
 def setup(bot: model.Bakerbot) -> None:
     cog = Voice(bot)
