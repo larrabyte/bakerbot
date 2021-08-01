@@ -1,3 +1,4 @@
+import typing as t
 import discord
 import os
 
@@ -19,17 +20,19 @@ class Identifiers:
     bytelength = 16
 
     @classmethod
-    def generate(cls, obj: object) -> str:
+    def generate(cls, obj: t.Any) -> str:
         """Generates a random identifier (along with a bonus `str(obj)` if given)."""
         rand = os.urandom(cls.bytelength).hex()
         representation = str(obj)
         return f"{rand}{representation}"
 
     @classmethod
-    def extract(cls, identifier: str) -> str:
+    def extract(cls, interaction: discord.Interaction, obj: t.Type[t.Any]) -> t.Any:
         """Extracts the object representation passed in via `Identifiers.generate()`."""
         start = cls.bytelength * 2
-        return identifier[start:]
+        identifier = interaction.data["custom_id"]
+        data = identifier[start:]
+        return obj(data)
 
 class Embeds:
     @staticmethod

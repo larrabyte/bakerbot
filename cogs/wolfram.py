@@ -22,7 +22,7 @@ class Wolfram(commands.Cog):
         """Ask WolframAlpha anything you want!"""
         async with ctx.typing():
             params = self.backend.parameters(query, format="image", width="1500", mag="3")
-            view = await WolframView.create(cog=self, params=params)
+            view = await WolframView.create(self, params)
 
         if view is None:
             fail = self.embeds.status(False, "WolframAlpha couldn't answer your query.")
@@ -32,7 +32,7 @@ class Wolfram(commands.Cog):
         await ctx.reply(data, view=view)
 
 class WolframView(discord.ui.View):
-    """A `discord.ui.View` subclass for WolframAlpha queries using the Full Results API."""
+    """A subclass of `discord.ui.View` for WolframAlpha queries using the Full Results API."""
     @classmethod
     async def create(cls, cog: Wolfram, params: dict) -> t.Optional["WolframView"]:
         """Creates and returns an instance of `WolframView`."""
@@ -52,10 +52,9 @@ class WolframView(discord.ui.View):
         instance.add_pod_buttons()
         return instance
 
-    @staticmethod
-    def images(pod: dict) -> str:
+    def images(self, pod: dict) -> str:
         """Returns available image links inside a pod."""
-        links = [s["img"]["src"] for s in pod["subpods"]]
+        links = (s["img"]["src"] for s in pod["subpods"])
         return "\n".join(links)
 
     def add_podstate_buttons(self, states: list) -> None:
@@ -102,8 +101,7 @@ class WolframView(discord.ui.View):
         embed.set_footer(text="Interaction deferred.", icon_url=self.icons.info)
         await interaction.response.edit_message(content=None, embed=embed, view=None)
 
-        identifier = interaction.data["custom_id"]
-        identifier = self.ids.extract(identifier)
+        identifier = self.ids.extract(interaction, str)
         self.params["podstate"] = identifier
         self.params["podindex"] = str(self.cursor + 1)
 
@@ -119,15 +117,12 @@ class WolframView(discord.ui.View):
         if (states := pod.get("states", None)) is not None:
             self.add_podstate_buttons(states)
 
-        data = WolframView.images(pod)
+        data = self.images(pod)
         await interaction.edit_original_message(content=data, embed=None, view=self)
 
     async def pod_callback(self, interaction: discord.Interaction) -> None:
         """Handles pod-based button presses."""
-        identifier = interaction.data["custom_id"]
-        identifier = self.ids.extract(identifier)
-        self.cursor = int(identifier)
-
+        self.cursor = self.ids.extract(interaction, int)
         self.clear_items()
         self.add_control_buttons()
 
@@ -135,13 +130,12 @@ class WolframView(discord.ui.View):
         if (states := pod.get("states", None)) is not None:
             self.add_podstate_buttons(states)
 
-        data = WolframView.images(pod)
+        data = self.images(pod)
         await interaction.response.edit_message(content=data, embed=None, view=self)
 
     async def control_callback(self, interaction: discord.Interaction) -> None:
         """Handles control button presses."""
-        identifier = interaction.data["custom_id"]
-        identifier = self.ids.extract(identifier)
+        identifier = self.ids.extract(interaction, str)
         data = "Press any button to view its content."
 
         if identifier == "back":

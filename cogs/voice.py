@@ -158,9 +158,8 @@ class SelectionView(discord.ui.View):
             fail = self.embeds.status(False, "Unable to join a channel.")
             return await interaction.response.edit_message(content=None, embed=fail, view=None)
 
-        menu = interaction.data["custom_id"]
-        menu = int(self.ids.extract(menu))
-        choice = self.children[menu].values[0]
+        index = self.ids.extract(interaction, int)
+        choice = self.children[index].values[0]
         track = await discord.FFmpegOpusAudio.from_probe(choice)
 
         client = interaction.guild.voice_client

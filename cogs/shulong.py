@@ -92,11 +92,9 @@ class DyslexifierView(discord.ui.View):
 
     async def menu_callback(self, interaction: discord.Interaction) -> None:
         """Called when a user selects a guild."""
-        identifier = interaction.data["custom_id"]
-        identifier = int(self.ids.extract(identifier))
-        menu = self.children[identifier]
-        guild = int(menu.values[0])
-        guild = self.cog.bot.get_guild(guild)
+        identifier = self.ids.extract(interaction, int)
+        uuid = int(self.children[identifier].values[0])
+        guild = self.cog.bot.get_guild(uuid)
 
         if self.mode == "start":
             self.cog.dyslexifier.add(guild)
