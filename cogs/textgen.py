@@ -45,6 +45,8 @@ class Textgen(commands.Cog):
             model = "EleutherAI/gpt-neo-2.7B"
             data = await self.backend.generate(model, query, self.maximum)
 
+        data = discord.utils.escape_markdown(data)
+        data = f"{data[0:1997]}..."
         await ctx.reply(data)
 
     @text.command()
@@ -79,7 +81,7 @@ class TextgenBackend:
             raise RuntimeError("Request attempted without API key.")
 
         headers = {"Authorization": f"Bearer {self.key}"}
-        payload = {"inputs": query, "parameters": {"max_length": chars}}
+        payload = {"inputs": query, "options": {"wait_for_model": True}, "parameters": {"max_length": chars}}
         data = await self.request(f"models/{model}", payload, headers)
 
         if isinstance(data, list):
