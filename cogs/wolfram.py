@@ -17,7 +17,7 @@ class Wolfram(commands.Cog):
         self.backend = backend
         self.bot = bot
 
-    @commands.command()
+    @commands.command(aliases=["わ"])
     async def wa(self, ctx: commands.Context, *, query: str) -> None:
         """Ask WolframAlpha anything you want!"""
         async with ctx.typing():
@@ -64,7 +64,7 @@ class WolframView(discord.ui.View):
                 substates = state["states"]
                 self.add_podstate_buttons(substates)
             else:
-                name = state["name"]
+                name = state["name"][0:80]
                 param = state["input"]
                 identifier = self.ids.generate(param)
                 label = tcase.titlecase(name)
@@ -78,7 +78,7 @@ class WolframView(discord.ui.View):
         pods = self.results["pods"]
 
         for index, pod in enumerate(pods):
-            title = pod["title"]
+            title = pod["title"][0:80]
             identifier = self.ids.generate(index)
             title = tcase.titlecase(title)
 

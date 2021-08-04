@@ -80,26 +80,29 @@ class Voice(commands.Cog):
     async def play(self, ctx: commands.Context, track: t.Optional[str]) -> None:
         """Plays audio tracks from the music folder."""
         if track is None:
-            view = SelectionView(self)
-            content = "Please select a track from the dropdown menu."
-            await ctx.reply(content, view=view)
+            paginator = self.bot.utils.Paginator()
+            paginator.placeholder = "Tracks"
 
-            # If the view timed out, simply return.
-            if (await view.wait()):
+            for track in pathlib.Path("music").iterdir():
+                label = f"{track.name[0:22]}..." if len(track.name) > 25 else track.name
+                option = discord.SelectOption(label=label, value=track.name, description=str(track))
+                paginator.add(option)
+
+            await ctx.reply("Please select a track from the dropdown menu.", view=paginator)
+            track = await paginator.wait()
+            if track is None:
                 return
-
-            track = view.selection
 
         filepath = pathlib.Path(f"music/{track}")
         if not filepath.is_file():
-            fail = self.embeds.status(False, f"`{track}` does not exist.")
+            fail = self.embeds.status(False, f"{track} is not a valid track.")
             return await ctx.reply(embed=fail)
 
         if not (await self.ensure_client(ctx.author.voice)):
             fail = self.embeds.status(False, "Unable to join a channel.")
             return await ctx.reply(embed=fail)
 
-        track = await discord.FFmpegOpusAudio.from_probe(str(filepath))
+        track = await discord.FFmpegOpusAudio.from_probe(filepath)
         embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
         embed.set_footer(text="Interaction complete.", icon_url=self.icons.info)
         embed.description = f"Now playing `{filepath}`."
@@ -128,41 +131,6 @@ class Voice(commands.Cog):
         vc = ctx.guild.voice_client
         if vc is not None and vc.is_connected():
             await vc.disconnect()
-
-class SelectionView(discord.ui.View):
-    """A discord.ui.View subclass for audio selection."""
-    def __init__(self, cog: Voice) -> None:
-        super().__init__()
-        self.ids = cog.bot.utils.Identifiers
-        self.colours = cog.bot.utils.Colours
-        self.embeds = cog.bot.utils.Embeds
-        self.icons = cog.bot.utils.Icons
-        self.cog = cog
-
-        # Return values go here.
-        self.selection = None
-
-        files = list(pathlib.Path("music").iterdir())
-        tracks = [chunk for chunk in discord.utils.as_chunks(files, 25)]
-        cursor = 1
-
-        for i in range(len(tracks)):
-            identifier = self.ids.generate(i)
-            menu = discord.ui.Select(custom_id=identifier, placeholder=f"Menu #{i + 1}")
-            menu.callback = self.menu_callback
-
-            for track in tracks[i]:
-                label = f"{track.name[0:22]}..." if len(track.name) > 25 else track.name
-                menu.add_option(label=label, value=track.name, description=str(track))
-                cursor += 1
-
-            self.add_item(menu)
-
-    async def menu_callback(self, interaction: discord.Interaction) -> None:
-        """Handles menu selections and returns the selected value."""
-        index = self.ids.extract(interaction, int)
-        self.selection = self.children[index].values[0]
-        self.stop()
 
 def setup(bot: model.Bakerbot) -> None:
     cog = Voice(bot)

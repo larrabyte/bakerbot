@@ -54,57 +54,31 @@ class Shulong(commands.Cog):
         """For people who you wish to punish (but in a discreet way)."""
         if mode == "start":
             response = "Who has wronged you today?"
+            success = "Shulong Special started!"
             guilds = self.bot.guilds
+            action = self.dyslexifier.add
         elif mode == "stop":
             response = "Who is spared from the wrath of the Shulong Special?"
+            success = "Shulong Special stopped."
             guilds = self.dyslexifier.guilds(self.bot)
+            action = self.dyslexifier.remove
 
-        view = DyslexifierView(self, guilds, mode)
-        await ctx.reply(response, view=view)
+        paginator = self.bot.utils.Paginator()
+        paginator.placeholder = "Guilds"
 
-class DyslexifierView(discord.ui.View):
-    """A subclass of `discord.ui.View` for the Dyslexifier."""
-    def __init__(self, cog: Shulong, guilds: t.List[discord.Guild], mode: int) -> None:
-        super().__init__()
-        self.ids = cog.bot.utils.Identifiers
-        self.colours = cog.bot.utils.Colours
-        self.embeds = cog.bot.utils.Embeds
-        self.icons = cog.bot.utils.Icons
-        self.mode = mode
-        self.cog = cog
+        for guild in guilds:
+            label = f"{guild.name[0:22]}..." if len(guild.name) > 25 else guild.name
+            description = guild.description or "No description available."
+            option = discord.SelectOption(label=label, value=guild.id, description=description)
+            paginator.add(option)
 
-        # Use ceiling division to ensure we have enough menus.
-        chunked = discord.utils.as_chunks(guilds, 25)
-        menus = -(-len(guilds) // 25)
+        message = await ctx.reply(response, view=paginator)
+        if (selection := await paginator.wait()) is not None:
+            guild = self.bot.get_guild(int(selection))
+            action(guild)
 
-        for i in range(menus):
-            identifier = self.ids.generate(i)
-            placeholder = f"Menu #{i + 1}"
-            menu = discord.ui.Select(custom_id=identifier, placeholder=placeholder)
-            menu.callback = self.menu_callback
-
-            for guild in next(chunked):
-                label = f"{guild.name[0:22]}..." if len(guild.name) > 25 else guild.name
-                description = guild.description or "No description available."
-                menu.add_option(label=label, value=guild.id, description=description)
-
-            self.add_item(menu)
-
-    async def menu_callback(self, interaction: discord.Interaction) -> None:
-        """Called when a user selects a guild."""
-        identifier = self.ids.extract(interaction, int)
-        uuid = int(self.children[identifier].values[0])
-        guild = self.cog.bot.get_guild(uuid)
-
-        if self.mode == "start":
-            self.cog.dyslexifier.add(guild)
-            embed = self.embeds.status(True, f"`{guild.name}` is now experiencing the Shulong Special.")
-        elif self.mode == "stop":
-            # One corresponds to removing.
-            self.cog.dyslexifier.remove(guild)
-            embed = self.embeds.status(True, f"`{guild.name}` is no longer experiencing the Shulong Special.")
-
-        await interaction.response.edit_message(content=None, embed=embed, view=None)
+            embed = self.embeds.status(True, success)
+            await message.edit(content=None, embed=embed, view=None)
 
 class Dyslexifier:
     """A class that abstracts the dyslexification tasks."""
