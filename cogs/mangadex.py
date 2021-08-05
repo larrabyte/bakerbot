@@ -64,7 +64,7 @@ class Mangadex(commands.Cog):
         embed.add_field(name=genreSubtitle, value=", ".join(genres))
 
         demo = manga["publicationDemographic"]
-        demo = tcase.titlecase(demo)
+        demo = tcase.titlecase(demo) if demo is not None else "Unknown demographic."
         embed.add_field(name="Demographic", value=demo)
         await ctx.reply(embed=embed)
 
