@@ -60,11 +60,9 @@ class Debugger(commands.Cog):
         else: # Refresh the bot's internal state.
             self.bot.utils = model.Bakerbot.load_utils()
             self.bot.secrets = model.Bakerbot.load_secrets()
-            cache = [c for c in self.bot.cogs]
 
-            for cogs in cache:
-                name = f"cogs.{cogs.lower()}"
-                self.bot.reload_extension(name)
+            for cogs in [c.__module__ for c in self.bot.cogs.values()]:
+                self.bot.reload_extension(cogs)
 
         summary = f"{cog} has been reloaded." if cog is not None else "All modules reloaded."
         embed = self.embeds.status(True, summary)
@@ -95,7 +93,7 @@ class Debugger(commands.Cog):
 
         else: # Otherwise, we perform generic error handling.
             embed = self.embeds.status(False, "")
-            embed.title = "Exception raised. See below for more information." 
+            embed.title = "Exception raised. See below for more information."
 
             # Extract traceback information if available.
             if (traceback := ex.__traceback__) is not None:
