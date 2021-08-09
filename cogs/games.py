@@ -1,5 +1,4 @@
 import discord.ext.commands as commands
-import itertools
 import discord
 import asyncio
 import model
@@ -46,29 +45,29 @@ class Games(commands.Cog):
 
         instance = self.classes[game]
         instance = instance(self)
-        await instance.run(ctx)
+        message = await ctx.reply("Please wait as the game is created...")
+        await asyncio.sleep(0.5)
+        await instance.run(message)
 
 class Monopoly:
     """Monopoly class: houses everything Monopoly-related."""
     def __init__(self, cog: Games) -> None:
-        self.joiner = MonopolyPlayerJoiner(self)
-        self.selector = MonopolyPieceSelector(self)
-        self.board = MonopolyBoard(self)
         self.players = {}
         self.cog = cog
 
-    async def selector2board(self, interaction: discord.Interaction) -> None:
-        """Called after `self.selector` is finished. Transitions to the game board."""
-        await asyncio.sleep(0.5)
-        await self.board.run(interaction)
-
-    async def joiner2selector(self, interaction: discord.Interaction) -> None:
-        """Called after `self.joiner` is finished. Transitions to the piece selector."""
-        await self.selector.run(interaction)
-
-    async def run(self, ctx: commands.Context) -> None:
+    async def run(self, message: discord.Message) -> None:
         """Starts the game. This should be the last function that is run."""
-        await self.joiner.run(ctx)
+        playerJoiner = MonopolyPlayerJoiner(self)
+        await playerJoiner.run(message)
+        await playerJoiner.wait()
+
+        pieceSelector = MonopolyPieceSelector(self)
+        await pieceSelector.run(message)
+        await pieceSelector.wait()
+
+        board = MonopolyBoard(self)
+        await board.run(message)
+        await board.wait()
 
 class MonopolyBoard(discord.ui.View):
     """A subclass of `discord.ui.View` for the board UI in a Monopoly game."""
@@ -76,12 +75,10 @@ class MonopolyBoard(discord.ui.View):
         super().__init__()
         self.game = game
 
-    async def run(self, interaction: discord.Interaction) -> None:
+    async def run(self, message: discord.Message) -> None:
         """Starts the Monopoly board screen."""
-        # The interaction has already received a response at this point.
-        # Accessing interaction.response is no longer valid!
         content = "https://i.pinimg.com/originals/a9/31/4a/a9314a10181ad43d6a25c6019c19c397.jpg"
-        await interaction.edit_original_message(content=content, embed=None, view=self)
+        await message.edit(content=content, embed=None, view=self)
 
 class MonopolyPieceSelector(discord.ui.View):
     """A subclass of `discord.ui.View` for the piece selection screen in a Monopoly game."""
@@ -107,7 +104,7 @@ class MonopolyPieceSelector(discord.ui.View):
         await interaction.response.edit_message(view=self)
 
         if self.selected == len(self.game.players.keys()):
-            await self.game.selector2board(interaction)
+            self.stop()
 
     @discord.ui.button(label="Wheelbarrow", emoji="<:wheelbarrow:868328816098021437>")
     async def wheelbarrow(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
@@ -149,11 +146,11 @@ class MonopolyPieceSelector(discord.ui.View):
         """Called when a user selects this as their piece."""
         await self.common(button, interaction)
 
-    async def run(self, interaction: discord.Interaction) -> None:
+    async def run(self, message: discord.Message) -> None:
         """Starts the piece selection screen."""
         self.enabled = len(self.children)
         content = "Press any button to select a piece."
-        await interaction.response.edit_message(content=content, embed=None, view=self)
+        await message.edit(content=content, embed=None, view=self)
 
 class MonopolyPlayerJoiner(discord.ui.View):
     """A subclass of `discord.ui.View` for the player join screen in a Monopoly game."""
@@ -190,9 +187,9 @@ class MonopolyPlayerJoiner(discord.ui.View):
             nope = "You cannot start this game as you are not apart of it."
             return await interaction.response.send_message(content=nope, ephemeral=True)
 
-        await self.game.joiner2selector(interaction)
+        self.stop()
 
-    async def run(self, ctx: commands.Context) -> None:
+    async def run(self, message: discord.Message) -> None:
         """Starts the player joining screen."""
         self.embed.set_footer(text="Unfortunately, no sponsorship from Hasbro.", icon_url=self.game.cog.icons.info)
         self.embed.set_thumbnail(url="https://m.media-amazon.com/images/I/81oC5pYhh2L.jpg")
@@ -201,7 +198,7 @@ class MonopolyPlayerJoiner(discord.ui.View):
         self.embed.title = "Bakerbot: Monopoly, but it's open-source!"
         self.embed.colour = self.game.cog.colours.regular
         self.embed.timestamp = discord.utils.utcnow()
-        await ctx.reply(embed=self.embed, view=self)
+        await message.edit(content=None, embed=self.embed, view=self)
 
 class MonopolyPlayer:
     """A class representing a Monopoly player."""
