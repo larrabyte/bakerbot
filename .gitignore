@@ -1,6 +1,7 @@
 # Things I don't want to be tracked.
 .stfolder/
 .vscode/
+local/
 .DS_Store
 secrets.json
 

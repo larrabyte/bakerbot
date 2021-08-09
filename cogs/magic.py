@@ -15,8 +15,9 @@ class Magic(commands.Cog):
         self.bot = bot
 
     async def cog_check(self, ctx: commands.Context) -> None:
-        # Ensure that these commands can only be run from Team Magic.
-        if ctx.guild.id == self.magic:
+        # There are two conditions for running these commands:
+        # the command is being run in Team Magic or I'm the one executing it.
+        if ctx.guild.id == self.magic or (await self.bot.is_owner(ctx.author)):
             return True
 
         return False
