@@ -61,7 +61,7 @@ class Textgen(commands.Cog):
 class TextgenBackend:
     """A backend Hugging Face API wrapper."""
     def __init__(self, bot: model.Bakerbot) -> None:
-        self.key = bot.secrets.get("huggingface-key", None)
+        self.key = bot.secrets.get("hugging-token", None)
         self.base = "https://api-inference.huggingface.co"
         self.session = bot.session
 

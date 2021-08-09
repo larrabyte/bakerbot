@@ -9,7 +9,7 @@ import ujson
 import yarl
 
 class Wolfram(commands.Cog):
-    """Houses an API wrapper for WolframAlpha (with unlimited requests)."""
+    """Houses an API wrapper for WolframAlpha."""
     def __init__(self, bot: model.Bakerbot, backend: "WolframBackend") -> None:
         self.colours = bot.utils.Colours
         self.icons = bot.utils.Icons

@@ -17,8 +17,9 @@ class Covid(commands.Cog):
         self.backend = backend
         self.bot = bot
 
-        # Start the statistics task.
-        self.covid_task.start()
+        # Start the statistics task if this channel exists in the bot's list.
+        if (channel := bot.get_channel(473426067823263753)) is not None:
+            self.covid_task.start(channel)
 
     def cog_unload(self):
         """Handles task cancellation on cog unload."""
@@ -40,7 +41,7 @@ class Covid(commands.Cog):
         return embed
 
     @tasks.loop(hours=24)
-    async def covid_task(self) -> None:
+    async def covid_task(self, channel: discord.TextChannel) -> None:
         """Asynchronous task for displaying statistics every 24 hours."""
         now = datetime.datetime.now()
         execat = datetime.time(20, 30)
@@ -54,7 +55,6 @@ class Covid(commands.Cog):
         seconds = (delay - now).total_seconds()
         await asyncio.sleep(seconds)
 
-        channel = self.bot.get_channel(473426067823263753)
         results = await self.backend.request("datafiles/statsLocations.json")
         embed = self.covid_embed(results)
         await channel.send(embed=embed)
