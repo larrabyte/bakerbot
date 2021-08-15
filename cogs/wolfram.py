@@ -20,7 +20,6 @@ class Wolfram(commands.Cog):
     @commands.command(aliases=["わ"])
     async def wa(self, ctx: commands.Context, *, query: str) -> None:
         """Ask WolframAlpha anything you want!"""
-        if not ctx.guild.me.guild_permissions.administrator:
         async with ctx.typing():
             params = self.backend.parameters(query, format="image", width="1500", mag="3")
             view = await WolframView.create(self, params)

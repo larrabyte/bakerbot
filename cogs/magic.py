@@ -1,5 +1,4 @@
 import discord.ext.commands as commands
-import secrets
 import asyncio
 import discord
 import model
@@ -11,7 +10,7 @@ class Magic(commands.Cog):
         self.icons = bot.utils.Icons
         self.embeds = bot.utils.Embeds
         self.magic = 473426067823263749
-        self.omdsnipe = False
+        self.sniper = False
         self.bot = bot
 
     async def cog_check(self, ctx: commands.Context) -> None:
@@ -37,8 +36,16 @@ class Magic(commands.Cog):
     @magic.command()
     async def nodelete(self, ctx: commands.Context) -> None:
         """Enable/disable the message sniper."""
-        self.omdsnipe = not self.omdsnipe
-        description = f"on_message_delete() listener set to: `{self.omdsnipe}`"
+        self.sniper = not self.sniper
+        description = f"on_message_delete() listener set to: `{self.sniper}`"
+        embed = self.embeds.status(True, description)
+        await ctx.reply(embed=embed)
+
+    @magic.command()
+    async def replace(self, ctx: commands.Context) -> None:
+        """Enable/disable the word replacer."""
+        self.replacement = not self.replacement
+        description = f"on_message() listener set to: `{self.replacement}`"
         embed = self.embeds.status(True, description)
         await ctx.reply(embed=embed)
 
@@ -53,7 +60,8 @@ class Magic(commands.Cog):
     @magic.command()
     async def hookify(self, ctx: commands.Context, target: discord.TextChannel) -> None:
         """So it turns out you can have more than 10 webooks in a channel..."""
-        headers = {"Authorization": f"Bot {secrets.dpytoken}"}
+        token = self.bot.secrets["discord-token"]
+        headers = {"Authorization": f"Bot {token}"}
         payload = {"channel_id": target.id}
         endpoints = await ctx.channel.webhooks()
         moved = 0
@@ -73,7 +81,7 @@ class Magic(commands.Cog):
     @commands.Cog.listener()
     async def on_message_delete(self, message: discord.Message) -> None:
         """Resends deleted messages. Triggered by the nodelete command."""
-        if self.omdsnipe and message.guild.id == self.magic:
+        if self.sniper and message.guild.id == self.magic:
             await message.channel.send(f"> Sent by {message.author.mention}\n{message.content}")
 
 def setup(bot):
