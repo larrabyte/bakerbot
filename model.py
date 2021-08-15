@@ -2,7 +2,7 @@ import discord.ext.commands as commands
 import importlib
 import utilities
 import aiohttp
-import json
+import ujson
 
 class Bakerbot(commands.Bot):
     def __init__(self, *args, **kwargs) -> None:
@@ -15,7 +15,7 @@ class Bakerbot(commands.Bot):
     def load_secrets() -> dict:
         """Refreshes the bot's secrets dictionary."""
         with open("secrets.json", "r") as file:
-            return json.load(file)
+            return ujson.load(file)
 
     @staticmethod
     def load_utils() -> utilities:
