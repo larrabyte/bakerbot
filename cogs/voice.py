@@ -1,4 +1,5 @@
 import discord.ext.commands as commands
+import libs.utilities as utilities
 import typing as t
 import pathlib
 import discord
@@ -7,9 +8,6 @@ import model
 class Voice(commands.Cog):
     """Houses the voice client for Bakerbot. Audio commands can be found here."""
     def __init__(self, bot: model.Bakerbot) -> None:
-        self.colours = bot.utils.Colours
-        self.icons = bot.utils.Icons
-        self.embeds = bot.utils.Embeds
         self.bot = bot
 
     def cog_unload(self) -> None:
@@ -47,23 +45,23 @@ class Voice(commands.Cog):
                             This cog houses commands related to audio.
                             See `$help voice` for a full list of available subcommands."""
 
-                embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
+                embed = discord.Embed(colour=utilities.Colours.regular, timestamp=discord.utils.utcnow())
                 embed.description = summary
-                embed.set_footer(text="Dunno what to put here.", icon_url=self.icons.info)
+                embed.set_footer(text="Dunno what to put here.", icon_url=utilities.Icons.info)
                 await ctx.reply(embed=embed)
             else:
                 # The subcommand was not valid: throw a fit.
                 command = f"${ctx.command.name} {ctx.subcommand_passed}"
                 summary = f"`{command}` is not a valid command."
                 footer = "Try $help voice for a full list of available subcommands."
-                embed = self.embeds.status(False, summary)
-                embed.set_footer(text=footer, icon_url=self.icons.cross)
+                embed = utilities.Embeds.status(False, summary)
+                embed.set_footer(text=footer, icon_url=utilities.Icons.cross)
                 await ctx.reply(embed=embed)
 
     @vc.command()
     async def upload(self, ctx: commands.Context) -> None:
         """Uploads a file to Bakerbot's music repository."""
-        embed = self.embeds.status(True, None)
+        embed = utilities.Embeds.status(True, None)
         saved = 0
 
         async with ctx.typing():
@@ -80,7 +78,7 @@ class Voice(commands.Cog):
     async def play(self, ctx: commands.Context, track: t.Optional[str]) -> None:
         """Plays audio tracks from the music folder."""
         if track is None:
-            paginator = self.bot.utils.Paginator()
+            paginator = utilities.Paginator()
             paginator.placeholder = "Tracks"
 
             for track in pathlib.Path("music").iterdir():
@@ -95,16 +93,16 @@ class Voice(commands.Cog):
 
         filepath = pathlib.Path(f"music/{track}")
         if not filepath.is_file():
-            fail = self.embeds.status(False, f"{track} is not a valid track.")
+            fail = utilities.Embeds.status(False, f"{track} is not a valid track.")
             return await ctx.reply(embed=fail)
 
         if not (await self.ensure_client(ctx.author.voice)):
-            fail = self.embeds.status(False, "Unable to join a channel.")
+            fail = utilities.Embeds.status(False, "Unable to join a channel.")
             return await ctx.reply(embed=fail)
 
         track = await discord.FFmpegOpusAudio.from_probe(filepath)
-        embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
-        embed.set_footer(text="Interaction complete.", icon_url=self.icons.info)
+        embed = discord.Embed(colour=utilities.Colours.regular, timestamp=discord.utils.utcnow())
+        embed.set_footer(text="Interaction complete.", icon_url=utilities.Icons.info)
         embed.description = f"Now playing `{filepath}`."
 
         if ctx.voice_client.is_playing() or ctx.voice_client.is_paused():
@@ -120,7 +118,7 @@ class Voice(commands.Cog):
 
         if channel is None:
             response = "No available channels exist (either none specified or you aren't in one)."
-            fail = self.embeds.status(False, response)
+            fail = utilities.Embeds.status(False, response)
             return await ctx.reply(embed=fail)
 
         await self.connect(channel)

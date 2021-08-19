@@ -1,4 +1,5 @@
 import discord.ext.commands as commands
+import libs.utilities as utilities
 import typing as t
 import discord
 import model
@@ -6,20 +7,17 @@ import model
 class Helper(commands.Cog):
     """Bakerbot's documentation lives here."""
     def __init__(self, bot: model.Bakerbot) -> None:
-        self.colours = bot.utils.Colours
-        self.icons = bot.utils.Icons
-        self.embeds = bot.utils.Embeds
         self.bot = bot
 
     def cog_help(self, cogname: str) -> discord.Embed:
         """Returns the documentation for a specific cog."""
         if (cog := self.bot.get_cog(cogname.capitalize())) is None:
-            fail = self.embeds.status(False, f"Could not find the `{cogname}` cog.")
+            fail = utilities.Embeds.status(False, f"Could not find the `{cogname}` cog.")
             return fail
 
-        embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
+        embed = discord.Embed(colour=utilities.Colours.regular, timestamp=discord.utils.utcnow())
         footer = "Arguments enclosed in <> are required while [] are optional."
-        embed.set_footer(text=footer, icon_url=self.icons.info)
+        embed.set_footer(text=footer, icon_url=utilities.Icons.info)
 
         for command in cog.walk_commands():
             # We don't want group parent commands listed, ignore those.
@@ -31,9 +29,9 @@ class Helper(commands.Cog):
 
     def general_help(self) -> discord.Embed:
         """Returns documentation for Bakerbot."""
-        embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
+        embed = discord.Embed(colour=utilities.Colours.regular, timestamp=discord.utils.utcnow())
         footer = "Typing $help [cogname] will display commands in that cog."
-        embed.set_footer(text=footer, icon_url=self.icons.info)
+        embed.set_footer(text=footer, icon_url=utilities.Icons.info)
 
         # Get list of cog objects using self.bot.cogs and add fields to embed.
         for cog in [self.bot.cogs[name] for name in self.bot.cogs]:

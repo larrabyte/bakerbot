@@ -1,4 +1,5 @@
 import discord.ext.commands as commands
+import libs.utilities as utilities
 import typing as t
 import discord
 import model
@@ -8,9 +9,6 @@ import yarl
 class Textgen(commands.Cog):
     """Want to generate some text? Try the text generator!"""
     def __init__(self, bot: model.Bakerbot, backend: "TextgenBackend") -> None:
-        self.colours = bot.utils.Colours
-        self.icons = bot.utils.Icons
-        self.embeds = bot.utils.Embeds
         self.backend = backend
         self.maximum = 200
         self.bot = bot
@@ -25,17 +23,17 @@ class Textgen(commands.Cog):
                             This cog houses commands that interface with the Hugging Face API.
                             See `$help textgen` for a full list of available subcommands."""
 
-                embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
+                embed = discord.Embed(colour=utilities.Colours.regular, timestamp=discord.utils.utcnow())
                 embed.description = summary
-                embed.set_footer(text="Powered by the Hugging Face API.", icon_url=self.icons.info)
+                embed.set_footer(text="Powered by the Hugging Face API.", icon_url=utilities.Icons.info)
                 await ctx.reply(embed=embed)
             else:
                 # The subcommand was not valid: throw a fit.
                 command = f"${ctx.command.name} {ctx.subcommand_passed}"
                 summary = f"`{command}` is not a valid command."
                 footer = "Try $help textgen for a full list of available subcommands."
-                embed = self.embeds.status(False, summary)
-                embed.set_footer(text=footer, icon_url=self.icons.cross)
+                embed = utilities.Embeds.status(False, summary)
+                embed.set_footer(text=footer, icon_url=utilities.Icons.cross)
                 await ctx.reply(embed=embed)
 
     @text.command()
@@ -53,8 +51,8 @@ class Textgen(commands.Cog):
     async def maxlen(self, ctx: commands.Context, maximum: t.Optional[int]) -> None:
         """Query or set the maximum number of characters returned by the API."""
         info = f"The maximum is currently `{self.maximum}`." if maximum is None else f"The maximum has been set to `{maximum}`."
-        embed = discord.Embed(description=info, colour=self.colours.regular, timestamp=discord.utils.utcnow())
-        embed.set_footer(text="Powered by the Hugging Face API.", icon_url=self.icons.info)
+        embed = discord.Embed(description=info, colour=utilities.Colours.regular, timestamp=discord.utils.utcnow())
+        embed.set_footer(text="Powered by the Hugging Face API.", icon_url=utilities.Icons.info)
         self.maximum = maximum or self.maximum
         await ctx.reply(embed=embed)
 

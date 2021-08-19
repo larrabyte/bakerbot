@@ -1,4 +1,5 @@
 import discord.ext.commands as commands
+import libs.utilities as utilities
 import titlecase as tcase
 import typing as t
 import discord
@@ -10,9 +11,6 @@ import yarl
 class Mangadex(commands.Cog):
     """A manga reader for Bakerbot!"""
     def __init__(self, bot: model.Bakerbot, backend: "MangadexBackend") -> None:
-        self.colours = bot.utils.Colours
-        self.icons = bot.utils.Icons
-        self.embeds = bot.utils.Embeds
         self.backend = backend
         self.bot = bot
 
@@ -26,8 +24,8 @@ class Mangadex(commands.Cog):
                             This cog houses commands for searching and reading manga.
                             See `$help mangadex` for a full list of available subcommands."""
 
-                embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
-                embed.set_footer(text="Powered by the Mangadex API.", icon_url=self.icons.info)
+                embed = discord.Embed(colour=utilities.Colours.regular, timestamp=discord.utils.utcnow())
+                embed.set_footer(text="Powered by the Mangadex API.", icon_url=utilities.Icons.info)
                 embed.description = summary
                 await ctx.reply(embed=embed)
             else:
@@ -35,8 +33,8 @@ class Mangadex(commands.Cog):
                 command = f"${ctx.command.name} {ctx.subcommand_passed}"
                 summary = f"`{command}` is not a valid command."
                 footer = "Try $help mangadex for a full list of available subcommands."
-                embed = self.embeds.status(False, summary)
-                embed.set_footer(text=footer, icon_url=self.icons.cross)
+                embed = utilities.Embeds.status(False, summary)
+                embed.set_footer(text=footer, icon_url=utilities.Icons.cross)
                 await ctx.reply(embed=embed)
 
     @manga.command()
@@ -49,8 +47,8 @@ class Mangadex(commands.Cog):
             coverUUID = self.backend.coverUUID(data)
             thumbnail = await self.backend.cover(mangaUUID, coverUUID)
 
-        embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
-        embed.set_footer(text="Powered by the Mangadex API.", icon_url=self.icons.info)
+        embed = discord.Embed(colour=utilities.Colours.regular, timestamp=discord.utils.utcnow())
+        embed.set_footer(text="Powered by the Mangadex API.", icon_url=utilities.Icons.info)
         embed.set_thumbnail(url=thumbnail)
 
         manga = data["data"]["attributes"]
@@ -89,7 +87,7 @@ class Mangadex(commands.Cog):
             numChapters -= limit
             offset += 500
 
-        paginator = self.bot.utils.Paginator()
+        paginator = utilities.Paginator()
         paginator.placeholder = "Chapters"
 
         for index, chapter in enumerate(chapters):

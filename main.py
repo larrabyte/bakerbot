@@ -15,14 +15,11 @@ if __name__ == "__main__":
     activity = discord.Streaming(name=name, url="https://twitch.tv/larrabyte")
 
     # Instantiate the bot with the required arguments.
-    bot = model.Bakerbot(command_prefix="$",
-                           help_command=None,
-                           case_insensitive=True,
-                           intents=intents,
-                           activity=activity)
+    bot = model.Bakerbot(command_prefix="$", help_command=None, case_insensitive=True, intents=intents, activity=activity)
 
-    # Load extensions from the cogs folder.
-    for path in pathlib.Path("cogs").glob("*.py"):
-        bot.load_extension(f"cogs.{path.stem}")
+    # Load extensions from these folders.
+    for folder in ("cogs", "local"):
+        for path in pathlib.Path(folder).glob("*.py"):
+            bot.load_extension(f"{folder}.{path.stem}")
 
     bot.run()

@@ -1,4 +1,5 @@
 import discord.ext.commands as commands
+import libs.utilities as utilities
 import asyncio
 import discord
 import model
@@ -6,9 +7,6 @@ import model
 class Magic(commands.Cog):
     """You can find dumb ideas from Team Magic here."""
     def __init__(self, bot: model.Bakerbot):
-        self.colours = bot.utils.Colours
-        self.icons = bot.utils.Icons
-        self.embeds = bot.utils.Embeds
         self.magic = 473426067823263749
         self.sniper = False
         self.bot = bot
@@ -29,8 +27,8 @@ class Magic(commands.Cog):
             desc = ("Welcome to the Team Magic command group. You can find dumb stuff here.\n"
                     "See `$help magic` for available subcommands.")
 
-            embed = discord.Embed(description=desc, colour=self.colours.regular, timestamp=discord.utils.utcnow())
-            embed.set_footer(text="These commands will only work inside Team Magic.", icon_url=self.icons.info)
+            embed = discord.Embed(description=desc, colour=utilities.Colours.regular, timestamp=discord.utils.utcnow())
+            embed.set_footer(text="These commands will only work inside Team Magic.", icon_url=utilities.Icons.info)
             await ctx.reply(embed=embed)
 
     @magic.command()
@@ -38,7 +36,7 @@ class Magic(commands.Cog):
         """Enable/disable the message sniper."""
         self.sniper = not self.sniper
         description = f"on_message_delete() listener set to: `{self.sniper}`"
-        embed = self.embeds.status(True, description)
+        embed = utilities.Embeds.status(True, description)
         await ctx.reply(embed=embed)
 
     @magic.command()
@@ -46,7 +44,7 @@ class Magic(commands.Cog):
         """Enable/disable the word replacer."""
         self.replacement = not self.replacement
         description = f"on_message() listener set to: `{self.replacement}`"
-        embed = self.embeds.status(True, description)
+        embed = utilities.Embeds.status(True, description)
         await ctx.reply(embed=embed)
 
     @magic.command()

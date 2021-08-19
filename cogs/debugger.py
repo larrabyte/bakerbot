@@ -1,4 +1,5 @@
 import discord.ext.commands as commands
+import libs.utilities as utilities
 import traceback as trace
 import typing as t
 import discord
@@ -7,9 +8,6 @@ import model
 class Debugger(commands.Cog):
     """Provides a built-in debugger for Bakerbot."""
     def __init__(self, bot: model.Bakerbot):
-        self.colours = bot.utils.Colours
-        self.icons = bot.utils.Icons
-        self.embeds = bot.utils.Embeds
         self.bot = bot
 
     @commands.is_owner()
@@ -24,31 +22,31 @@ class Debugger(commands.Cog):
                             See `$help debugger` for a full list of available subcommands."""
 
                 footer = "Only approved users may execute module manager commands."
-                embed = discord.Embed(colour=self.colours.regular, timestamp=discord.utils.utcnow())
+                embed = discord.Embed(colour=utilities.Colours.regular, timestamp=discord.utils.utcnow())
                 embed.description = summary
-                embed.set_footer(text=footer, icon_url=self.icons.info)
+                embed.set_footer(text=footer, icon_url=utilities.Icons.info)
                 await ctx.reply(embed=embed)
             else:
                 # The subcommand was not valid: throw a fit.
                 command = f"${ctx.command.name} {ctx.subcommand_passed}"
                 summary = f"`{command}` is not a valid command."
                 footer = "Try $help debugger for a full list of available subcommands."
-                embed = self.embeds.status(False, summary)
-                embed.set_footer(text=footer, icon_url=self.icons.cross)
+                embed = utilities.Embeds.status(False, summary)
+                embed.set_footer(text=footer, icon_url=utilities.Icons.cross)
                 await ctx.reply(embed=embed)
 
     @mod.command()
     async def load(self, ctx: commands.Context, cog: str):
         """Extension loader, requires a fully qualified module name."""
         self.bot.load_extension(cog)
-        embed = self.embeds.status(True, f"{cog} has been loaded.")
+        embed = utilities.Embeds.status(True, f"{cog} has been loaded.")
         await ctx.reply(embed=embed)
 
     @mod.command()
     async def unload(self, ctx: commands.Context, cog: str):
         """Extension unloader, requires a fully qualified module name."""
         self.bot.unload_extension(cog)
-        embed = self.embeds.status(True, f"{cog} has been unloaded.")
+        embed = utilities.Embeds.status(True, f"{cog} has been unloaded.")
         await ctx.reply(embed=embed)
 
     @mod.command()
@@ -56,16 +54,12 @@ class Debugger(commands.Cog):
         """Extension reloader, reloads all cogs or `cog` if passed in."""
         if cog is not None:
             self.bot.reload_extension(cog)
+            summary = f"{cog} has been reloaded."
+        else:
+            self.bot.reload()
+            summary = "All modules reloaded."
 
-        else: # Refresh the bot's internal state.
-            self.bot.utils = model.Bakerbot.load_utils()
-            self.bot.secrets = model.Bakerbot.load_secrets()
-
-            for cogs in [c.__module__ for c in self.bot.cogs.values()]:
-                self.bot.reload_extension(cogs)
-
-        summary = f"{cog} has been reloaded." if cog is not None else "All modules reloaded."
-        embed = self.embeds.status(True, summary)
+        embed = utilities.Embeds.status(True, summary)
         await ctx.reply(embed=embed)
 
     @commands.Cog.listener()
@@ -80,19 +74,19 @@ class Debugger(commands.Cog):
         elif isinstance(ex, commands.CommandNotFound):
             reason = f"`{ctx.message.content}` is not a valid command."
             footer = "Try $help for a list of command groups."
-            fail = self.embeds.status(False, reason)
-            fail.set_footer(text=footer, icon_url=self.icons.cross)
+            fail = utilities.Embeds.status(False, reason)
+            fail.set_footer(text=footer, icon_url=utilities.Icons.cross)
             await ctx.reply(embed=fail)
 
         elif isinstance(ex, commands.MissingRequiredArgument):
             reason = f"`{ex.param.name}` is a required argument that is missing."
             footer = f"Expected an argument of type {ex.param.annotation.__name__}."
-            fail = self.embeds.status(False, reason)
-            fail.set_footer(text=footer, icon_url=self.icons.cross)
+            fail = utilities.Embeds.status(False, reason)
+            fail.set_footer(text=footer, icon_url=utilities.Icons.cross)
             await ctx.reply(embed=fail)
 
         else: # Otherwise, we perform generic error handling.
-            embed = self.embeds.status(False, "")
+            embed = utilities.Embeds.status(False, "")
             embed.title = "Exception raised. See below for more information."
 
             # Extract traceback information if available.
