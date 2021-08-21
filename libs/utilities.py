@@ -27,7 +27,7 @@ class Identifiers:
         return f"{rand}{representation}"
 
     @classmethod
-    def extract(cls, interaction: discord.Interaction, obj: t.Type[t.Any]) -> t.Any:
+    def extract(cls, interaction: discord.Interaction, obj: t.Any) -> t.Any:
         """Extracts the object representation passed in via `Identifiers.generate()`."""
         start = cls.bytelength * 2
         identifier = interaction.data["custom_id"]

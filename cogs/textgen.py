@@ -1,14 +1,13 @@
 import discord.ext.commands as commands
 import libs.utilities as utilities
+import libs.hugging as hugging
 import typing as t
 import discord
 import model
-import ujson
-import yarl
 
 class Textgen(commands.Cog):
     """Want to generate some text? Try the text generator!"""
-    def __init__(self, bot: model.Bakerbot, backend: "TextgenBackend") -> None:
+    def __init__(self, bot: model.Bakerbot, backend: hugging.Backend) -> None:
         self.backend = backend
         self.maximum = 200
         self.bot = bot
@@ -56,38 +55,7 @@ class Textgen(commands.Cog):
         self.maximum = maximum or self.maximum
         await ctx.reply(embed=embed)
 
-class TextgenBackend:
-    """A backend Hugging Face API wrapper."""
-    def __init__(self, bot: model.Bakerbot) -> None:
-        self.key = bot.secrets.get("hugging-token", None)
-        self.base = "https://api-inference.huggingface.co"
-        self.session = bot.session
-
-    async def request(self, path: str, payload: dict, headers: dict) -> object:
-        """Send a HTTP POST request to the Hugging Face Inference API."""
-        url = yarl.URL(f"{self.base}/{path}", encoded=True)
-
-        async with self.session.post(url, json=payload, headers=headers) as resp:
-            data = await resp.read()
-            data = data.decode("utf-8")
-            data = ujson.loads(data)
-            return data
-
-    async def generate(self, model: str, query: str, chars: int) -> str:
-        """Generates text from a given `model` and `query` string."""
-        if self.key is None:
-            raise RuntimeError("Request attempted without API key.")
-
-        headers = {"Authorization": f"Bearer {self.key}"}
-        payload = {"inputs": query, "options": {"wait_for_model": True}, "parameters": {"max_length": chars}}
-        data = await self.request(f"models/{model}", payload, headers)
-
-        if isinstance(data, list):
-            return data[0]["generated_text"]
-
-        return data["error"]
-
 def setup(bot: model.Bakerbot) -> None:
-    backend = TextgenBackend(bot)
+    backend = hugging.Backend(bot.secrets, bot.session)
     cog = Textgen(bot, backend)
     bot.add_cog(cog)
