@@ -24,7 +24,7 @@ class Games(commands.Cog):
                             This cog houses swag and epic commands related to gaming.
                             See `$help games` for a full list of available subcommands."""
 
-                embed = discord.Embed(colour=utilities.Colours.regular, timestamp=discord.utils.utcnow())
+                embed = utilities.Embeds.standard()
                 embed.description = summary
                 embed.set_footer(text="Powered by the Hugging Face API.", icon_url=utilities.Icons.info)
                 await ctx.reply(embed=embed)

@@ -36,8 +36,14 @@ class Identifiers:
 
 class Embeds:
     @staticmethod
+    def standard(**kwargs: dict) -> discord.Embed:
+        """Creates a standard Bakerbot embed."""
+        embed = discord.Embed(colour=Colours.regular, timestamp=discord.utils.utcnow(), **kwargs)
+        return embed
+
+    @staticmethod
     def status(success: bool, description: str) -> discord.Embed:
-        """Creates a standardised status embed."""
+        """Creates a standard Bakerbot status embed."""
         status = "Operation successful!" if success else "Operation failed!"
         colour = Colours.success if success else Colours.failure
         icon = Icons.tick if success else Icons.cross

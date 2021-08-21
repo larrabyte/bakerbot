@@ -27,7 +27,7 @@ class Magic(commands.Cog):
             desc = ("Welcome to the Team Magic command group. You can find dumb stuff here.\n"
                     "See `$help magic` for available subcommands.")
 
-            embed = discord.Embed(description=desc, colour=utilities.Colours.regular, timestamp=discord.utils.utcnow())
+            embed = utilities.Embeds.standard(description=desc)
             embed.set_footer(text="These commands will only work inside Team Magic.", icon_url=utilities.Icons.info)
             await ctx.reply(embed=embed)
 

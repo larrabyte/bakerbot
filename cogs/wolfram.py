@@ -87,7 +87,7 @@ class WolframView(discord.ui.View):
     async def podstate_callback(self, interaction: discord.Interaction) -> None:
         """Handles podstate button presses."""
         # Defer the interaction as we need to make another request.
-        embed = discord.Embed(colour=utilities.Colours.regular, timestamp=discord.utils.utcnow())
+        embed = utilities.Embeds.standard()
         embed.description = "Please wait as another WolframAlpha API request is made."
         embed.set_footer(text="Interaction deferred.", icon_url=utilities.Icons.info)
         await interaction.response.edit_message(content=None, embed=embed, view=None)

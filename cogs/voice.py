@@ -45,7 +45,7 @@ class Voice(commands.Cog):
                             This cog houses commands related to audio.
                             See `$help voice` for a full list of available subcommands."""
 
-                embed = discord.Embed(colour=utilities.Colours.regular, timestamp=discord.utils.utcnow())
+                embed = utilities.Embeds.standard()
                 embed.description = summary
                 embed.set_footer(text="Dunno what to put here.", icon_url=utilities.Icons.info)
                 await ctx.reply(embed=embed)
@@ -101,7 +101,7 @@ class Voice(commands.Cog):
             return await ctx.reply(embed=fail)
 
         track = await discord.FFmpegOpusAudio.from_probe(filepath)
-        embed = discord.Embed(colour=utilities.Colours.regular, timestamp=discord.utils.utcnow())
+        embed = utilities.Embeds.standard()
         embed.set_footer(text="Interaction complete.", icon_url=utilities.Icons.info)
         embed.description = f"Now playing `{filepath}`."
 
