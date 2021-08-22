@@ -40,14 +40,6 @@ class Magic(commands.Cog):
         await ctx.reply(embed=embed)
 
     @magic.command()
-    async def replace(self, ctx: commands.Context) -> None:
-        """Enable/disable the word replacer."""
-        self.replacement = not self.replacement
-        description = f"on_message() listener set to: `{self.replacement}`"
-        embed = utilities.Embeds.status(True, description)
-        await ctx.reply(embed=embed)
-
-    @magic.command()
     async def demux(self, ctx: commands.Context, channel: discord.TextChannel, *, message: str) -> None:
         """A demultiplexer experiment using Discord webhooks."""
         endpoints = await channel.webhooks()
