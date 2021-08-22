@@ -79,9 +79,12 @@ class Debugger(commands.Cog):
             await ctx.reply(embed=fail)
 
         elif isinstance(ex, commands.MissingRequiredArgument):
-            reason = f"`{ex.param.name}` is a required argument that is missing."
-            footer = f"Expected an argument of type {ex.param.annotation.__name__}."
+            prefix = f"{ctx.command.full_parent_name} " if ctx.command.parent else ""
+            template = f"{prefix}{ctx.command.name} {ctx.command.signature}"
+            reason = f"`{ex.param.name}` (type {ex.param.annotation.__name__}) is a required argument that is missing.\n"
+
             fail = utilities.Embeds.status(False, reason)
+            footer = f"Command signature: {template}"
             fail.set_footer(text=footer, icon_url=utilities.Icons.cross)
             await ctx.reply(embed=fail)
 
