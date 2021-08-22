@@ -6,7 +6,7 @@ import ujson
 import sys
 
 class Bakerbot(commands.Bot):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: list, **kwargs: dict) -> None:
         super().__init__(*args, **kwargs)
         self.session = aiohttp.ClientSession()
 

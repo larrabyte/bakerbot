@@ -1,6 +1,5 @@
 import discord.ext.commands as commands
 import libs.utilities as utilities
-import typing as t
 import discord
 import model
 
@@ -9,11 +8,33 @@ class Helper(commands.Cog):
     def __init__(self, bot: model.Bakerbot) -> None:
         self.bot = bot
 
-    def cog_help(self, cogname: str) -> discord.Embed:
-        """Returns the documentation for a specific cog."""
-        if (cog := self.bot.get_cog(cogname.capitalize())) is None:
-            fail = utilities.Embeds.status(False, f"Could not find the `{cogname}` cog.")
-            return fail
+    @commands.command()
+    async def help(self, ctx: commands.Context) -> None:
+        """The help command for Bakerbot."""
+        embed = utilities.Embeds.standard()
+        embed.description = "Use the dropbown menu below to see the help for a specific command group."
+        embed.set_footer(text="Remember: the prefix is $ (and not +).", icon_url=utilities.Icons.info)
+        view = HelperView(self.bot)
+        await ctx.reply(embed=embed, view=view)
+
+class HelperView(discord.ui.View):
+    """A subclass of `discord.ui.View` for the help screen."""
+    def __init__(self, bot: model.Bakerbot, *args: list, **kwargs: dict) -> None:
+        super().__init__(*args, **kwargs)
+        self.bot = bot
+
+        self.menu = discord.ui.Select(placeholder="Select any cog to view its commands.")
+        self.menu.callback = self.cog_callback
+
+        for name, cog in self.bot.cogs.items():
+            self.menu.add_option(label=name.lower(), value=name, description=cog.description)
+
+        self.add_item(self.menu)
+
+    async def cog_callback(self, interaction: discord.Interaction) -> None:
+        """Handles cog help requests."""
+        selection = self.menu.values[0]
+        cog = self.bot.cogs[selection]
 
         embed = utilities.Embeds.standard()
         footer = "Arguments enclosed in <> are required while [] are optional."
@@ -21,29 +42,13 @@ class Helper(commands.Cog):
 
         for command in cog.walk_commands():
             # We don't want group parent commands listed, ignore those.
-            if isinstance(command, commands.Group): continue
-            prefix = f"{command.full_parent_name}" if command.parent else ""
-            embed.add_field(name=f"{prefix} {command.name} {command.signature}", value=command.help, inline=False)
+            if isinstance(command, commands.Group):
+                continue
 
-        return embed
+            prefix = f"{command.full_parent_name} " if command.parent else ""
+            embed.add_field(name=f"{prefix}{command.name} {command.signature}", value=command.help, inline=False)
 
-    def general_help(self) -> discord.Embed:
-        """Returns documentation for Bakerbot."""
-        embed = utilities.Embeds.standard()
-        footer = "Typing $help [cogname] will display commands in that cog."
-        embed.set_footer(text=footer, icon_url=utilities.Icons.info)
-
-        # Get list of cog objects using self.bot.cogs and add fields to embed.
-        for cog in [self.bot.cogs[name] for name in self.bot.cogs]:
-            embed.add_field(name=cog.qualified_name.lower(), value=cog.description, inline=False)
-
-        return embed
-
-    @commands.command()
-    async def help(self, ctx: commands.Context, cogname: t.Optional[str]) -> None:
-        """Displays a list of cogs. Passing in `cogname` will display commands inside that cog."""
-        embed = self.general_help() if cogname is None else self.cog_help(cogname)
-        await ctx.reply(embed=embed)
+        await interaction.response.edit_message(embed=embed)
 
 def setup(bot: model.Bakerbot) -> None:
     cog = Helper(bot)
