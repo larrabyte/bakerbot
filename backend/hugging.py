@@ -1,3 +1,5 @@
+import exceptions
+
 import aiohttp
 import ujson
 import yarl
@@ -22,7 +24,7 @@ class Backend:
     async def generate(self, model: str, query: str, chars: int) -> str:
         """Generates text from a given `model` and `query` string."""
         if self.key is None:
-            raise RuntimeError("Request attempted without API key.")
+            raise exceptions.SecretNotFound("hugging-token not found in secrets.json.")
 
         headers = {"Authorization": f"Bearer {self.key}"}
         payload = {"inputs": query, "options": {"wait_for_model": True}, "parameters": {"max_length": chars}}

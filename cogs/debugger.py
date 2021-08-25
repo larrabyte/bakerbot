@@ -1,9 +1,9 @@
+import backend.utilities as utilities
+import model
+
 import discord.ext.commands as commands
-import libs.utilities as utilities
 import traceback as trace
 import typing as t
-import discord
-import model
 
 class Debugger(commands.Cog):
     """Provides a built-in debugger for Bakerbot."""

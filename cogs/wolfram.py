@@ -1,10 +1,11 @@
+import backend.utilities as utilities
+import backend.wolfram as wolfram
+import model
+
 import discord.ext.commands as commands
-import libs.utilities as utilities
-import libs.wolfram as wolfram
 import titlecase as tcase
 import typing as t
 import discord
-import model
 
 class Wolfram(commands.Cog):
     """Houses an API wrapper for WolframAlpha."""

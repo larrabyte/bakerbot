@@ -1,11 +1,12 @@
+import backend.utilities as utilities
+import backend.covid as covid
+import model
+
 import discord.ext.commands as commands
-import libs.utilities as utilities
 import discord.ext.tasks as tasks
-import libs.covid as covid
 import datetime
 import discord
 import asyncio
-import model
 
 class Covid(commands.Cog):
     """Daily COVID-19 tracker for New South Wales."""

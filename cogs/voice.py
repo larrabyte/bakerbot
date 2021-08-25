@@ -1,9 +1,10 @@
+import backend.utilities as utilities
+import model
+
 import discord.ext.commands as commands
-import libs.utilities as utilities
 import typing as t
 import pathlib
 import discord
-import model
 
 class Voice(commands.Cog):
     """Houses the voice client for Bakerbot. Audio commands can be found here."""

@@ -1,3 +1,5 @@
+import exceptions
+
 import hashlib
 import aiohttp
 import urllib
@@ -29,7 +31,7 @@ class Backend:
     def digest(self, results: dict) -> str:
         """Returns an MD5 digest of `results`."""
         if self.salt is None:
-            raise RuntimeError("Digest attempted without a salt.")
+            raise exceptions.SecretNotFound("wolfram-salt not specified in secrets.json.")
 
         values = [f"{k}{v}" for k, v in results.items()]
         data = f"{self.salt}{''.join(values)}"
@@ -40,7 +42,7 @@ class Backend:
     def parameters(self, query: str, **kwargs: dict) -> dict:
         """Generates a reasonable default dictionary of parameters (plus extras via kwargs)."""
         if self.id is None:
-            raise RuntimeError("Parameter construction attempted without an ID.")
+            raise exceptions.SecretNotFound("wolfram-id not specified in secrets.json.")
 
         params = {
             "appid": self.id,

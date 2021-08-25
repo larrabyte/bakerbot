@@ -1,4 +1,5 @@
-from importlib import util
+import exceptions
+
 import discord.ext.commands as commands
 import importlib
 import aiohttp
@@ -18,8 +19,11 @@ class Bakerbot(commands.Bot):
         with open("secrets.json", "r") as file:
             self.secrets = ujson.load(file)
 
-        reloadables = [module for name, module in sys.modules.items() if name.startswith("libs.")]
+        reloadables = [module for name, module in sys.modules.items() if name.startswith("backend.")]
         extensions = [extension for extension in self.extensions.keys()]
+
+        # Add any special files to the reloadables list.
+        reloadables.append(exceptions)
 
         for reloadable in reloadables:
             importlib.reload(reloadable)
@@ -29,7 +33,8 @@ class Bakerbot(commands.Bot):
 
     def run(self) -> None:
         """Starts the bot. This should be the last function that is called."""
-        if (token := self.secrets.get("discord-token", None)) is None:
-            raise RuntimeError("discord-token not found in secrets.json.")
+        if "discord-token" not in self.secrets:
+            raise exceptions.SecretNotFound("discord-token not specified in secrets.json.")
 
+        token = self.secrets["discord-token"]
         super().run(token)

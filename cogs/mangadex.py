@@ -1,10 +1,11 @@
+import backend.utilities as utilities
+import backend.mangadex as mangadex
+import model
+
 import discord.ext.commands as commands
-import libs.utilities as utilities
-import libs.mangadex as mangadex
 import titlecase as tcase
 import typing as t
 import discord
-import model
 
 class Mangadex(commands.Cog):
     """A manga reader for Bakerbot!"""

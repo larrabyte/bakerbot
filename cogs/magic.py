@@ -1,8 +1,9 @@
+import backend.utilities as utilities
+import model
+
 import discord.ext.commands as commands
-import libs.utilities as utilities
 import asyncio
 import discord
-import model
 
 class Magic(commands.Cog):
     """You can find dumb ideas from Team Magic here."""

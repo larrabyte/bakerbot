@@ -1,7 +1,8 @@
-import discord.ext.commands as commands
-import libs.utilities as utilities
-import discord
+import backend.utilities as utilities
 import model
+
+import discord.ext.commands as commands
+import discord
 
 class Helper(commands.Cog):
     """Bakerbot's documentation lives here."""

@@ -1,9 +1,10 @@
+import backend.utilities as utilities
+import backend.hugging as hugging
+import model
+
 import discord.ext.commands as commands
-import libs.utilities as utilities
-import libs.hugging as hugging
 import typing as t
 import discord
-import model
 
 class Textgen(commands.Cog):
     """Want to generate some text? Try the text generator!"""
