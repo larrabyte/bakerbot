@@ -9,6 +9,7 @@ class Magic(commands.Cog):
     """You can find dumb ideas from Team Magic here."""
     def __init__(self, bot: model.Bakerbot):
         self.magic = 473426067823263749
+        self.targets = set()
         self.sniper = False
         self.bot = bot
 
@@ -69,11 +70,32 @@ class Magic(commands.Cog):
 
         await ctx.reply(f"{moved} webhooks were moved.")
 
+    @magic.command()
+    async def gryffindor(self, ctx: commands.Context, member: discord.Member) -> None:
+        """Prevent a member from joining a voice channel."""
+        mentions = discord.AllowedMentions.none()
+
+        if member.id in self.targets:
+            self.targets.remove(member.id)
+            await ctx.reply(f"{member.mention} shall pass!", allowed_mentions=mentions)
+        else:
+            self.targets.add(member.id)
+            if member.voice is not None and member.voice.channel is not None:
+                await member.move_to(None)
+
+            await ctx.reply(f"{member.mention} shall not pass!", allowed_mentions=mentions)
+
     @commands.Cog.listener()
     async def on_message_delete(self, message: discord.Message) -> None:
         """Resends deleted messages. Triggered by the nodelete command."""
         if self.sniper and message.guild.id == self.magic:
             await message.channel.send(f"> Sent by {message.author.mention}\n{message.content}")
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState) -> None:
+        """Prevents certain members from joining."""
+        if member.id in self.targets and after.channel is not None:
+            await member.move_to(None)
 
 def setup(bot):
     cog = Magic(bot)
