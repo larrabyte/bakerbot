@@ -12,6 +12,7 @@ class Backend:
         self.id = secrets.get("wolfram-id", None)
         self.salt = secrets.get("wolfram-salt", None)
         self.hashing = secrets.get("wolfram-hash", False)
+        self.v2base = "https://api.wolframalpha.com/v2"
         self.session = session
 
     def valid(self, results: dict) -> bool:
@@ -19,14 +20,6 @@ class Backend:
         success = results.get("success", False)
         error = results.get("error", True)
         return success and not error
-
-    @property
-    def available(self) -> bool:
-        """Checks whether the backend is available for use."""
-        token = self.id is not None
-        hashoff = self.hashing is False
-        hashon = self.hashing is True and self.salt is not None
-        return token and (hashon or hashoff)
 
     def digest(self, results: dict) -> str:
         """Returns an MD5 digest of `results`."""
@@ -77,8 +70,8 @@ class Backend:
             digest = self.digest(params)
             path += f"&sig={digest}"
 
-        v2base = "https://api.wolframalpha.com/v2"
-        data = await self.request(f"{v2base}/{path}")
+        path = f"{self.v2base}/{path}"
+        data = await self.request(path)
 
         try:
             data = ujson.loads(data)
