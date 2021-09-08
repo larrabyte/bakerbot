@@ -67,8 +67,10 @@ class Voice(commands.Cog):
             paginator.placeholder = "Tracks"
 
             for track in pathlib.Path("music").iterdir():
-                label = f"{track.name[0:22]}..." if len(track.name) > 25 else track.name
-                option = discord.SelectOption(label=label, value=track.name, description=str(track))
+                label = utilities.Limits.limit(track.name, utilities.Limits.select_label)
+                value = utilities.Limits.limit(track.name, utilities.Limits.select_value)
+                desc = utilities.Limits.limit(str(track), utilities.Limits.select_description)
+                option = discord.SelectOption(label=label, value=value, description=desc)
                 paginator.add(option)
 
             await ctx.reply("Please select a track from the dropdown menu.", view=paginator)

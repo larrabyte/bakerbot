@@ -18,6 +18,32 @@ class Icons:
     rfa = "https://upload.wikimedia.org/wikipedia/commons/4/40/Radio_Free_Asia_%28logo%29.png"
     wikipedia = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Wikipedia-logo-v2.svg/500px-Wikipedia-logo-v2.svg.png"
 
+class Limits:
+    message_content = 2000
+    message_embeds = 10
+    embed_characters = 6000
+    embed_title = 256
+    embed_description = 4096
+    embed_fields = 25
+    embed_field_name = 256
+    embed_field_value = 1024
+    embed_footer_text = 2048
+    embed_author_name = 256
+    view_children = 25
+    view_items_per_row = 5
+    select_label = 100
+    select_value = 100
+    select_description = 100
+    select_options = 25
+
+    @classmethod
+    def limit(cls, string: str, limit: int) -> str:
+        """Limits a string to `limit` characters."""
+        if len(string) > limit:
+            return f"{string[0:limit - 3]}..."
+
+        return string
+
 class Identifiers:
     bytelength = 16
 
@@ -89,7 +115,7 @@ class View(discord.ui.View):
         readable = str(error) or type(error).__name__
         embed.description += readable
 
-        maximum = 6000 - (len(embed.title) + 6)
+        maximum = Limits.embed_characters - (len(embed.title) + 6)
         if len(embed.description) > maximum:
             embed.description = embed.description[:maximum]
 
@@ -109,26 +135,28 @@ class Paginator(View):
 
     def active(self) -> t.List[discord.ui.Select]:
         """Returns the list of active menus (according to `self.menus` and `self.page`)."""
-        begin, end = 4 * self.page, 4 * (self.page + 1)
+        constant = Limits.view_items_per_row - 1
+        begin, end = constant * self.page, constant * (self.page + 1)
         return self.menus[begin:end]
 
     def generate(self) -> discord.ui.Select:
         """Returns a menu with an appropriate ID and placeholder."""
         n = len(self.menus)
         i = Identifiers.generate(n)
+        lower, upper = (Limits.select_options * n) + 1, Limits.select_options * (n + 1)
 
-        text = f"{self.placeholder} {25 * n + 1} to {25 * n + 25}"
+        text = f"{self.placeholder} {lower} to {upper}"
         menu = discord.ui.Select(custom_id=i, placeholder=text)
         menu.callback = self.callback
         return menu
 
     def add(self, option: discord.SelectOption) -> None:
         """Adds an item to the Paginator."""
-        if not self.menus or len(self.menus[-1].options) == 25:
+        if not self.menus or len(self.menus[-1].options) == Limits.select_options:
             menu = self.generate()
             self.menus.append(menu)
 
-            if len(self.menus) < 5:
+            if len(self.menus) < Limits.view_items_per_row:
                 self.add_item(menu)
 
         self.menus[-1].append_option(option)
@@ -173,7 +201,8 @@ class Paginator(View):
     @discord.ui.button(label="Next", row=4)
     async def next(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
         """Moves the Paginator to the next page."""
-        if self.page >= -(-len(self.menus) // 4) - 1:
+        constant = (Limits.view_items_per_row - 1)
+        if self.page >= -(-len(self.menus) // constant) - 1:
             return await interaction.response.defer()
 
         self.page += 1
@@ -183,6 +212,7 @@ class Paginator(View):
     @discord.ui.button(label="Last", row=4)
     async def last(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
         """Moves the Paginator to the last page."""
-        self.page = -(-len(self.menus) // 4) - 1
+        constant = (Limits.view_items_per_row - 1)
+        self.page = -(-len(self.menus) // constant) - 1
         self.display()
         await interaction.response.edit_message(view=self)

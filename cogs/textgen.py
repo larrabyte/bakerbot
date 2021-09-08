@@ -6,6 +6,7 @@ import model
 import discord.ext.commands as commands
 import typing as t
 import discord
+import io
 
 class Textgen(commands.Cog):
     """An interface to a text-generating neural network."""
@@ -29,10 +30,14 @@ class Textgen(commands.Cog):
             data = await self.backend.generate(self.model, query)
             data = discord.utils.escape_markdown(data)
 
-        if len(data) > 2000:
-            data = f"{data[0:1997]}..."
+        if len(data) < utilities.Limits.message_content:
+            return await ctx.reply(data)
 
-        await ctx.reply(data)
+        # Chunk the message if it's over the limit.
+        encoded = data.encode("utf-8")
+        rawdata = io.BytesIO(encoded)
+        uploadable = discord.File(rawdata, "generated.txt")
+        await ctx.reply(file=uploadable)
 
     @text.command()
     async def length(self, ctx: commands.Context, maximum: t.Optional[int]) -> None:

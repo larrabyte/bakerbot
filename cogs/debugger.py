@@ -89,7 +89,7 @@ class Debugger(commands.Cog):
             readable = str(ex) or type(ex).__name__
             embed.description += readable
 
-            maximum = 6000 - (len(embed.title) + 6)
+            maximum = utilities.Limits.embed_characters - (len(embed.title) + 6)
             if len(embed.description) > maximum:
                 embed.description = embed.description[:maximum]
 

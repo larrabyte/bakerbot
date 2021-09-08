@@ -42,8 +42,8 @@ class Mangadex(commands.Cog):
         embed.description = description
 
         genres = [tag["attributes"]["name"]["en"] for tag in manga["tags"]]
-        genreSubtitle = "Genres" if len(genres) > 1 else "Genre"
-        embed.add_field(name=genreSubtitle, value=", ".join(genres))
+        genre_subtitle = "Genres" if len(genres) > 1 else "Genre"
+        embed.add_field(name=genre_subtitle, value=", ".join(genres))
 
         demo = manga["publicationDemographic"]
         demo = tcase.titlecase(demo) if demo is not None else "Unknown demographic."
@@ -79,11 +79,11 @@ class Mangadex(commands.Cog):
             chapter_index = chapter["data"]["attributes"]["chapter"]
             description = f"Volume {volume_index}, " if volume_index is not None else ""
             description += f"Chapter {chapter_index}"
-
             title = chapter["data"]["attributes"]["title"] or description
-            label = f"{title[0:22]}..." if len(title) > 25 else title
 
-            option = discord.SelectOption(label=label, value=str(index), description=description)
+            title = utilities.Limits.limit(title, utilities.Limits.select_label)
+            description = utilities.Limits.limit(description, utilities.Limits.select_description)
+            option = discord.SelectOption(label=title, value=str(index), description=description)
             paginator.add(option)
 
         message = await ctx.reply("Select any chapter to start reading.", view=paginator)
