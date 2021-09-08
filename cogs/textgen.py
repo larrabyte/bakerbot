@@ -1,4 +1,5 @@
 import backend.utilities as utilities
+import backend.hugging as hugging
 import backend.neuro as neuro
 import model
 
@@ -10,7 +11,7 @@ class Textgen(commands.Cog):
     """An interface to a text-generating neural network."""
     def __init__(self, bot: model.Bakerbot, backend: neuro.Backend) -> None:
         self.backend = backend
-        self.maximum = 200
+        self.model = neuro.Model("60ca2a1e54f6ecb69867c72c")
         self.bot = bot
 
     @commands.group(invoke_without_subcommand=True)
@@ -25,7 +26,7 @@ class Textgen(commands.Cog):
     async def generate(self, ctx: commands.Context, temperature: t.Optional[float]=1.0, *, query: str) -> None:
         """Generates text with an optional `temperature` parameter."""
         async with ctx.typing():
-            data = await self.backend.generate(query, self.maximum, temperature=temperature)
+            data = await self.backend.generate(self.model, query)
             data = discord.utils.escape_markdown(data)
 
         if len(data) > 2000:
@@ -36,11 +37,8 @@ class Textgen(commands.Cog):
     @text.command()
     async def length(self, ctx: commands.Context, maximum: t.Optional[int]) -> None:
         """Queries or sets the maximum number of characters returned by the API."""
-        info = f"The maximum is currently `{self.maximum}`." if maximum is None else f"The maximum has been set to `{maximum}`."
-        embed = utilities.Embeds.standard(description=info)
-        embed.set_footer(text="Powered by the Hugging Face API.", icon_url=utilities.Icons.info)
-        self.maximum = maximum or self.maximum
-        await ctx.reply(embed=embed)
+        self.model.maximum = maximum or self.model.maximum
+        await ctx.reply(f"The current maximum is (now?) `{self.model.maximum}` tokens.")
 
 def setup(bot: model.Bakerbot) -> None:
     backend = neuro.Backend(bot.secrets, bot.session)

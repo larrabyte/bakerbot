@@ -1,3 +1,5 @@
+import exceptions
+
 import aiohttp
 import ujson
 import yarl
@@ -22,16 +24,17 @@ class Backend:
 
     async def request(self, path: str) -> dict:
         """Sends a HTTP GET request to the COVID-19 API."""
-        url = yarl.URL(f"{self.base}/{path}")
+        url = yarl.URL(f"{self.base}/{path}", encoded=True)
 
         async with self.session.get(url) as resp:
+            if resp.status != 200:
+                raise exceptions.HTTPStatusError(200, resp.status)
+
             data = await resp.read()
-            data = data.decode("utf-8")
             return ujson.loads(data)
 
     async def statistics(self) -> Statistics:
         """Returns COVID-19 statistics from the NSWDAC's API."""
         results = await self.request("datafiles/statsLocations.json")
-        results = results["data"][0]
-        stats = Statistics(results)
-        return stats
+        rawdata = results["data"][0]
+        return Statistics(rawdata)
