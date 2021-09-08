@@ -46,7 +46,7 @@ class Voice(commands.Cog):
     @vc.command()
     async def upload(self, ctx: commands.Context) -> None:
         """Uploads a file to Bakerbot's music repository."""
-        embed = utilities.Embeds.status(True, None)
+        embed = utilities.Embeds.status(True, "")
         saved = 0
 
         async with ctx.typing():

@@ -18,18 +18,6 @@ class Icons:
     rfa = "https://upload.wikimedia.org/wikipedia/commons/4/40/Radio_Free_Asia_%28logo%29.png"
     wikipedia = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Wikipedia-logo-v2.svg/500px-Wikipedia-logo-v2.svg.png"
 
-class Commands:
-    @staticmethod
-    async def group(ctx: commands.Context, summary: str) -> None:
-        """Handles standard parent group command behaviour."""
-        if ctx.invoked_subcommand is None:
-            if ctx.subcommand_passed is None:
-                await ctx.reply(summary)
-            else:
-                command = f"${ctx.command.name} {ctx.subcommand_passed}"
-                summary = f"`{command}` is not a valid command."
-                await ctx.reply(summary)
-
 class Identifiers:
     bytelength = 16
 
@@ -66,6 +54,21 @@ class Embeds:
         embed.set_footer(text=status, icon_url=icon)
         embed.description = description
         return embed
+
+class Commands:
+    @staticmethod
+    async def group(ctx: commands.Context, summary: str) -> None:
+        """Handles standard parent group command behaviour."""
+        if ctx.invoked_subcommand is None:
+            if ctx.subcommand_passed is None:
+                await ctx.reply(summary)
+            else:
+                classname = str(ctx.command.cog.__class__.__name__).lower()
+                summary = f"`{ctx.subcommand_passed}` is not a valid subcommand of `${ctx.command.name}`."
+                footer = f"Try $help {classname} for a list of subcommands."
+                embed = Embeds.status(False, summary)
+                embed.set_footer(text=footer, icon_url=Icons.cross)
+                await ctx.reply(embed=embed)
 
 class View(discord.ui.View):
     """A subclass of `discord.ui.View` that streamlines interaction error handling."""

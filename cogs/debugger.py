@@ -56,7 +56,8 @@ class Debugger(commands.Cog):
             pass
 
         elif isinstance(ex, commands.CommandNotFound):
-            reason = f"`{ctx.message.content}` is not a valid command."
+            command = ctx.message.content.split(" ")[0]
+            reason = f"`{command}` is not a valid command."
             footer = "Try $help for a list of command groups."
             fail = utilities.Embeds.status(False, reason)
             fail.set_footer(text=footer, icon_url=utilities.Icons.cross)
