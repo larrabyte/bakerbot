@@ -15,7 +15,7 @@ class Statistics:
         self.interstate = data.get("AcquiredInterstate", None)
 
 class Backend:
-    """Backend COVID-19 API wrapper."""
+    """The backend COVID-19 API wrapper."""
     def __init__(self, session: aiohttp.ClientSession) -> None:
         self.base = "https://nswdac-covid-19-postcode-heatmap.azurewebsites.net"
         self.session = session

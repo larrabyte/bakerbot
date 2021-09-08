@@ -1,3 +1,4 @@
+import discord.ext.commands as commands
 import typing as t
 import discord
 import os
@@ -15,6 +16,18 @@ class Icons:
     illuminati = "https://upload.wikimedia.org/wikipedia/commons/a/a9/Illuminati_triangle_eye.png"
     rfa = "https://upload.wikimedia.org/wikipedia/commons/4/40/Radio_Free_Asia_%28logo%29.png"
     wikipedia = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Wikipedia-logo-v2.svg/500px-Wikipedia-logo-v2.svg.png"
+
+class Commands:
+    @staticmethod
+    async def group(ctx: commands.Context, summary: str) -> None:
+        """Handles standard parent group command behaviour."""
+        if ctx.invoked_subcommand is None:
+            if ctx.subcommand_passed is None:
+                await ctx.reply(summary)
+            else:
+                command = f"${ctx.command.name} {ctx.subcommand_passed}"
+                summary = f"`{command}` is not a valid command."
+                await ctx.reply(summary)
 
 class Identifiers:
     bytelength = 16

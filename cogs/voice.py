@@ -7,12 +7,11 @@ import pathlib
 import discord
 
 class Voice(commands.Cog):
-    """Houses the voice client for Bakerbot. Audio commands can be found here."""
+    """Houses Bakerbot's voice client: audio-related commands can be found here."""
     def __init__(self, bot: model.Bakerbot) -> None:
         self.bot = bot
 
     def cog_unload(self) -> None:
-        """Ensures a clean disconnect from any voice clients on unload."""
         for client in self.bot.voice_clients:
             coro = self.cog_unload_disconnect(client)
             self.bot.loop.create_task(coro)
@@ -38,26 +37,11 @@ class Voice(commands.Cog):
 
     @commands.group(invoke_without_subcommand=True)
     async def vc(self, ctx: commands.Context) -> None:
-        """The parent command for voice client management."""
-        if ctx.invoked_subcommand is None:
-            if ctx.subcommand_passed is None:
-                # There is no subcommand: inform the user about voice clients.
-                summary = """Hi! Welcome to Bakerbot's voice client command group.
-                            This cog houses commands related to audio.
-                            See `$help voice` for a full list of available subcommands."""
+        """The parent command for Bakerbot's voice client."""
+        summary = ("You've encountered Bakerbot's voice client! "
+                   "See `$help voice` for a full list of available subcommands.")
 
-                embed = utilities.Embeds.standard()
-                embed.description = summary
-                embed.set_footer(text="Dunno what to put here.", icon_url=utilities.Icons.info)
-                await ctx.reply(embed=embed)
-            else:
-                # The subcommand was not valid: throw a fit.
-                command = f"${ctx.command.name} {ctx.subcommand_passed}"
-                summary = f"`{command}` is not a valid command."
-                footer = "Try $help voice for a full list of available subcommands."
-                embed = utilities.Embeds.status(False, summary)
-                embed.set_footer(text=footer, icon_url=utilities.Icons.cross)
-                await ctx.reply(embed=embed)
+        await utilities.Commands.group(ctx, summary)
 
     @vc.command()
     async def upload(self, ctx: commands.Context) -> None:
@@ -77,7 +61,7 @@ class Voice(commands.Cog):
 
     @vc.command()
     async def play(self, ctx: commands.Context, track: t.Optional[str]) -> None:
-        """Plays audio tracks from the music folder."""
+        """Plays audio tracks from Bakerbot's music folder."""
         if track is None:
             paginator = utilities.Paginator()
             paginator.placeholder = "Tracks"
@@ -126,7 +110,7 @@ class Voice(commands.Cog):
 
     @vc.command()
     async def leave(self, ctx: commands.Context) -> None:
-        """Disconnects the bot from any guild voice channels."""
+        """Disconnects the bot from any voice channels."""
         vc = ctx.guild.voice_client
         if vc is not None and vc.is_connected():
             await vc.disconnect()

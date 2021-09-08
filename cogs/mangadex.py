@@ -8,7 +8,7 @@ import typing as t
 import discord
 
 class Mangadex(commands.Cog):
-    """A manga reader for Bakerbot!"""
+    """Bakerbot's implementation of the Mangadex API (v5)."""
     def __init__(self, bot: model.Bakerbot, backend: mangadex.Backend) -> None:
         self.backend = backend
         self.bot = bot
@@ -16,29 +16,14 @@ class Mangadex(commands.Cog):
     @commands.group(invoke_without_subcommand=True)
     async def manga(self, ctx: commands.Context) -> None:
         """The parent command for the manga reader."""
-        if ctx.invoked_subcommand is None:
-            if ctx.subcommand_passed is None:
-                # There is no subcommand: inform the user about the manga reader.
-                summary = """Hi! Welcome to Bakerbot's manga reader.
-                            This cog houses commands for searching and reading manga.
-                            See `$help mangadex` for a full list of available subcommands."""
+        summary = ("You've encountered the Mangadex command group!"
+                    "See `$help mangadex` for a full list of available subcommands.")
 
-                embed = utilities.Embeds.standard()
-                embed.set_footer(text="Powered by the Mangadex API.", icon_url=utilities.Icons.info)
-                embed.description = summary
-                await ctx.reply(embed=embed)
-            else:
-                # The subcommand was not valid: throw a fit.
-                command = f"${ctx.command.name} {ctx.subcommand_passed}"
-                summary = f"`{command}` is not a valid command."
-                footer = "Try $help mangadex for a full list of available subcommands."
-                embed = utilities.Embeds.status(False, summary)
-                embed.set_footer(text=footer, icon_url=utilities.Icons.cross)
-                await ctx.reply(embed=embed)
+        await utilities.Commands.group(ctx, summary)
 
     @manga.command()
     async def info(self, ctx: commands.Context, *, title: str) -> None:
-        """Get information on a manga given a `title` as the search query."""
+        """Returns informatioan about a specific manga."""
         async with ctx.typing():
             searches = await self.backend.search(title, 1)
             data = searches["results"][0]
@@ -67,7 +52,7 @@ class Mangadex(commands.Cog):
 
     @manga.command()
     async def read(self, ctx: commands.Context, *, title: str) -> None:
-        """Read a manga (using `title` as the search query)."""
+        """Initialises an instance of Bakerbot's manga reader."""
         async with ctx.typing():
             searches = await self.backend.search(title, 1)
             data = searches["results"][0]
@@ -75,25 +60,25 @@ class Mangadex(commands.Cog):
             aggregate = await self.backend.aggregate(uuid)
 
         volumes = aggregate["volumes"].values()
-        numChapters = sum(volume["count"] for volume in volumes)
+        num_chapters = sum(volume["count"] for volume in volumes)
         chapters = []
         offset = 0
 
-        while numChapters > 0:
-            limit = min(numChapters, 500)
+        while num_chapters > 0:
+            limit = min(num_chapters, 500)
             data = await self.backend.feed(uuid, limit, offset)
             chapters += data["results"]
-            numChapters -= limit
+            num_chapters -= limit
             offset += 500
 
         paginator = utilities.Paginator()
         paginator.placeholder = "Chapters"
 
         for index, chapter in enumerate(chapters):
-            volumeIndex = chapter["data"]["attributes"]["volume"]
-            chapterIndex = chapter["data"]["attributes"]["chapter"]
-            description = f"Volume {volumeIndex}, " if volumeIndex is not None else ""
-            description += f"Chapter {chapterIndex}"
+            volume_index = chapter["data"]["attributes"]["volume"]
+            chapter_index = chapter["data"]["attributes"]["chapter"]
+            description = f"Volume {volume_index}, " if volume_index is not None else ""
+            description += f"Chapter {chapter_index}"
 
             title = chapter["data"]["attributes"]["title"] or description
             label = f"{title[0:22]}..." if len(title) > 25 else title

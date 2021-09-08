@@ -8,14 +8,14 @@ import typing as t
 import discord
 
 class Wolfram(commands.Cog):
-    """Houses an API wrapper for WolframAlpha."""
+    """Bakerbot's interface to WolframAlpha. Supports unlimited requests and step-by-step solutions."""
     def __init__(self, bot: model.Bakerbot, backend: wolfram.Backend) -> None:
         self.backend = backend
         self.bot = bot
 
     @commands.command(aliases=["わ"])
     async def wa(self, ctx: commands.Context, *, query: str) -> None:
-        """Ask WolframAlpha anything you want!"""
+        """Queries WolframAlpha with `query`."""
         async with ctx.typing():
             params = self.backend.parameters(query, format="image", width="1500", mag="3")
             view = await WolframView.create(self.backend, params)
@@ -28,10 +28,9 @@ class Wolfram(commands.Cog):
         await ctx.reply(data, view=view)
 
 class WolframView(discord.ui.View):
-    """A subclass of `discord.ui.View` for WolframAlpha queries using the Full Results API."""
+    """A subclass of `discord.ui.View` for queries using the Full Results API."""
     @classmethod
     async def create(cls, backend: wolfram.Backend, params: dict) -> t.Optional["WolframView"]:
-        """Creates and returns an instance of `WolframView`."""
         instance = WolframView()
         instance.results = await backend.fullresults(params)
         if not backend.valid(instance.results):

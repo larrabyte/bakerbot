@@ -4,7 +4,7 @@ import ujson
 import yarl
 
 class Backend:
-    """Backend Mangadex API wrapper."""
+    """The Mangadex API wrapper."""
     def __init__(self, session: aiohttp.ClientSession) -> None:
         self.session = session
 
@@ -38,7 +38,7 @@ class Backend:
         return results["baseUrl"]
 
     async def search(self, title: str, maximum: int) -> dict:
-        """Search for some manga given a `title`."""
+        """Searches for a manga."""
         params = {"title": title, "limit": maximum}
         encoder = urllib.parse.quote_plus
         params = urllib.parse.urlencode(params, quote_via=encoder)

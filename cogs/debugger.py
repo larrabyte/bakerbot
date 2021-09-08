@@ -14,44 +14,28 @@ class Debugger(commands.Cog):
     @commands.group(invoke_without_subcommand=True)
     async def mod(self, ctx: commands.Context):
         """The parent command for the module manager."""
-        if ctx.invoked_subcommand is None:
-            if ctx.subcommand_passed is None:
-                # There is no subcommand: inform the user about the module manager.
-                summary = """Welcome to the module manager. This command group is responsible
-                            for providing a front end to Bakerbot's extension loader/unloader.
-                            See `$help debugger` for a full list of available subcommands."""
+        summary = ("You've encountered Bakerbot's module manager! "
+                   "See `$help debugger` for a full list of available subcommands.")
 
-                footer = "Only approved users may execute module manager commands."
-                embed = utilities.Embeds.standard()
-                embed.description = summary
-                embed.set_footer(text=footer, icon_url=utilities.Icons.info)
-                await ctx.reply(embed=embed)
-            else:
-                # The subcommand was not valid: throw a fit.
-                command = f"${ctx.command.name} {ctx.subcommand_passed}"
-                summary = f"`{command}` is not a valid command."
-                footer = "Try $help debugger for a full list of available subcommands."
-                embed = utilities.Embeds.status(False, summary)
-                embed.set_footer(text=footer, icon_url=utilities.Icons.cross)
-                await ctx.reply(embed=embed)
+        await utilities.Commands.group(ctx, summary)
 
     @mod.command()
     async def load(self, ctx: commands.Context, cog: str):
-        """Extension loader, requires a fully qualified module name."""
+        """Loads a command group."""
         self.bot.load_extension(cog)
         embed = utilities.Embeds.status(True, f"{cog} has been loaded.")
         await ctx.reply(embed=embed)
 
     @mod.command()
     async def unload(self, ctx: commands.Context, cog: str):
-        """Extension unloader, requires a fully qualified module name."""
+        """Unloads a command group."""
         self.bot.unload_extension(cog)
         embed = utilities.Embeds.status(True, f"{cog} has been unloaded.")
         await ctx.reply(embed=embed)
 
     @mod.command()
     async def reload(self, ctx: commands.Context, cog: t.Optional[str]) -> None:
-        """Extension reloader, reloads all cogs or `cog` if passed in."""
+        """Reloads `cog` if specified, otherwise refreshes the bot's internal state."""
         if cog is not None:
             self.bot.reload_extension(cog)
             summary = f"{cog} has been reloaded."

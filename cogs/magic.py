@@ -14,28 +14,19 @@ class Magic(commands.Cog):
         self.bot = bot
 
     async def cog_check(self, ctx: commands.Context) -> None:
-        # There are two conditions for running these commands:
-        # the command is being run in Team Magic or I'm the one executing it.
-        if ctx.guild.id == self.magic or (await self.bot.is_owner(ctx.author)):
-            return True
-
-        return False
+        return ctx.guild.id == self.magic or (await self.bot.is_owner(ctx.author))
 
     @commands.group(invoke_without_subcommand=True)
     async def magic(self, ctx: commands.Context) -> None:
         """The parent command for all things Team Magic related."""
-        if ctx.invoked_subcommand is None:
-            # Since there was no subcommand, inform the user about the group and its subcommands.
-            desc = ("Welcome to the Team Magic command group. You can find dumb stuff here.\n"
-                    "See `$help magic` for available subcommands.")
+        summary = ("You've encountered Team Magic's command group!"
+                    "See `$help magic` for a full list of available subcommands.")
 
-            embed = utilities.Embeds.standard(description=desc)
-            embed.set_footer(text="These commands will only work inside Team Magic.", icon_url=utilities.Icons.info)
-            await ctx.reply(embed=embed)
+        await utilities.Commands.group(ctx, summary)
 
     @magic.command()
     async def nodelete(self, ctx: commands.Context) -> None:
-        """Enable/disable the message sniper."""
+        """Enables/disables the `on_message` listener for Team Magic."""
         self.sniper = not self.sniper
         description = f"on_message_delete() listener set to: `{self.sniper}`"
         embed = utilities.Embeds.status(True, description)
@@ -43,7 +34,7 @@ class Magic(commands.Cog):
 
     @magic.command()
     async def demux(self, ctx: commands.Context, channel: discord.TextChannel, *, message: str) -> None:
-        """A demultiplexer experiment using Discord webhooks."""
+        """A demultiplexing experiment using Discord webhooks."""
         endpoints = await channel.webhooks()
         user, avatar = ctx.author.display_name, self.bot.user.avatar.url
         tasks = [hook.send(message, username=user, avatar_url=avatar) for hook in endpoints]
@@ -72,7 +63,7 @@ class Magic(commands.Cog):
 
     @magic.command()
     async def gryffindor(self, ctx: commands.Context, member: discord.Member) -> None:
-        """Prevent a member from joining a voice channel."""
+        """Prevents a member from joining a voice channel."""
         mentions = discord.AllowedMentions.none()
 
         if member.id in self.targets:
@@ -87,13 +78,13 @@ class Magic(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_delete(self, message: discord.Message) -> None:
-        """Resends deleted messages. Triggered by the nodelete command."""
+        """Team Magic-specific listener for resending deleted messages."""
         if self.sniper and message.guild.id == self.magic:
             await message.channel.send(f"> Sent by {message.author.mention}\n{message.content}")
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState) -> None:
-        """Prevents certain members from joining."""
+        """Team Magic-specific listener for preventing members from joining voice channels."""
         if member.id in self.targets and after.channel is not None:
             await member.move_to(None)
 

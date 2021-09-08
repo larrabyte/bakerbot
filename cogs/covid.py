@@ -9,7 +9,7 @@ import discord
 import asyncio
 
 class Covid(commands.Cog):
-    """Daily COVID-19 tracker for New South Wales."""
+    """A COVID-19 tracker for New South Wales. Updates daily at around 8:30pm."""
     def __init__(self, bot: model.Bakerbot, backend: covid.Backend) -> None:
         self.backend = backend
         self.bot = bot
@@ -19,11 +19,10 @@ class Covid(commands.Cog):
             self.task.start(channel)
 
     def cog_unload(self):
-        """Handles task cancellation on cog unload."""
         self.task.cancel()
 
     def embeddify(self, results: covid.Statistics) -> discord.Embed:
-        """Creates and returns a COVID-19 statistics embed."""
+        """Transforms data in `results` into the format of a Discord embed."""
         time = datetime.datetime.utcnow().strftime("%A, %d %B %Y")
         embed = utilities.Embeds.standard(title=f"COVID-19 Statistics as of {time}")
         embed.set_footer(text="Data taken from the NSW Data Analytics Centre.", icon_url=utilities.Icons.info)
@@ -62,7 +61,7 @@ class Covid(commands.Cog):
 
     @commands.command()
     async def covid(self, ctx: commands.Context) -> None:
-        """Query the API for COVID-19 statistics in New South Wales."""
+        """Queries the NSWDAC for current COVID-19 statistics."""
         results = await self.backend.statistics()
         embed = self.embeddify(results)
         await ctx.reply(embed=embed)

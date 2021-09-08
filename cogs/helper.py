@@ -11,7 +11,7 @@ class Helper(commands.Cog):
         self.bot = bot
 
     def embeddify(self, cog: commands.Cog) -> discord.Embed:
-        """Creates a help embed for `cog`."""
+        """Transforms command group documentation into the format of a Discord embed."""
         embed = utilities.Embeds.standard(description=cog.description)
         embed.title = f"Documentation for `{cog.__class__.__module__}`:"
         footer = "Arguments enclosed in <> are required while [] are optional."
@@ -30,8 +30,8 @@ class Helper(commands.Cog):
 
     @commands.command()
     async def help(self, ctx: commands.Context, cog: t.Optional[str]) -> None:
-        """The help command for Bakerbot."""
-        view = HelperView(self.bot.cogs, self.embeddify)
+        """Sends Bakerbot's documentation in a neatly formatted message."""
+        view = DocumentationView(self.bot.cogs, self.embeddify)
 
         if cog is None:
             instructions = "Use the dropbown menu below to see help for a specific command group."
@@ -41,8 +41,8 @@ class Helper(commands.Cog):
             embed = self.embeddify(cog)
             await ctx.reply(embed=embed, view=view)
 
-class HelperView(discord.ui.View):
-    """A subclass of `discord.ui.View` for the help screen."""
+class DocumentationView(discord.ui.View):
+    """A subclass of `discord.ui.View` for documenting commands."""
     def __init__(self, cogs: t.Mapping[str, commands.Cog], formatter: t.Callable, *args: list, **kwargs: dict) -> None:
         super().__init__(*args, **kwargs)
         self.formatter = formatter
@@ -58,7 +58,7 @@ class HelperView(discord.ui.View):
         self.add_item(self.menu)
 
     async def cog_callback(self, interaction: discord.Interaction) -> None:
-        """Handles cog help requests."""
+        """Handles cog selection requests from the Select Menu."""
         selection = self.menu.values[0]
         cog = self.cogs[selection]
         embed = self.formatter(cog)

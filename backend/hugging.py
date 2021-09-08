@@ -5,14 +5,14 @@ import ujson
 import yarl
 
 class Backend:
-    """A backend Hugging Face API wrapper."""
+    """The Hugging Face API wrapper."""
     def __init__(self, secrets: dict, session: aiohttp.ClientSession) -> None:
         self.base = "https://api-inference.huggingface.co"
         self.key = secrets.get("hugging-token", None)
         self.session = session
 
     async def request(self, path: str, payload: dict, headers: dict) -> object:
-        """Send a HTTP POST request to the Hugging Face Inference API."""
+        """Sends a HTTP POST request to the Hugging Face Inference API."""
         url = yarl.URL(f"{self.base}/{path}", encoded=True)
 
         async with self.session.post(url, json=payload, headers=headers) as resp:
