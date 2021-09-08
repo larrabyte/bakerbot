@@ -1,5 +1,5 @@
 import backend.utilities as utilities
-import backend.hugging as hugging
+import backend.neuro as neuro
 import model
 
 import discord.ext.commands as commands
@@ -8,7 +8,7 @@ import discord
 
 class Textgen(commands.Cog):
     """An interface to a text-generating neural network."""
-    def __init__(self, bot: model.Bakerbot, backend: hugging.Backend) -> None:
+    def __init__(self, bot: model.Bakerbot, backend: neuro.Backend) -> None:
         self.backend = backend
         self.maximum = 200
         self.bot = bot
@@ -22,14 +22,15 @@ class Textgen(commands.Cog):
         await utilities.Commands.group(ctx, summary)
 
     @text.command()
-    async def generate(self, ctx: commands.Context, *, query: str) -> None:
+    async def generate(self, ctx: commands.Context, temperature: t.Optional[float]=1.0, *, query: str) -> None:
         """Generates text with an optional `temperature` parameter."""
         async with ctx.typing():
-            model = "EleutherAI/gpt-neo-2.7B"
-            data = await self.backend.generate(model, query, self.maximum)
+            data = await self.backend.generate(query, self.maximum, temperature=temperature)
+            data = discord.utils.escape_markdown(data)
 
-        data = discord.utils.escape_markdown(data)
-        data = f"{data[0:1997]}..."
+        if len(data) > 2000:
+            data = f"{data[0:1997]}..."
+
         await ctx.reply(data)
 
     @text.command()
@@ -42,6 +43,6 @@ class Textgen(commands.Cog):
         await ctx.reply(embed=embed)
 
 def setup(bot: model.Bakerbot) -> None:
-    backend = hugging.Backend(bot.secrets, bot.session)
+    backend = neuro.Backend(bot.secrets, bot.session)
     cog = Textgen(bot, backend)
     bot.add_cog(cog)
