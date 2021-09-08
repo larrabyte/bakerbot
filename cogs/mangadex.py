@@ -96,8 +96,8 @@ class Mangadex(commands.Cog):
             reader = await MangaReader.create(self, identifier, digest, images)
             await reader.run(message)
 
-class MangaReader(discord.ui.View):
-    """A subclass of `discord.ui.View` built for image iteration."""
+class MangaReader(utilities.View):
+    """A subclass of `utilities.View` built for image iteration."""
     @classmethod
     async def create(self, cog: Mangadex, identifier: str, digest: str, images: t.List[str]) -> "MangaReader":
         instance = MangaReader()

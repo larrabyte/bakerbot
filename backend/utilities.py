@@ -1,4 +1,5 @@
 import discord.ext.commands as commands
+import traceback as trace
 import typing as t
 import discord
 import os
@@ -66,7 +67,34 @@ class Embeds:
         embed.description = description
         return embed
 
-class Paginator(discord.ui.View):
+class View(discord.ui.View):
+    """A subclass of `discord.ui.View` that streamlines interaction error handling."""
+    async def on_error(self, error: Exception, item: discord.ui.Item, interaction: discord.Interaction) -> None:
+        await interaction.response.defer()
+        embed = Embeds.status(False, "")
+        embed.title = "Exception raised. See below for more information."
+
+        # Extract traceback information if available.
+        if (traceback := error.__traceback__) is not None:
+            embed.title = "Exception raised. Traceback reads as follows:"
+
+            for l in trace.extract_tb(traceback):
+                embed.description += f"Error occured in {l[2]}, line {l[1]}:\n"
+                embed.description += f"    {l[3]}\n"
+
+        # Package the text/traceback data into an embed field and send it off.
+        readable = str(error) or type(error).__name__
+        embed.description += readable
+
+        maximum = 6000 - (len(embed.title) + 6)
+        if len(embed.description) > maximum:
+            embed.description = embed.description[:maximum]
+
+        embed.description = f"```{embed.description}```"
+        await interaction.edit_original_message(content=None, embed=embed, view=None)
+
+class Paginator(View):
+    """A subclass of `utilities.View` for paginating select menus."""
     def __init__(self, placeholder: str="Options", *args: list, **kwargs: dict) -> None:
         super().__init__(*args, **kwargs)
         self.placeholder = placeholder

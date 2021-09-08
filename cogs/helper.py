@@ -41,8 +41,8 @@ class Helper(commands.Cog):
             embed = self.embeddify(cog)
             await ctx.reply(embed=embed, view=view)
 
-class DocumentationView(discord.ui.View):
-    """A subclass of `discord.ui.View` for documenting commands."""
+class DocumentationView(utilities.View):
+    """A subclass of `utilities.View` for documenting commands."""
     def __init__(self, cogs: t.Mapping[str, commands.Cog], formatter: t.Callable, *args: list, **kwargs: dict) -> None:
         super().__init__(*args, **kwargs)
         self.formatter = formatter

@@ -27,8 +27,8 @@ class Wolfram(commands.Cog):
         data = "Press any button to view its content."
         await ctx.reply(data, view=view)
 
-class WolframView(discord.ui.View):
-    """A subclass of `discord.ui.View` for queries using the Full Results API."""
+class WolframView(utilities.View):
+    """A subclass of `utilities.View` for queries using the Full Results API."""
     @classmethod
     async def create(cls, backend: wolfram.Backend, params: dict) -> t.Optional["WolframView"]:
         instance = WolframView()
