@@ -7,8 +7,8 @@ import typing as t
 import discord
 
 class Textgen(commands.Cog):
-    def __init__(self, bot: model.Bakerbot, backend: hugging.Backend) -> None:
     """An interface to a text-generating neural network."""
+    def __init__(self, bot: model.Bakerbot, backend: hugging.Backend) -> None:
         self.backend = backend
         self.maximum = 200
         self.bot = bot
