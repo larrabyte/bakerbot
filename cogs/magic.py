@@ -1,9 +1,12 @@
 import backend.utilities as utilities
+import backend.discord as expcord
 import model
 
 import discord.ext.commands as commands
+import typing as t
 import asyncio
 import discord
+import random
 
 class Magic(commands.Cog):
     """You can find dumb ideas from Team Magic here."""
@@ -14,7 +17,7 @@ class Magic(commands.Cog):
         self.bot = bot
 
     async def cog_check(self, ctx: commands.Context) -> None:
-        return ctx.guild.id == self.magic or (await self.bot.is_owner(ctx.author))
+        return (await self.bot.is_owner(ctx.author)) or ctx.guild.id == self.magic
 
     @commands.group(invoke_without_subcommand=True)
     async def magic(self, ctx: commands.Context) -> None:
@@ -39,25 +42,24 @@ class Magic(commands.Cog):
         await asyncio.gather(*tasks)
 
     @magic.command()
-    async def hookify(self, ctx: commands.Context, target: discord.TextChannel) -> None:
+    async def hookify(self, ctx: commands.Context, source: discord.TextChannel, destination: t.Optional[discord.TextChannel]) -> None:
         """So it turns out you can have more than 10 webooks in a channel..."""
-        token = self.bot.secrets["discord-token"]
-        headers = {"Authorization": f"Bot {token}"}
-        payload = {"channel_id": target.id}
-        endpoints = await ctx.channel.webhooks()
-        moved = 0
+        hooks = await source.webhooks()
 
-        for hook in endpoints:
-            url = f"https://discord.com/api/webhooks/{hook.id}"
-            resp = await self.bot.session.patch(url, json=payload, headers=headers)
-            moved += 1 if resp.status == 200 else 0
+        if destination is None:
+            webhooks = "\n".join(str(w.id) for w in hooks)
+            return await ctx.reply(webhooks)
 
-            if resp.status != 200:
-                message = f"HTTP {resp.status} {resp.reason}\nWebhook {hook.id} was not moved.\n\n{resp.headers}"
-                await ctx.reply(message)
-                break
+        for i in range(10 - len(hooks)):
+            rand = random.randint(0, 2**32)
+            name = f"bakerbot hook #{rand}"
+            await expcord.Webhooks.create(self.bot, source, name)
 
-        await ctx.reply(f"{moved} webhooks were moved.")
+        # Refresh the list of hooks after we create more.
+        for webhook in (await source.webhooks()):
+            await expcord.Webhooks.move(self.bot, webhook, destination)
+
+        await ctx.reply("Webhooks created and moved.")
 
     @magic.command()
     async def gandalf(self, ctx: commands.Context, member: discord.Member) -> None:
