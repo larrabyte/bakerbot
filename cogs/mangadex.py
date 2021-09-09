@@ -32,7 +32,7 @@ class Mangadex(commands.Cog):
             thumbnail = await self.backend.cover(mangaUUID, coverUUID)
 
         embed = utilities.Embeds.standard()
-        embed.set_footer(text="Powered by the Mangadex API.", icon_url=utilities.Icons.info)
+        embed.set_footer(text="Powered by the Mangadex API.", icon_url=utilities.Icons.INFO)
         embed.set_thumbnail(url=thumbnail)
 
         manga = data["data"]["attributes"]
@@ -81,8 +81,8 @@ class Mangadex(commands.Cog):
             description += f"Chapter {chapter_index}"
             title = chapter["data"]["attributes"]["title"] or description
 
-            title = utilities.Limits.limit(title, utilities.Limits.select_label)
-            description = utilities.Limits.limit(description, utilities.Limits.select_description)
+            title = utilities.Limits.limit(title, utilities.Limits.SELECT_LABEL)
+            description = utilities.Limits.limit(description, utilities.Limits.SELECT_DESCRIPTION)
             option = discord.SelectOption(label=title, value=str(index), description=description)
             paginator.add(option)
 

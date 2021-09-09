@@ -60,7 +60,7 @@ class Debugger(commands.Cog):
             reason = f"`{command}` is not a valid command."
             footer = "Try $help for a list of command groups."
             fail = utilities.Embeds.status(False, reason)
-            fail.set_footer(text=footer, icon_url=utilities.Icons.cross)
+            fail.set_footer(text=footer, icon_url=utilities.Icons.CROSS)
             await ctx.reply(embed=fail)
 
         elif isinstance(ex, commands.MissingRequiredArgument):
@@ -70,7 +70,7 @@ class Debugger(commands.Cog):
 
             fail = utilities.Embeds.status(False, reason)
             footer = f"Command signature: {template}"
-            fail.set_footer(text=footer, icon_url=utilities.Icons.cross)
+            fail.set_footer(text=footer, icon_url=utilities.Icons.CROSS)
             await ctx.reply(embed=fail)
 
         else: # Otherwise, we perform generic error handling.
@@ -89,11 +89,10 @@ class Debugger(commands.Cog):
             readable = str(ex) or type(ex).__name__
             embed.description += readable
 
-            maximum = utilities.Limits.embed_characters - (len(embed.title) + 6)
-            if len(embed.description) > maximum:
-                embed.description = embed.description[:maximum]
-
+            maximum = utilities.Limits.EMBED_CHARACTERS - (len(embed.title) + 6)
+            embed.description = utilities.Limits.limit(embed.description, maximum)
             embed.description = f"```{embed.description}```"
+
             await ctx.reply(embed=embed)
 
 def setup(bot: model.Bakerbot) -> None:

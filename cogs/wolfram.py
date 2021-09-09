@@ -89,7 +89,7 @@ class WolframView(utilities.View):
         # Defer the interaction as we need to make another request.
         embed = utilities.Embeds.standard()
         embed.description = "Please wait as another WolframAlpha API request is made."
-        embed.set_footer(text="Interaction deferred.", icon_url=utilities.Icons.info)
+        embed.set_footer(text="Interaction deferred.", icon_url=utilities.Icons.INFO)
         await interaction.response.edit_message(content=None, embed=embed, view=None)
 
         identifier = utilities.Identifiers.extract(interaction, str)

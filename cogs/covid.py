@@ -25,7 +25,7 @@ class Covid(commands.Cog):
         """Transforms data in `results` into the format of a Discord embed."""
         time = datetime.datetime.utcnow().strftime("%A, %d %B %Y")
         embed = utilities.Embeds.standard(title=f"COVID-19 Statistics as of {time}")
-        embed.set_footer(text="Data taken from the NSW Data Analytics Centre.", icon_url=utilities.Icons.info)
+        embed.set_footer(text="Data taken from the NSW Data Analytics Centre.", icon_url=utilities.Icons.INFO)
 
         acquisitions = f"With a total of **{results.new:,}** cases:\n"
         acquisitions += f"* **{results.local:,}** cases were acquired locally.\n"

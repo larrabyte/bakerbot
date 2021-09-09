@@ -5,36 +5,33 @@ import discord
 import os
 
 class Colours:
-    regular = 0xF5CC00
-    success = 0x00C92C
-    failure = 0xFF3300
-    gaming = 0x0095FF
+    REGULAR = 0xF5CC00
+    SUCCESS = 0x00C92C
+    FAILURE = 0xFF3300
+    GAMING = 0x0095FF
 
 class Icons:
-    tick = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Flat_tick_icon.svg/500px-Flat_tick_icon.svg.png"
-    cross = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Flat_cross_icon.svg/500px-Flat_cross_icon.svg.png"
-    info = "https://icon-library.com/images/info-icon-svg/info-icon-svg-5.jpg"
-    illuminati = "https://upload.wikimedia.org/wikipedia/commons/a/a9/Illuminati_triangle_eye.png"
-    rfa = "https://upload.wikimedia.org/wikipedia/commons/4/40/Radio_Free_Asia_%28logo%29.png"
-    wikipedia = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Wikipedia-logo-v2.svg/500px-Wikipedia-logo-v2.svg.png"
+    TICK = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Flat_tick_icon.svg/500px-Flat_tick_icon.svg.png"
+    CROSS = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Flat_cross_icon.svg/500px-Flat_cross_icon.svg.png"
+    INFO = "https://icon-library.com/images/info-icon-svg/info-icon-svg-5.jpg"
 
 class Limits:
-    message_content = 2000
-    message_embeds = 10
-    embed_characters = 6000
-    embed_title = 256
-    embed_description = 4096
-    embed_fields = 25
-    embed_field_name = 256
-    embed_field_value = 1024
-    embed_footer_text = 2048
-    embed_author_name = 256
-    view_children = 25
-    view_items_per_row = 5
-    select_label = 100
-    select_value = 100
-    select_description = 100
-    select_options = 25
+    MESSAGE_CHARACTERS = 2000
+    MESSAGE_EMBEDS = 10
+    EMBED_CHARACTERS = 6000
+    EMBED_TITLE = 256
+    EMBED_DESCRIPTION = 4096
+    EMBED_FIELDS = 25
+    EMBED_FIELD_NAME = 256
+    EMBED_FIELD_VALUE = 1024
+    EMBED_FOOTER_TEXT = 2048
+    EMBED_AUTHOR_NAME = 256
+    VIEW_CHILDREN = 25
+    VIEW_ITEMS_PER_ROW = 5
+    SELECT_LABEL = 100
+    SELECT_VALUE = 100
+    SELECT_DESCRIPTION = 100
+    SELECT_OPTIONS = 25
 
     @classmethod
     def limit(cls, string: str, limit: int) -> str:
@@ -66,15 +63,15 @@ class Embeds:
     @staticmethod
     def standard(**kwargs: dict) -> discord.Embed:
         """Creates a standard Bakerbot embed."""
-        embed = discord.Embed(colour=Colours.regular, timestamp=discord.utils.utcnow(), **kwargs)
+        embed = discord.Embed(colour=Colours.REGULAR, timestamp=discord.utils.utcnow(), **kwargs)
         return embed
 
     @staticmethod
     def status(success: bool, description: str) -> discord.Embed:
         """Creates a standard Bakerbot status embed."""
         status = "Operation successful!" if success else "Operation failed!"
-        colour = Colours.success if success else Colours.failure
-        icon = Icons.tick if success else Icons.cross
+        colour = Colours.SUCCESS if success else Colours.FAILURE
+        icon = Icons.TICK if success else Icons.CROSS
 
         embed = discord.Embed(colour=colour, timestamp=discord.utils.utcnow())
         embed.set_footer(text=status, icon_url=icon)
@@ -93,7 +90,7 @@ class Commands:
                 summary = f"`{ctx.subcommand_passed}` is not a valid subcommand of `${ctx.command.name}`."
                 footer = f"Try $help {classname} for a list of subcommands."
                 embed = Embeds.status(False, summary)
-                embed.set_footer(text=footer, icon_url=Icons.cross)
+                embed.set_footer(text=footer, icon_url=Icons.CROSS)
                 await ctx.reply(embed=embed)
 
 class View(discord.ui.View):
@@ -115,11 +112,10 @@ class View(discord.ui.View):
         readable = str(error) or type(error).__name__
         embed.description += readable
 
-        maximum = Limits.embed_characters - (len(embed.title) + 6)
-        if len(embed.description) > maximum:
-            embed.description = embed.description[:maximum]
-
+        maximum = Limits.EMBED_CHARACTERS - (len(embed.title) + 6)
+        embed.description = Limits.limit(embed.description, maximum)
         embed.description = f"```{embed.description}```"
+
         await interaction.edit_original_message(content=None, embed=embed, view=None)
 
 class Paginator(View):
@@ -135,7 +131,7 @@ class Paginator(View):
 
     def active(self) -> t.List[discord.ui.Select]:
         """Returns the list of active menus (according to `self.menus` and `self.page`)."""
-        constant = Limits.view_items_per_row - 1
+        constant = Limits.VIEW_ITEMS_PER_ROW - 1
         begin, end = constant * self.page, constant * (self.page + 1)
         return self.menus[begin:end]
 
@@ -143,7 +139,7 @@ class Paginator(View):
         """Returns a menu with an appropriate ID and placeholder."""
         n = len(self.menus)
         i = Identifiers.generate(n)
-        lower, upper = (Limits.select_options * n) + 1, Limits.select_options * (n + 1)
+        lower, upper = (Limits.SELECT_OPTIONS * n) + 1, Limits.SELECT_OPTIONS * (n + 1)
 
         text = f"{self.placeholder} {lower} to {upper}"
         menu = discord.ui.Select(custom_id=i, placeholder=text)
@@ -152,11 +148,11 @@ class Paginator(View):
 
     def add(self, option: discord.SelectOption) -> None:
         """Adds an item to the Paginator."""
-        if not self.menus or len(self.menus[-1].options) == Limits.select_options:
+        if not self.menus or len(self.menus[-1].options) == Limits.SELECT_OPTIONS:
             menu = self.generate()
             self.menus.append(menu)
 
-            if len(self.menus) < Limits.view_items_per_row:
+            if len(self.menus) < Limits.VIEW_ITEMS_PER_ROW:
                 self.add_item(menu)
 
         self.menus[-1].append_option(option)
@@ -201,7 +197,7 @@ class Paginator(View):
     @discord.ui.button(label="Next", row=4)
     async def next(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
         """Moves the Paginator to the next page."""
-        constant = (Limits.view_items_per_row - 1)
+        constant = (Limits.VIEW_ITEMS_PER_ROW - 1)
         if self.page >= -(-len(self.menus) // constant) - 1:
             return await interaction.response.defer()
 
@@ -212,7 +208,7 @@ class Paginator(View):
     @discord.ui.button(label="Last", row=4)
     async def last(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
         """Moves the Paginator to the last page."""
-        constant = (Limits.view_items_per_row - 1)
+        constant = (Limits.VIEW_ITEMS_PER_ROW - 1)
         self.page = -(-len(self.menus) // constant) - 1
         self.display()
         await interaction.response.edit_message(view=self)

@@ -15,7 +15,7 @@ class Helper(commands.Cog):
         embed = utilities.Embeds.standard(description=cog.description)
         embed.title = f"Documentation for `{cog.__class__.__module__}`:"
         footer = "Arguments enclosed in <> are required while [] are optional."
-        embed.set_footer(text=footer, icon_url=utilities.Icons.info)
+        embed.set_footer(text=footer, icon_url=utilities.Icons.INFO)
 
         for command in cog.walk_commands():
             # We don't want group parent commands listed, ignore those.

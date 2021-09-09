@@ -30,7 +30,7 @@ class Textgen(commands.Cog):
             data = await self.backend.generate(self.model, query)
             data = discord.utils.escape_markdown(data)
 
-        if len(data) < utilities.Limits.message_content:
+        if len(data) < utilities.Limits.MESSAGE_CHARACTERS:
             return await ctx.reply(data)
 
         # Chunk the message if it's over the limit.

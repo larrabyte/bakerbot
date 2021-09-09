@@ -67,9 +67,9 @@ class Voice(commands.Cog):
             paginator.placeholder = "Tracks"
 
             for track in pathlib.Path("music").iterdir():
-                label = utilities.Limits.limit(track.name, utilities.Limits.select_label)
-                value = utilities.Limits.limit(track.name, utilities.Limits.select_value)
-                desc = utilities.Limits.limit(str(track), utilities.Limits.select_description)
+                label = utilities.Limits.limit(track.name, utilities.Limits.SELECT_LABEL)
+                value = utilities.Limits.limit(track.name, utilities.Limits.SELECT_VALUE)
+                desc = utilities.Limits.limit(str(track), utilities.Limits.SELECT_DESCRIPTION)
                 option = discord.SelectOption(label=label, value=value, description=desc)
                 paginator.add(option)
 
@@ -89,7 +89,7 @@ class Voice(commands.Cog):
 
         track = await discord.FFmpegOpusAudio.from_probe(filepath)
         embed = utilities.Embeds.standard()
-        embed.set_footer(text="Interaction complete.", icon_url=utilities.Icons.info)
+        embed.set_footer(text="Interaction complete.", icon_url=utilities.Icons.INFO)
         embed.description = f"Now playing `{filepath}`."
 
         if ctx.voice_client.is_playing() or ctx.voice_client.is_paused():
