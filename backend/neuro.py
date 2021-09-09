@@ -55,4 +55,10 @@ class Backend:
 
         path = "SyncPredict?include_result=true"
         data = await self.request(path, payload, headers)
+
+        if data["state"] == "ERROR":
+            # API returned HTTP 200 status but still errored.
+            message = data["result"]
+            raise exceptions.HTTPUnexpectedResponse(message)
+
         return data["result"][0]["generated_text"]
