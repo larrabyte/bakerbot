@@ -31,8 +31,7 @@ class Backend:
             if resp.status != 200:
                 raise exceptions.HTTPStatusError(200, resp.status)
 
-            data = await resp.read()
-            return ujson.loads(data)
+            return await resp.json(encoding="utf-8", loads=ujson.loads)
 
     async def statistics(self) -> Statistics:
         """Returns COVID-19 statistics from the NSWDAC's API."""

@@ -25,8 +25,7 @@ class Backend:
         url = yarl.URL(f"{self.base}/{path}", encoded=True)
 
         async with self.session.post(url, json=payload, headers=headers) as resp:
-            data = await resp.read()
-            data = ujson.loads(data)
+            data = await resp.json(encoding="utf-8", loads=ujson.loads)
 
             if resp.status != 200:
                 if "error" in data:
