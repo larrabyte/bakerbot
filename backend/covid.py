@@ -1,5 +1,6 @@
 import exceptions
 
+import typing as t
 import aiohttp
 import ujson
 import yarl
@@ -22,7 +23,7 @@ class Backend:
         self.base = "https://nswdac-covid-19-postcode-heatmap.azurewebsites.net"
         self.session = session
 
-    async def request(self, path: str) -> dict:
+    async def request(self, path: str) -> t.Any:
         """Sends a HTTP GET request to the COVID-19 API."""
         url = yarl.URL(f"{self.base}/{path}", encoded=True)
 

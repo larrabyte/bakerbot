@@ -20,7 +20,7 @@ class Backend:
         self.key = secrets.get("hugging-token", None)
         self.session = session
 
-    async def request(self, path: str, payload: dict, headers: dict) -> t.List:
+    async def request(self, path: str, payload: dict, headers: dict) -> t.Any:
         """Sends a HTTP POST request to the Hugging Face Inference API."""
         url = yarl.URL(f"{self.base}/{path}", encoded=True)
 
@@ -33,7 +33,7 @@ class Backend:
                     message = data["error"]
                     raise exceptions.HTTPUnexpectedResponse(message)
 
-                # If there isn't an error message, just raise a bad status exception. 
+                # If there isn't an error message, just raise a bad status exception.
                 raise exceptions.HTTPBadStatus(200, resp.status)
 
             return data
@@ -46,7 +46,7 @@ class Backend:
         headers = {"Authorization": f"Bearer {self.key}"}
 
         payload = {
-            "inputs": query, 
+            "inputs": query,
             "options": {
                 "use_cache": False,
                 "wait_for_model": True

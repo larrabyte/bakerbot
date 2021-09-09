@@ -33,8 +33,8 @@ class Limits:
     SELECT_DESCRIPTION = 100
     SELECT_OPTIONS = 25
 
-    @classmethod
-    def limit(cls, string: str, limit: int) -> str:
+    @staticmethod
+    def limit(string: str, limit: int) -> str:
         """Limits a string to `limit` characters."""
         if len(string) > limit:
             return f"{string[0:limit - 3]}..."
@@ -139,7 +139,8 @@ class Paginator(View):
         """Returns a menu with an appropriate ID and placeholder."""
         n = len(self.menus)
         i = Identifiers.generate(n)
-        lower, upper = (Limits.SELECT_OPTIONS * n) + 1, Limits.SELECT_OPTIONS * (n + 1)
+        lower = (Limits.SELECT_OPTIONS * n) + 1
+        upper = Limits.SELECT_OPTIONS * (n + 1)
 
         text = f"{self.placeholder} {lower} to {upper}"
         menu = discord.ui.Select(custom_id=i, placeholder=text)
@@ -197,7 +198,7 @@ class Paginator(View):
     @discord.ui.button(label="Next", row=4)
     async def next(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
         """Moves the Paginator to the next page."""
-        constant = (Limits.VIEW_ITEMS_PER_ROW - 1)
+        constant = Limits.VIEW_ITEMS_PER_ROW - 1
         if self.page >= -(-len(self.menus) // constant) - 1:
             return await interaction.response.defer()
 
@@ -208,7 +209,8 @@ class Paginator(View):
     @discord.ui.button(label="Last", row=4)
     async def last(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
         """Moves the Paginator to the last page."""
-        constant = (Limits.VIEW_ITEMS_PER_ROW - 1)
+        constant = Limits.VIEW_ITEMS_PER_ROW - 1
         self.page = -(-len(self.menus) // constant) - 1
         self.display()
+
         await interaction.response.edit_message(view=self)

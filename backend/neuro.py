@@ -1,5 +1,6 @@
 import exceptions
 
+import typing as t
 import aiohttp
 import ujson
 import yarl
@@ -19,7 +20,7 @@ class Backend:
         self.key = secrets.get("neuro-token", None)
         self.session = session
 
-    async def request(self, path: str, payload: dict, headers: dict) -> dict:
+    async def request(self, path: str, payload: dict, headers: dict) -> t.Any:
         """Sends a HTTP POST request to the Neuro API."""
         url = yarl.URL(f"{self.base}/{path}", encoded=True)
 

@@ -1,5 +1,6 @@
 import exceptions
 
+import typing as t
 import hashlib
 import aiohttp
 import urllib
@@ -48,7 +49,7 @@ class Backend:
         params.update(kwargs)
         return params
 
-    async def request(self, path: str) -> str:
+    async def request(self, path: str) -> t.Any:
         """Sends a HTTP GET request to the WolframAlpha API."""
         url = yarl.URL(path, encoded=True)
 
