@@ -4,10 +4,10 @@
 Bakerbot is a [discord.py](https://github.com/Rapptz/discord.py) bot written in Python :) Originally made as a learning exercise, now used by friends as a *somewhat* useful bot and used by me to experiment with dumb coding ideas.
 
 ## Key Features
-* A frontend to the WolframAlpha API.
+* A component-based frontend for the WolframAlpha API.
 * A Discord-oriented manga reader using the Mangadex API.
 * Games *(something like Monopoly: coming soon, TM).*
-* Text generation using the Hugging Face API.
+* Text generation using the Hugging Face and/or Neuro APIs.
 
 ## Prerequisites and Execution
 Install Bakerbot's requirements by running the following command:
@@ -15,20 +15,19 @@ Install Bakerbot's requirements by running the following command:
 $ pip install -r requirements.txt
 ```
 
-Once all the prerequisites are installed, create a `secrets.json` file and format it like so:
+Once all the prerequisites are installed, create a `secrets.json` file and format it like so (note that only the `discord-token` field is required, all others are optional):
 ```json
 {
     "discord-token": "YOUR DISCORD TOKEN HERE",
-
-    // Optional fields, you may leave these out.
     "hugging-token": "YOUR HUGGING FACE TOKEN HERE",
+    "neuro-token": "YOUR NEURO TOKEN HERE",
     "wolfram-id": "YOUR WOLFRAM ID HERE",
     "wolfram-salt": "YOUR WOLFRAM SALT HERE",
     "wolfram-hash": "true/false"
 }
 ```
+> If the `hugging-token` field is not specified, functionality related to Hugging Face will be disabled. <br>
+> If the `neuro-token` field is not specified, functionality related to the Neuro API will be disabled. <br>
+> If the `wolfram-id` field is not specified, functionality related to WolframAlpha will be disabled.
 
-> If the `wolfram-id` field is not specified, functionality related to WolframAlpha will be disabled. <br>
-> If the `hugging-token` field is not specified, functionality related to Hugging Face will be disabled.
-
-Then, open a terminal and run `python main.py`. Simple as that!
+After that, open a terminal and run `python main.py`. Simple as that!
