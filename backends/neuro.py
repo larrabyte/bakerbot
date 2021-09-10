@@ -5,13 +5,15 @@ import aiohttp
 import ujson
 import http
 
-class Model:
-    """A Neuro model."""
-    def __init__(self, identifier: str) -> None:
-        self.identifier = identifier
+class UserModel:
+    """A class representing each user's model configuration."""
+    backend = "Neuro API"
+
+    def __init__(self) -> None:
+        self.identifier = "60ca2a1e54f6ecb69867c72c"
+        self.remove_input = False
         self.temperature = 1.0
         self.maximum = 200
-        self.noinput = False
 
 class Backend:
     """The Neuro API wrapper."""
@@ -32,7 +34,7 @@ class Backend:
             return data
 
     @classmethod
-    async def generate(cls, model: Model, query: str) -> str:
+    async def generate(cls, model: UserModel, query: str) -> str:
         """Generates text using `model`."""
         if cls.token is None:
             raise exceptions.SecretNotFound("neuro-token not found in secrets.json.")
@@ -45,7 +47,7 @@ class Backend:
             "data": query,
             "input_kwargs": {
                 "response_length": model.maximum,
-                "remove_input": model.noinput,
+                "remove_input": model.remove_input,
                 "temperature": model.temperature
             }
         }

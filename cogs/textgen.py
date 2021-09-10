@@ -8,11 +8,30 @@ import typing as t
 import discord
 import io
 
+class ModelFlags(commands.FlagConverter):
+    """An object representing possible modifiable attributes in a `UserModel`."""
+    backend: t.Optional[t.Literal["hugging", "neuro"]]
+    identifier: t.Optional[str]
+    remove_input: t.Optional[bool]
+    temperature: t.Optional[float]
+    maximum: t.Optional[int]
+
 class Textgen(commands.Cog):
     """An interface to a text-generating neural network."""
     def __init__(self, bot: model.Bakerbot) -> None:
-        self.model = neuro.Model("60ca2a1e54f6ecb69867c72c")
+        self.mapping = {
+            hugging.UserModel: hugging.Backend.generate,
+            neuro.UserModel: neuro.Backend.generate,
+            "hugging": hugging.UserModel,
+            "neuro": neuro.UserModel
+        }
+
+        self.models = {}
         self.bot = bot
+
+    async def cog_before_invoke(self, ctx: commands.Context) -> None:
+        if ctx.author.id not in self.models:
+            self.models[ctx.author.id] = neuro.UserModel()
 
     @commands.group(invoke_without_subcommand=True)
     async def text(self, ctx: commands.Context) -> None:
@@ -23,10 +42,13 @@ class Textgen(commands.Cog):
         await utilities.Commands.group(ctx, summary)
 
     @text.command()
-    async def generate(self, ctx: commands.Context, temperature: t.Optional[float]=1.0, *, query: str) -> None:
-        """Generates text with an optional `temperature` parameter."""
+    async def generate(self, ctx: commands.Context, *, query: str) -> None:
+        """Generates text with your personal model configuration."""
+        model = self.models[ctx.author.id]
+        generator = self.mapping[type(model)]
+
         async with ctx.typing():
-            data = await neuro.Backend.generate(self.model, query)
+            data = await generator(model, query)
             data = discord.utils.escape_markdown(data)
 
         if len(data) < utilities.Limits.MESSAGE_CHARACTERS:
@@ -39,10 +61,26 @@ class Textgen(commands.Cog):
         await ctx.reply(file=uploadable)
 
     @text.command()
-    async def length(self, ctx: commands.Context, maximum: t.Optional[int]) -> None:
-        """Queries or sets the maximum number of characters returned by the API."""
-        self.model.maximum = maximum or self.model.maximum
-        await ctx.reply(f"The current maximum is (now?) `{self.model.maximum}` tokens.")
+    async def configure(self, ctx: commands.Context, *, flags: ModelFlags) -> None:
+        """Updates your personal model configuration."""
+        if flags.backend is not None:
+            self.models[ctx.author.id] = self.mapping[flags.backend]
+
+        model = self.models[ctx.author.id]
+        model.identifier = flags.identifier or model.identifier
+        model.remove_input = flags.remove_input or model.remove_input
+        model.temperature = flags.temperature or model.temperature
+        model.maximum = flags.maximum or model.maximum
+
+        binput = str(model.remove_input).lower()
+        message = (f"Current (or updated?) model configuration:\n"
+                   f" • Backend: {model.backend}\n"
+                   f" • Identifier: {model.identifier}\n"
+                   f" • Strip input from response? {binput}\n"
+                   f" • Maximum no. of characters: {model.maximum}\n"
+                   f" • Temperature: {model.temperature}")
+
+        await ctx.reply(message)
 
 def setup(bot: model.Bakerbot) -> None:
     cog = Textgen(bot)

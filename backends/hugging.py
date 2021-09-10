@@ -1,18 +1,19 @@
 import exceptions
 import model
 
-import typing as t
 import aiohttp
 import ujson
 import http
 
-class Model:
-    """A Hugging Face model."""
-    def __init__(self, identifier: str) -> None:
-        self.identifier = identifier
+class UserModel:
+    """A class representing each user's model configuration."""
+    backend = "Hugging Face API"
+    
+    def __init__(self) -> None:
+        self.identifier = "EleutherAI/gpt-neo-2.7B"
+        self.remove_input = False
         self.temperature = 1.0
         self.maximum = 200
-        self.noinput = False
 
 class Backend:
     """The Hugging Face API wrapper."""
@@ -24,16 +25,18 @@ class Backend:
     async def request(cls, endpoint: str, payload: dict, headers: dict) -> dict:
         """Sends a HTTP POST request to the Hugging Face Inference API."""
         async with cls.session.post(f"{cls.base}/{endpoint}", json=payload, headers=headers) as response:
-            data = await response.json(encoding="utf-8", loads=ujson.loads)
+            data = await response.read()
 
             if response.status != http.HTTPStatus.OK:
-                error = data.get("error", None)
+                try: formatted = ujson.loads(data)
+                except ValueError: formatted = {}
+                error = formatted.get("error", None)
                 raise exceptions.HTTPUnexpected(response.status, error)
 
-            return data
+            return ujson.loads(data)
 
     @classmethod
-    async def generate(cls, model: Model, query: str) -> str:
+    async def generate(cls, model: UserModel, query: str) -> str:
         """Generates text using `model`."""
         if cls.token is None:
             raise exceptions.SecretNotFound("hugging-token not found in secrets.json.")

@@ -8,5 +8,5 @@ class SecretNotFound(Exception):
 class HTTPUnexpected(Exception):
     """Raised whenever an unexpected response is encountered."""
     def __init__(self, status: int, error: t.Optional[str]=None) -> None:
-        message = error or f"Endpoint returned {status} {http.client.responses[status]}"
+        message = error or f"Endpoint returned HTTP {status} {http.client.responses[status]}."
         super().__init__(message)
