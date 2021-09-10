@@ -1,4 +1,4 @@
-import backend.utilities as utilities
+import utilities
 import model
 
 import discord.ext.commands as commands

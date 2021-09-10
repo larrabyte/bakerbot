@@ -1,9 +1,9 @@
-import backend.utilities as utilities
+import utilities
 import model
 
 import discord.ext.commands as commands
-import traceback as trace
 import typing as t
+import traceback
 
 class Debugger(commands.Cog):
     """Provides a built-in debugger for Bakerbot."""
@@ -78,10 +78,10 @@ class Debugger(commands.Cog):
             embed.title = "Exception raised. See below for more information."
 
             # Extract traceback information if available.
-            if (traceback := ex.__traceback__) is not None:
+            if (trace := ex.__traceback__) is not None:
                 embed.title = "Exception raised. Traceback reads as follows:"
 
-                for l in trace.extract_tb(traceback):
+                for l in traceback.extract_tb(trace):
                     embed.description += f"Error occured in {l[2]}, line {l[1]}:\n"
                     embed.description += f"    {l[3]}\n"
 

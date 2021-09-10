@@ -1,5 +1,5 @@
-import backend.utilities as utilities
-import backend.wolfram as wolfram
+import backends.wolfram as wolfram
+import utilities
 import model
 
 import discord.ext.commands as commands

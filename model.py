@@ -1,4 +1,5 @@
 import exceptions
+import utilities
 
 import discord.ext.commands as commands
 import importlib
@@ -19,11 +20,12 @@ class Bakerbot(commands.Bot):
         with open("secrets.json", "r") as file:
             self.secrets = ujson.load(file)
 
-        reloadables = [module for name, module in sys.modules.items() if name.startswith("backend.")]
+        reloadables = [module for name, module in sys.modules.items() if name.startswith("backends.")]
         extensions = [extension for extension in self.extensions.keys()]
 
         # Add any special files to the reloadables list.
         reloadables.append(exceptions)
+        reloadables.append(utilities)
 
         for reloadable in reloadables:
             importlib.reload(reloadable)

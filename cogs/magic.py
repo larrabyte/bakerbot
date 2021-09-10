@@ -1,5 +1,5 @@
-import backend.utilities as utilities
-import backend.discord as expcord
+import backends.discord as expcord
+import utilities
 import model
 
 import discord.ext.commands as commands

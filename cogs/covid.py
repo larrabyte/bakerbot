@@ -1,5 +1,5 @@
-import backend.utilities as utilities
-import backend.covid as covid
+import backends.covid as covid
+import utilities
 import model
 
 import discord.ext.commands as commands

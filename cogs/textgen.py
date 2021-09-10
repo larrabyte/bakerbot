@@ -1,6 +1,6 @@
-import backend.utilities as utilities
-import backend.hugging as hugging
-import backend.neuro as neuro
+import backends.hugging as hugging
+import backends.neuro as neuro
+import utilities
 import model
 
 import discord.ext.commands as commands

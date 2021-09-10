@@ -1,5 +1,5 @@
-import backend.utilities as utilities
-import backend.mangadex as mangadex
+import backends.mangadex as mangadex
+import utilities
 import model
 
 import discord.ext.commands as commands
