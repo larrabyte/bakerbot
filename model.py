@@ -5,32 +5,26 @@ import discord.ext.commands as commands
 import importlib
 import aiohttp
 import ujson
-import sys
 
 class Bakerbot(commands.Bot):
-    def __init__(self, *args: list, **kwargs: dict) -> None:
+    def __init__(self, *args: tuple, **kwargs: dict) -> None:
         super().__init__(*args, **kwargs)
         self.session = aiohttp.ClientSession()
+        self.secrets = self.spice()
 
+    def spice(self) -> dict:
+        """Returns the contents of `secrets.json` as a dictionary."""
         with open("secrets.json", "r") as file:
-            self.secrets = ujson.load(file)
+            return ujson.load(file)
 
     def reload(self) -> None:
         """Reloads the bot's internal state without logging out of Discord."""
-        with open("secrets.json", "r") as file:
-            self.secrets = ujson.load(file)
+        self.secrets = self.spice()
 
-        reloadables = [module for name, module in sys.modules.items() if name.startswith("backends.")]
-        extensions = [extension for extension in self.extensions.keys()]
+        for module in (exceptions, utilities):
+            importlib.reload(module)
 
-        # Add any special files to the reloadables list.
-        reloadables.append(exceptions)
-        reloadables.append(utilities)
-
-        for reloadable in reloadables:
-            importlib.reload(reloadable)
-
-        for extension in extensions:
+        for extension in [extension for extension in self.extensions.keys()]:
             self.reload_extension(extension)
 
     def run(self) -> None:

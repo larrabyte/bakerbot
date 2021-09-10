@@ -1,9 +1,9 @@
 import exceptions
+import model
 
-import typing as t
 import aiohttp
 import ujson
-import yarl
+import http
 
 class Statistics:
     """A COVID-19 data object."""
@@ -19,22 +19,24 @@ class Statistics:
 
 class Backend:
     """The backend COVID-19 API wrapper."""
-    def __init__(self, session: aiohttp.ClientSession) -> None:
-        self.base = "https://nswdac-covid-19-postcode-heatmap.azurewebsites.net"
-        self.session = session
+    base = "https://nswdac-covid-19-postcode-heatmap.azurewebsites.net"
+    session: aiohttp.ClientSession
 
-    async def request(self, path: str) -> t.Any:
+    @classmethod
+    async def request(cls, endpoint: str) -> dict:
         """Sends a HTTP GET request to the COVID-19 API."""
-        url = yarl.URL(f"{self.base}/{path}", encoded=True)
+        async with cls.session.get(f"{cls.base}/{endpoint}") as response:
+            if response.status != http.HTTPStatus.OK:
+                raise exceptions.HTTPUnexpected(response.status)
 
-        async with self.session.get(url) as resp:
-            if resp.status != 200:
-                raise exceptions.HTTPStatusError(200, resp.status)
+            return await response.json(encoding="utf-8", loads=ujson.loads)
 
-            return await resp.json(encoding="utf-8", loads=ujson.loads)
-
-    async def statistics(self) -> Statistics:
+    @classmethod
+    async def statistics(cls) -> Statistics:
         """Returns COVID-19 statistics from the NSWDAC's API."""
-        results = await self.request("datafiles/statsLocations.json")
-        rawdata = results["data"][0]
-        return Statistics(rawdata)
+        data = await cls.request("datafiles/statsLocations.json")
+        data = data["data"][0]
+        return Statistics(data)
+
+def setup(bot: model.Bakerbot) -> None:
+    Backend.session = bot.session

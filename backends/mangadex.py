@@ -1,3 +1,5 @@
+import model
+
 import aiohttp
 import urllib
 import ujson
@@ -58,3 +60,6 @@ class Backend:
         path = f"https://api.mangadex.org/manga/{uuid}/feed?limit={limit}&offset={offset}&translatedLanguage[]=en&order[chapter]=asc"
         results = await self.request(path)
         return results
+
+def setup(bot: model.Bakerbot) -> None:
+    pass

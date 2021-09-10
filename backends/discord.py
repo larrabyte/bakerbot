@@ -2,46 +2,48 @@ import exceptions
 import model
 
 import discord
+import aiohttp
 import ujson
+import http
 
 class Webhooks:
     """Experimental Discord webhook methods (ignores rate-limits)."""
     base = "https://discord.com/api/v9"
+    session: aiohttp.ClientSession
+    token: str
 
     @classmethod
-    async def create(cls, bot: model.Bakerbot, channel: discord.TextChannel, name: str) -> None:
+    async def create(cls, channel: discord.TextChannel, name: str) -> None:
         """Creates a webhook in `channel` by sending a raw HTTP request."""
-        token = bot.secrets["discord-token"]
-        headers = {"Authorization": f"Bot {token}"}
+        if cls.token is None:
+            raise exceptions.SecretNotFound("discord-token not specified in secrets.json.")
+
+        headers = {"Authorization": f"Bot {cls.token}"}
         payload = {"name": name}
 
-        path = f"{cls.base}/channels/{channel.id}/webhooks"
-        response = await bot.session.post(path, json=payload, headers=headers)
-
-        if response.status != 200:
-            data = await response.json(encoding="utf-8", loads=ujson.loads)
-
-            if "message" in data:
-                message = data["message"]
-                raise exceptions.HTTPUnexpectedResponse(message)
-
-            raise exceptions.HTTPBadStatus(200, response.status)
+        endpoint = f"{cls.base}/channels/{channel.id}/webhooks"
+        async with cls.session.post(endpoint, json=payload, headers=headers) as response:
+            if response.status != http.HTTPStatus.OK:
+                data = await response.json(encoding="utf-8", loads=ujson.loads)
+                error = data.get("message", None)
+                raise exceptions.HTTPUnexpected(response.status, error)
 
     @classmethod
-    async def move(cls, bot: model.Bakerbot, webhook: discord.Webhook, channel: discord.TextChannel) -> None:
+    async def move(cls, webhook: discord.Webhook, channel: discord.TextChannel) -> None:
         """Moves a webhook to `channel` by sending a raw HTTP request."""
-        token = bot.secrets["discord-token"]
-        headers = {"Authorization": f"Bot {token}"}
+        if cls.token is None:
+            raise exceptions.SecretNotFound("discord-token not specified in secrets.json.")
+
+        headers = {"Authorization": f"Bot {cls.token}"}
         payload = {"channel_id": channel.id}
 
-        path = f"{cls.base}/webhooks/{webhook.id}"
-        response = await bot.session.patch(path, json=payload, headers=headers)
+        endpoint = f"{cls.base}/webhooks/{webhook.id}"
+        async with cls.session.patch(endpoint, json=payload, headers=headers) as response:
+            if response.status != http.HTTPStatus.OK:
+                data = await response.json(encoding="utf-8", loads=ujson.loads)
+                error = data.get("message", None)
+                raise exceptions.HTTPUnexpected(response.status, error)
 
-        if response.status != 200:
-            data = await response.json(encoding="utf-8", loads=ujson.loads)
-
-            if "message" in data:
-                message = data["message"]
-                raise exceptions.HTTPUnexpectedResponse(message)
-
-            raise exceptions.HTTPBadStatus(200, response.status)
+def setup(bot: model.Bakerbot) -> None:
+    Webhooks.session = bot.session
+    Webhooks.token = bot.secrets.get("discord-token", None)

@@ -1,9 +1,9 @@
 import exceptions
+import model
 
-import typing as t
 import aiohttp
 import ujson
-import yarl
+import http
 
 class Model:
     """A Neuro model."""
@@ -15,33 +15,30 @@ class Model:
 
 class Backend:
     """The Neuro API wrapper."""
-    def __init__(self, secrets: dict, session: aiohttp.ClientSession) -> None:
-        self.base = "https://api.neuro-ai.co.uk"
-        self.key = secrets.get("neuro-token", None)
-        self.session = session
+    base = "https://api.neuro-ai.co.uk"
+    session: aiohttp.ClientSession
+    token: str
 
-    async def request(self, path: str, payload: dict, headers: dict) -> t.Any:
+    @classmethod
+    async def request(cls, endpoint: str, parameters: dict, payload: dict, headers: dict) -> dict:
         """Sends a HTTP POST request to the Neuro API."""
-        url = yarl.URL(f"{self.base}/{path}", encoded=True)
+        async with cls.session.post(f"{cls.base}/{endpoint}", params=parameters, json=payload, headers=headers) as response:
+            data = await response.json(encoding="utf-8", loads=ujson.loads)
 
-        async with self.session.post(url, json=payload, headers=headers) as resp:
-            data = await resp.json(encoding="utf-8", loads=ujson.loads)
-
-            if resp.status != 200:
-                if "error" in data:
-                    message = data["error"]
-                    raise exceptions.HTTPUnexpectedResponse(message)
-
-                raise exceptions.HTTPBadStatus(200, resp.status)
+            if response.status != http.HTTPStatus.OK:
+                error = data.get("error", None)
+                raise exceptions.HTTPUnexpected(response.status, error)
 
             return data
 
-    async def generate(self, model: Model, query: str) -> str:
+    @classmethod
+    async def generate(cls, model: Model, query: str) -> str:
         """Generates text using `model`."""
-        if self.key is None:
+        if cls.token is None:
             raise exceptions.SecretNotFound("neuro-token not found in secrets.json.")
 
-        headers = {"Authorization": f"Bearer {self.key}"}
+        parameters = {"include_result": "true"}
+        headers = {"Authorization": f"Bearer {cls.token}"}
 
         payload = {
             "modelId": model.identifier,
@@ -53,12 +50,16 @@ class Backend:
             }
         }
 
-        path = "SyncPredict?include_result=true"
-        data = await self.request(path, payload, headers)
+        data = await cls.request("SyncPredict", parameters, payload, headers)
 
         if data["state"] == "ERROR":
-            # API returned HTTP 200 status but still errored.
+            # API returned HTTP 200 OK, but there's still an error.
+            status = http.HTTPStatus.OK
             message = data["result"]
-            raise exceptions.HTTPUnexpectedResponse(message)
+            raise exceptions.HTTPUnexpected(status, message)
 
         return data["result"][0]["generated_text"]
+
+def setup(bot: model.Bakerbot) -> None:
+    Backend.session = bot.session
+    Backend.token = bot.secrets.get("neuro-token", None)

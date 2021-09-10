@@ -10,8 +10,7 @@ import asyncio
 
 class Covid(commands.Cog):
     """A COVID-19 tracker for New South Wales. Updates daily at around 8:30pm."""
-    def __init__(self, bot: model.Bakerbot, backend: covid.Backend) -> None:
-        self.backend = backend
+    def __init__(self, bot: model.Bakerbot) -> None:
         self.bot = bot
 
         # Start the statistics task if this channel exists in the bot's list.
@@ -55,18 +54,17 @@ class Covid(commands.Cog):
         seconds = (delay - now).total_seconds()
         await asyncio.sleep(seconds)
 
-        results = await self.backend.statistics()
+        results = await covid.Backend.statistics()
         embed = self.embeddify(results)
         await channel.send(embed=embed)
 
     @commands.command()
     async def covid(self, ctx: commands.Context) -> None:
         """Queries the NSWDAC for current COVID-19 statistics."""
-        results = await self.backend.statistics()
+        results = await covid.Backend.statistics()
         embed = self.embeddify(results)
         await ctx.reply(embed=embed)
 
 def setup(bot: model.Bakerbot) -> None:
-    backend = covid.Backend(bot.session)
-    cog = Covid(bot, backend)
+    cog = Covid(bot)
     bot.add_cog(cog)

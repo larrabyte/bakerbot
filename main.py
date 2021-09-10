@@ -18,7 +18,7 @@ if __name__ == "__main__":
     bot = model.Bakerbot(command_prefix="$", help_command=None, case_insensitive=True, intents=intents, activity=activity)
 
     # Load extensions from these folders.
-    for folder in ("cogs", "local"):
+    for folder in ("backends", "cogs", "local"):
         for path in pathlib.Path(folder).glob("*.py"):
             bot.load_extension(f"{folder}.{path.stem}")
 

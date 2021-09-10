@@ -1,13 +1,12 @@
+import typing as t
+import http.client
+
 class SecretNotFound(Exception):
-    """Raise this exception whenever a secret cannot be found."""
+    """Raised whenever a secret cannot be found."""
     pass
 
-class HTTPUnexpectedResponse(Exception):
-    """Raise this exception whenever an unexpected response is encountered."""
-    pass
-
-class HTTPBadStatus(Exception):
-    """Raise this exception whenever an unexpected HTTP status code is encountered."""
-    def __init__(self, expected: int, actual: int) -> None:
-        message = f"Expected status code {expected}, got {actual}."
+class HTTPUnexpected(Exception):
+    """Raised whenever an unexpected response is encountered."""
+    def __init__(self, status: int, error: t.Optional[str]=None) -> None:
+        message = error or f"Endpoint returned {status} {http.client.responses[status]}"
         super().__init__(message)

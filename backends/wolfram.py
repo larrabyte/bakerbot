@@ -1,4 +1,5 @@
 import exceptions
+import model
 
 import typing as t
 import hashlib
@@ -81,3 +82,6 @@ class Backend:
             data = {}
 
         return data
+
+def setup(bot: model.Bakerbot) -> None:
+    pass

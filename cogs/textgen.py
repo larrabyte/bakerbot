@@ -10,8 +10,7 @@ import io
 
 class Textgen(commands.Cog):
     """An interface to a text-generating neural network."""
-    def __init__(self, bot: model.Bakerbot, backend: neuro.Backend) -> None:
-        self.backend = backend
+    def __init__(self, bot: model.Bakerbot) -> None:
         self.model = neuro.Model("60ca2a1e54f6ecb69867c72c")
         self.bot = bot
 
@@ -27,7 +26,7 @@ class Textgen(commands.Cog):
     async def generate(self, ctx: commands.Context, temperature: t.Optional[float]=1.0, *, query: str) -> None:
         """Generates text with an optional `temperature` parameter."""
         async with ctx.typing():
-            data = await self.backend.generate(self.model, query)
+            data = await neuro.Backend.generate(self.model, query)
             data = discord.utils.escape_markdown(data)
 
         if len(data) < utilities.Limits.MESSAGE_CHARACTERS:
@@ -46,6 +45,5 @@ class Textgen(commands.Cog):
         await ctx.reply(f"The current maximum is (now?) `{self.model.maximum}` tokens.")
 
 def setup(bot: model.Bakerbot) -> None:
-    backend = neuro.Backend(bot.secrets, bot.session)
-    cog = Textgen(bot, backend)
+    cog = Textgen(bot)
     bot.add_cog(cog)
