@@ -26,16 +26,17 @@ class Covid(commands.Cog):
         embed = utilities.Embeds.standard(title=f"COVID-19 Statistics as of {time}")
         embed.set_footer(text="Data taken from the NSW Data Analytics Centre.", icon_url=utilities.Icons.INFO)
 
-        acquisitions = f"With a total of **{results.new:,}** cases:\n"
-        acquisitions += f"* **{results.local:,}** cases were acquired locally.\n"
-        acquisitions += f"* **{results.interstate:,}** cases were acquired interstate.\n"
-        acquisitions += f"* **{results.overseas:,}** cases were acquired overseas."
-        embed.add_field(name="New Acquisitions", value=acquisitions)
+        acquisitions = (f"With a total of **{results.new:,}** cases:\n"
+                        f"* **{results.local:,}** cases were acquired locally.\n"
+                        f"* **{results.interstate:,}** cases were acquired interstate.\n"
+                        f"* **{results.overseas:,}** cases were acquired overseas.")
 
-        totals = f"* **{results.tested:,}** tests have been administered.\n"
-        totals += f"* **{results.cases:,}** cases have been recorded.\n"
-        totals += f"* **{results.recovered:,}** people have recovered.\n"
-        totals += f"* **{results.deaths:,}** deaths have been recorded."
+        totals = (f"* **{results.tested:,}** tests have been administered.\n"
+                  f"* **{results.cases:,}** cases have been recorded.\n"
+                  f"* **{results.recovered:,}** people have recovered.\n"
+                  f"* **{results.deaths:,}** deaths have been recorded.")
+
+        embed.add_field(name="New Acquisitions", value=acquisitions)
         embed.add_field(name="Current State Totals", value=totals)
         return embed
 
