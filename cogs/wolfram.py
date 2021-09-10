@@ -13,8 +13,8 @@ class Wolfram(commands.Cog):
         self.backend = backend
         self.bot = bot
 
-    @commands.command(aliases=["わ"])
-    async def wa(self, ctx: commands.Context, *, query: str) -> None:
+    @commands.command(aliases=["wa", "わ"])
+    async def wolfram(self, ctx: commands.Context, *, query: str) -> None:
         """Queries WolframAlpha with `query`."""
         async with ctx.typing():
             params = self.backend.parameters(query, format="image", width="1500", mag="3")
