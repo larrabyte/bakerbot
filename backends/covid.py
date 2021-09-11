@@ -8,14 +8,14 @@ import http
 class Statistics:
     """A COVID-19 data object."""
     def __init__(self, data: dict) -> None:
-        self.recovered = data.get("Recovered", None)
-        self.overseas = data.get("AcquiredOverseas", None)
-        self.local = data.get("AcquiredLocally", None)
-        self.deaths = data.get("Deaths", None)
-        self.new = data.get("NewCases", None)
-        self.tested = data.get("Tested", None)
-        self.cases = data.get("Cases", None)
-        self.interstate = data.get("AcquiredInterstate", None)
+        self.recovered: int = data["Recovered"]
+        self.overseas: int = data["AcquiredOverseas"]
+        self.local: int = data["AcquiredLocally"]
+        self.deaths: int = data["Deaths"]
+        self.new: int = data["NewCases"]
+        self.tested: int = data["Tested"]
+        self.cases: int = data["Cases"]
+        self.interstate: int = data["AcquiredInterstate"]
 
 class Backend:
     """The backend COVID-19 API wrapper."""

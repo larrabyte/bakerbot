@@ -8,7 +8,7 @@ import http
 class UserModel:
     """A class representing each user's model configuration."""
     backend = "Hugging Face API"
-    
+
     def __init__(self) -> None:
         self.identifier = "EleutherAI/gpt-neo-2.7B"
         self.remove_input = False
