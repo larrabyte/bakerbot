@@ -23,6 +23,7 @@ class Textgen(commands.Cog):
         self.bot = bot
 
     async def cog_before_invoke(self, ctx: commands.Context) -> None:
+        """Ensures that a user has a model configuration in the dictionary."""
         if ctx.author.id not in self.models:
             self.models[ctx.author.id] = neuro.Model()
 

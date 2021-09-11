@@ -90,7 +90,6 @@ class Manga:
             return data["data"]["attributes"]["name"]
 
 class Backend:
-    """The Mangadex API wrapper."""
     @classmethod
     def setup(cls, bot: model.Bakerbot) -> None:
         """Initialises an instance of `Backend` using objects from `bot`."""
