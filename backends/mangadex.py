@@ -2,7 +2,6 @@ import exceptions
 import model
 
 import typing as t
-import aiohttp
 import ujson
 import http
 
@@ -77,7 +76,7 @@ class Manga:
         """Returns the cover for this manga."""
         if (covers := self.search_relationships("cover_art")):
             # Just pick the first cover for now.
-            data = await Backend.request(f"cover/{covers[0].identifier}")
+            data = await Backend.get(f"cover/{covers[0].identifier}")
             filename = data["data"]["attributes"]["fileName"]
             return f"{Backend.data}/covers/{self.identifier}/{filename}"
 
@@ -87,20 +86,23 @@ class Manga:
         """Returns the author for this manga."""
         if (authors := self.search_relationships("author")):
             # Just pick the first author for now.
-            data = await Backend.request(f"author/{authors[0].identifier}")
+            data = await Backend.get(f"author/{authors[0].identifier}")
             return data["data"]["attributes"]["name"]
 
 class Backend:
     """The Mangadex API wrapper."""
-    base = "https://api.mangadex.org"
-    data = "https://uploads.mangadex.org"
-    client = "https://mangadex.org"
-    session: aiohttp.ClientSession
+    @classmethod
+    def setup(cls, bot: model.Bakerbot) -> None:
+        """Initialises an instance of `Backend` using objects from `bot`."""
+        cls.base = "https://api.mangadex.org"
+        cls.data = "https://uploads.mangadex.org"
+        cls.client = "https://mangadex.org"
+        cls.session = bot.session
 
     @classmethod
-    async def request(cls, endpoint: str, parameters: dict={}) -> dict:
+    async def get(cls, endpoint: str, **kwargs: dict) -> dict:
         """Sends a HTTP GET request to the base Mangadex API."""
-        async with cls.session.get(f"{cls.base}/{endpoint}", params=parameters) as response:
+        async with cls.session.get(f"{cls.base}/{endpoint}", **kwargs) as response:
             data = await response.read()
 
             if response.status != http.HTTPStatus.OK:
@@ -112,26 +114,29 @@ class Backend:
             return ujson.loads(data)
 
     @classmethod
+    async def manga(cls, title: str) -> Manga:
+        """Returns a `Manga` object by searching the API."""
+        parameters = {"limit": 1, "title": title}
+        data = await cls.get("manga", params=parameters)
+
+        if data["results"][0]["result"] != "ok":
+            errored = data["results"][0]
+            errors = errored.get("errors", [])
+            readable = ", ".join(errors) or None
+            raise exceptions.HTTPUnexpected(http.HTTPStatus.OK, readable)
+
+        data = data["results"][0]["data"]
+        return Manga(data)
+
+    @classmethod
     async def search(cls, title: str, maximum: int) -> t.Union[Manga, t.List[Manga]]:
         """Returns a `Manga` object or list of `Manga` objects up to `maximum` in length."""
         if not 1 <= maximum <= 100:
             raise ValueError("Maximum must be between 1 and 100.")
 
         parameters = {"limit": maximum, "title": title}
-        data = await cls.request("manga", parameters)
-
-        if maximum == 1:
-            if data["results"][0]["result"] != "ok":
-                errored = data["results"][0]
-                errors = errored.get("errors", [])
-                readable = ", ".join(errors) or None
-                raise exceptions.HTTPUnexpected(http.HTTPStatus.OK, readable)
-
-            data = data["results"][0]["data"]
-            return Manga(data)
-
-        # If the maximum is > 1, then just return the manga that were successful.
+        data = await cls.get("manga", params=parameters)
         return [Manga(m) for m in data["results"] if m["result"] == "ok"]
 
 def setup(bot: model.Bakerbot) -> None:
-    Backend.session = bot.session
+    Backend.setup(bot)

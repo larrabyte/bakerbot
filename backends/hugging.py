@@ -1,12 +1,11 @@
 import exceptions
 import model
 
-import aiohttp
 import ujson
 import http
 
-class UserModel:
-    """A class representing each user's model configuration."""
+class Model:
+    """A class representing a Hugging Face model."""
     backend = "Hugging Face API"
 
     def __init__(self) -> None:
@@ -15,16 +14,21 @@ class UserModel:
         self.temperature = 1.0
         self.maximum = 200
 
+    async def generate(self, query: str) -> None:
+        """Generates text using this model's configuration."""
+        return await Backend.generate(self, query)
+
 class Backend:
-    """The Hugging Face API wrapper."""
-    base = "https://api-inference.huggingface.co"
-    session: aiohttp.ClientSession
-    token: str
+    @classmethod
+    def setup(cls, bot: model.Bakerbot) -> None:
+        cls.base = "https://api-inference.huggingface.co"
+        cls.session = bot.session
+        cls.token = bot.secrets.get("hugging-token", None)
 
     @classmethod
-    async def request(cls, endpoint: str, payload: dict, headers: dict) -> dict:
+    async def request(cls, endpoint: str, **kwargs: dict) -> dict:
         """Sends a HTTP POST request to the Hugging Face Inference API."""
-        async with cls.session.post(f"{cls.base}/{endpoint}", json=payload, headers=headers) as response:
+        async with cls.session.post(f"{cls.base}/{endpoint}", **kwargs) as response:
             data = await response.read()
 
             if response.status != http.HTTPStatus.OK:
@@ -36,8 +40,8 @@ class Backend:
             return ujson.loads(data)
 
     @classmethod
-    async def generate(cls, model: UserModel, query: str) -> str:
-        """Generates text using `model`."""
+    async def generate(cls, model: Model, query: str) -> str:
+        """Generates text using the Hugging Face API."""
         if cls.token is None:
             raise exceptions.SecretNotFound("hugging-token not found in secrets.json.")
 
@@ -56,9 +60,8 @@ class Backend:
         }
 
         endpoint = f"models/{model.identifier}"
-        data = await cls.request(endpoint, payload, headers)
+        data = await cls.request(endpoint, json=payload, headers=headers)
         return data[0]["generated_text"]
 
 def setup(bot: model.Bakerbot) -> None:
-    Backend.session = bot.session
-    Backend.token = bot.secrets.get("hugging-token", None)
+    Backend.setup(bot)

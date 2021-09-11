@@ -9,7 +9,6 @@ import ujson
 import yarl
 
 class Backend:
-    """The WolframAlpha API wrapper."""
     def __init__(self, secrets: dict, session: aiohttp.ClientSession) -> None:
         self.id = secrets.get("wolfram-id", None)
         self.salt = secrets.get("wolfram-salt", None)

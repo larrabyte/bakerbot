@@ -1,7 +1,6 @@
 import exceptions
 import model
 
-import aiohttp
 import ujson
 import http
 
@@ -18,14 +17,15 @@ class Statistics:
         self.interstate: int = data["AcquiredInterstate"]
 
 class Backend:
-    """The backend COVID-19 API wrapper."""
-    base = "https://nswdac-covid-19-postcode-heatmap.azurewebsites.net"
-    session: aiohttp.ClientSession
+    @classmethod
+    def setup(cls, bot: model.Bakerbot) -> None:
+        cls.base = "https://nswdac-covid-19-postcode-heatmap.azurewebsites.net"
+        cls.session = bot.session
 
     @classmethod
-    async def request(cls, endpoint: str) -> dict:
+    async def request(cls, endpoint: str, **kwargs: dict) -> dict:
         """Sends a HTTP GET request to the COVID-19 API."""
-        async with cls.session.get(f"{cls.base}/{endpoint}") as response:
+        async with cls.session.get(f"{cls.base}/{endpoint}", **kwargs) as response:
             if response.status != http.HTTPStatus.OK:
                 raise exceptions.HTTPUnexpected(response.status)
 
@@ -39,4 +39,4 @@ class Backend:
         return Statistics(data)
 
 def setup(bot: model.Bakerbot) -> None:
-    Backend.session = bot.session
+    Backend.setup(bot)

@@ -9,7 +9,7 @@ import discord
 import io
 
 class ModelFlags(commands.FlagConverter):
-    """An object representing possible modifiable attributes in a `UserModel`."""
+    """An object representing possible modifiable attributes in a `Model`."""
     backend: t.Optional[t.Literal["hugging", "neuro"]]
     identifier: t.Optional[str]
     remove_input: t.Optional[bool]
@@ -17,21 +17,14 @@ class ModelFlags(commands.FlagConverter):
     maximum: t.Optional[int]
 
 class Textgen(commands.Cog):
-    """An interface to a text-generating neural network."""
+    """An interface to the Hugging Face and Neuro text-generating APIs."""
     def __init__(self, bot: model.Bakerbot) -> None:
-        self.mapping = {
-            hugging.UserModel: hugging.Backend.generate,
-            neuro.UserModel: neuro.Backend.generate,
-            "hugging": hugging.UserModel,
-            "neuro": neuro.UserModel
-        }
-
         self.models = {}
         self.bot = bot
 
     async def cog_before_invoke(self, ctx: commands.Context) -> None:
         if ctx.author.id not in self.models:
-            self.models[ctx.author.id] = neuro.UserModel()
+            self.models[ctx.author.id] = neuro.Model()
 
     @commands.group(invoke_without_subcommand=True)
     async def text(self, ctx: commands.Context) -> None:
@@ -45,10 +38,9 @@ class Textgen(commands.Cog):
     async def generate(self, ctx: commands.Context, *, query: str) -> None:
         """Generates text with your personal model configuration."""
         model = self.models[ctx.author.id]
-        generator = self.mapping[type(model)]
 
         async with ctx.typing():
-            data = await generator(model, query)
+            data = await model.generate(query)
             data = discord.utils.escape_markdown(data)
 
         if len(data) < utilities.Limits.MESSAGE_CHARACTERS:
@@ -64,7 +56,9 @@ class Textgen(commands.Cog):
     async def configure(self, ctx: commands.Context, *, flags: ModelFlags) -> None:
         """Updates your personal model configuration."""
         if flags.backend is not None:
-            self.models[ctx.author.id] = self.mapping[flags.backend]
+            mapping = {"hugging": hugging.Model, "neuro": neuro.Model}
+            model = mapping[flags.backend]
+            self.models[ctx.author.id] = model()
 
         model = self.models[ctx.author.id]
         model.identifier = flags.identifier or model.identifier

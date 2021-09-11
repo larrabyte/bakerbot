@@ -3,6 +3,7 @@ import utilities
 import model
 
 import discord.ext.commands as commands
+import titlecase
 
 class Mangadex(commands.Cog):
     """Bakerbot's implementation of the Mangadex API (v5)."""
@@ -21,16 +22,16 @@ class Mangadex(commands.Cog):
     async def info(self, ctx: commands.Context, *, title: str) -> None:
         """Returns information about a specific manga."""
         async with ctx.typing():
-            manga = await mangadex.Backend.search(title, 1)
+            manga = await mangadex.Backend.manga(title)
             author = await manga.author()
             cover = await manga.cover()
 
         embed = utilities.Embeds.standard()
-        embed.set_footer(text="Powered by the Mangadex API.", icon_url=utilities.Icons.INFO)
         embed.title = f"Mangadex: {manga.title}"
-        embed.description = "No description available."
         embed.url = f"{mangadex.Backend.client}/title/{manga.identifier}"
+        embed.set_footer(text="Powered by the Mangadex API.", icon_url=utilities.Icons.INFO)
 
+        embed.description = "No description available."
         if manga.description is not None:
             stripped = manga.description.strip()
             embed.description = f"{stripped[0:256]}..." if len(stripped) > 256 else stripped
@@ -45,7 +46,7 @@ class Mangadex(commands.Cog):
 
         demographic = utilities.Text.titlecase(manga.demographic, "Unknown demographic.")
         status = utilities.Text.titlecase(manga.status, "Unknown status.")
-        rating = utilities.Text.titlecase(manga.content_rating)
+        rating = titlecase.titlecase(manga.content_rating)
         last_chapter = utilities.Text.titlecase(manga.last_chapter, "Not available.")
         embed.add_field(name="🤺  Demographic", value=demographic)
         embed.add_field(name="✍🏼  Status", value=status)
