@@ -1,6 +1,7 @@
 import discord.ext.commands as commands
 import typing as t
 import traceback
+import titlecase
 import discord
 import os
 
@@ -40,6 +41,15 @@ class Limits:
             return f"{string[0:limit - 3]}..."
 
         return string
+
+class Text:
+    @staticmethod
+    def titlecase(string: t.Optional[str], default: str) -> str:
+        """Optionally applies a titlecase transformation on `string`, else returns the default."""
+        if string is not None:
+            return titlecase.titlecase(string)
+
+        return default
 
 class Identifiers:
     bytelength = 16
