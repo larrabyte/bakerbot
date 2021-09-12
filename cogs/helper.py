@@ -43,7 +43,7 @@ class Helper(commands.Cog):
 
 class DocumentationView(utilities.View):
     """A subclass of `utilities.View` for documenting commands."""
-    def __init__(self, cogs: t.Mapping[str, commands.Cog], formatter: t.Callable, *args: list, **kwargs: dict) -> None:
+    def __init__(self, cogs: t.Mapping[str, commands.Cog], formatter: t.Callable, *args: tuple, **kwargs: dict) -> None:
         super().__init__(*args, **kwargs)
         self.formatter = formatter
         self.cogs = cogs

@@ -104,7 +104,6 @@ class Commands:
                 await ctx.reply(embed=embed)
 
 class View(discord.ui.View):
-    """A subclass of `discord.ui.View` that streamlines interaction error handling."""
     async def on_error(self, error: Exception, item: discord.ui.Item, interaction: discord.Interaction) -> None:
         await interaction.response.defer()
         embed = Embeds.status(False, "")
@@ -129,8 +128,7 @@ class View(discord.ui.View):
         await interaction.edit_original_message(content=None, embed=embed, view=None)
 
 class Paginator(View):
-    """A subclass of `utilities.View` for paginating select menus."""
-    def __init__(self, placeholder: str="Options", *args: list, **kwargs: dict) -> None:
+    def __init__(self, placeholder: str="Options", *args: tuple, **kwargs: dict) -> None:
         super().__init__(*args, **kwargs)
         self.placeholder = placeholder
         self.menus = []
