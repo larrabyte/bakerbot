@@ -29,6 +29,42 @@ class Tag:
             ship = Relationship(relationship)
             self.relationships.append(ship)
 
+class Chapter:
+    """A class that represents Mangadex's `Chapter` object."""
+    def __init__(self, data: dict) -> None:
+        self.identifier: str = data["id"]
+        self.title: str = data["attributes"]["title"]
+        self.volume: t.Optional[str] = data["attributes"]["volume"]
+        self.chapter: t.Optional[str] = data["attributes"]["chapter"]
+        self.language: str = data["attributes"]["translatedLanguage"]
+        self.hash: str = data["attributes"]["hash"]
+        self.data: t.List[str] = data["attributes"]["data"]
+        self.data_saver: t.List[str] = data["attributes"]["dataSaver"]
+
+        # WTFMD: `uploader` does not exist here???
+        # self.uploader: str = data["attributes"]["uploader"]
+
+        self.external_url: t.Optional[str] = data["attributes"]["externalUrl"]
+        self.version: int = data["attributes"]["version"]
+        self.created_at: int = data["attributes"]["createdAt"]
+        self.updated_at: int = data["attributes"]["updatedAt"]
+        self.publish_at: int = data["attributes"]["publishAt"]
+
+        self.relationships: t.List[Relationship] = []
+        for relationship in data["relationships"]:
+            ship = Relationship(relationship)
+            self.relationships.append(ship)
+
+        self.base_url: t.Optional[str] = None
+
+    async def base(self) -> str:
+        """Returns the MD@H base URL for this chapter."""
+        if self.base_url is None:
+            data = await Backend.get(f"at-home/server/{self.identifier}")
+            self.base_url = data["baseUrl"]
+
+        return self.base_url
+
 class Manga:
     """A class that represents Mangadex's `Manga` object."""
     def __init__(self, data: dict) -> None:
@@ -68,9 +104,30 @@ class Manga:
             ship = Relationship(relationship)
             self.relationships.append(ship)
 
+        self.volumes: t.Optional[dict] = None
+        self.chapters: t.Optional[t.List[Chapter]] = None
+
     def search_relationships(self, identifier: str) -> t.List[Relationship]:
         """Searches the list of relationships for `identifier`."""
         return [r for r in self.relationships if r.type == identifier]
+
+    def volume_count(self) -> int:
+        """Returns the number of volumes in this manga."""
+        if self.volumes is None:
+            raise exceptions.NoInformation("Aggregate not available.")
+
+        count = len(self.volumes.values())
+        if "none" in self.volumes.values():
+            count -= 1
+
+        return count
+
+    def chapter_count(self) -> int:
+        """Returns the number of chapters in this manga."""
+        if self.volumes is None:
+            raise exceptions.NoInformation("Aggregate not available.")
+
+        return sum(volume["count"] for volume in self.volumes.values())
 
     async def cover(self) -> t.Optional[str]:
         """Returns the cover for this manga."""
@@ -88,6 +145,27 @@ class Manga:
             # Just pick the first author for now.
             data = await Backend.get(f"author/{authors[0].identifier}")
             return data["data"]["attributes"]["name"]
+
+    async def aggregate(self, language: str) -> None:
+        """Populates this manga's volume information."""
+        parameters = {"translatedLanguage[]": language}
+        data = await Backend.get(f"manga/{self.identifier}/aggregate", params=parameters)
+        self.volumes = data["volumes"]
+
+    async def feed(self, language: str) -> None:
+        """Populates this manga's chapter information."""
+        count = self.chapter_count()
+        self.chapters = []
+        offset = 0
+
+        while count > 0:
+            limit = min(count, 500)
+            parameters = {"limit": limit, "offset": offset, "translatedLanguage[]": language, "order[chapter]": "asc"}
+            data = await Backend.get(f"manga/{self.identifier}/feed", params=parameters)
+            chapters = [Chapter(m["data"]) for m in data["results"] if m["result"] == "ok"]
+            self.chapters.extend(chapters)
+            count -= limit
+            offset += limit
 
 class Backend:
     @classmethod
