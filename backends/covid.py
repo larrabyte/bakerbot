@@ -23,7 +23,7 @@ class Backend:
         cls.session = bot.session
 
     @classmethod
-    async def request(cls, endpoint: str, **kwargs: dict) -> dict:
+    async def get(cls, endpoint: str, **kwargs: dict) -> dict:
         """Sends a HTTP GET request to the COVID-19 API."""
         async with cls.session.get(f"{cls.base}/{endpoint}", **kwargs) as response:
             if response.status != http.HTTPStatus.OK:
@@ -34,7 +34,7 @@ class Backend:
     @classmethod
     async def statistics(cls) -> Statistics:
         """Returns COVID-19 statistics from the NSWDAC's API."""
-        data = await cls.request("datafiles/statsLocations.json")
+        data = await cls.get("datafiles/statsLocations.json")
         data = data["data"][0]
         return Statistics(data)
 

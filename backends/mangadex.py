@@ -57,13 +57,10 @@ class Chapter:
 
         self.base_url: t.Optional[str] = None
 
-    async def base(self) -> str:
-        """Returns the MD@H base URL for this chapter."""
-        if self.base_url is None:
-            data = await Backend.get(f"at-home/server/{self.identifier}")
-            self.base_url = data["baseUrl"]
-
-        return self.base_url
+    async def base(self) -> None:
+        """Populates the base URL attribute for this chapter."""
+        data = await Backend.get(f"at-home/server/{self.identifier}")
+        self.base_url = data["baseUrl"]
 
 class Manga:
     """A class that represents Mangadex's `Manga` object."""
@@ -146,6 +143,8 @@ class Manga:
             data = await Backend.get(f"author/{authors[0].identifier}")
             return data["data"]["attributes"]["name"]
 
+        return None
+
     async def aggregate(self, language: str) -> None:
         """Populates this manga's volume information."""
         parameters = {"translatedLanguage[]": language}
@@ -206,7 +205,7 @@ class Backend:
         return Manga(data)
 
     @classmethod
-    async def search(cls, title: str, maximum: int) -> t.Union[Manga, t.List[Manga]]:
+    async def search(cls, title: str, maximum: int) -> t.List[Manga]:
         """Returns a `Manga` object or list of `Manga` objects up to `maximum` in length."""
         if not 1 <= maximum <= 100:
             raise ValueError("Maximum must be between 1 and 100.")

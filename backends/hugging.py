@@ -26,7 +26,7 @@ class Backend:
         cls.token = bot.secrets.get("hugging-token", None)
 
     @classmethod
-    async def request(cls, endpoint: str, **kwargs: dict) -> dict:
+    async def post(cls, endpoint: str, **kwargs: dict) -> dict:
         """Sends a HTTP POST request to the Hugging Face Inference API."""
         async with cls.session.post(f"{cls.base}/{endpoint}", **kwargs) as response:
             data = await response.read()
@@ -60,7 +60,7 @@ class Backend:
         }
 
         endpoint = f"models/{model.identifier}"
-        data = await cls.request(endpoint, json=payload, headers=headers)
+        data = await cls.post(endpoint, json=payload, headers=headers)
         return data[0]["generated_text"]
 
 def setup(bot: model.Bakerbot) -> None:

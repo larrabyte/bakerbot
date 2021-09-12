@@ -94,10 +94,13 @@ class MangaReaderView(utilities.View):
     async def get_current_page(self) -> str:
         """Returns the current image pointed to by the chapter and index cursors."""
         chapter = self.manga.chapters[self.current_chapter]
-        base = await chapter.base()
         page = chapter.data_saver[self.chapter_index]
 
-        return f"{base}/data-saver/{chapter.hash}/{page}"
+        if chapter.base_url is None:
+            await chapter.base()
+
+        # Use data saver so clients don't spend so much time downloading image data.
+        return f"{chapter.base_url}/data-saver/{chapter.hash}/{page}"
 
     async def run(self, message: discord.Message) -> None:
         """Starts the manga reader using `message` as the output."""
