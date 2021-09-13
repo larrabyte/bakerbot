@@ -14,6 +14,7 @@ class Magic(commands.Cog):
         self.magic = 473426067823263749
         self.sniper = MessageResender(bot, self.magic)
         self.disconnecter = Disconnecter(bot, self.magic)
+        self.asker = WhoAsked(bot, self.magic)
         self.bot = bot
 
     async def cog_check(self, ctx: commands.Context) -> None:
@@ -76,6 +77,26 @@ class Magic(commands.Cog):
                 await member.move_to(None)
 
             await ctx.reply(f"{member.mention} shall not pass!", allowed_mentions=mentions)
+
+    @magic.command()
+    async def whoasked(self, ctx: commands.Context) -> None:
+        """OK, but who asked?"""
+        self.asker.enabled = not self.asker.enabled
+        boolean = "disabled" if self.asker.enabled else "disabled"
+        await ctx.reply(f"Asking is now {boolean}.")
+
+class WhoAsked:
+    """A wrapper around `on_message()` for Team Magic."""
+    def __init__(self, bot: model.Bakerbot, guild: int) -> None:
+        self.guild = guild
+        self.enabled = True
+
+        bot.add_listener(self.on_message)
+
+    async def on_message(self, message: discord.Message) -> None:
+        """OK, but who asked?"""
+        if message.guild is not None and message.guild.id == self.guild and random.randint(0, 1000) == 0:
+            await message.reply("ok but who asked?")
 
 class MessageResender:
     """A wrapper around `on_message_delete()` for Team Magic."""

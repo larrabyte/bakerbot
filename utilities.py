@@ -105,7 +105,9 @@ class Commands:
 
 class View(discord.ui.View):
     async def on_error(self, error: Exception, item: discord.ui.Item, interaction: discord.Interaction) -> None:
-        await interaction.response.defer()
+        if not interaction.response.is_done():
+            await interaction.response.defer()
+
         embed = Embeds.status(False, "")
         embed.title = "Exception raised. See below for more information."
 
