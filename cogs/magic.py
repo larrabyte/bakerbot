@@ -95,7 +95,7 @@ class WhoAsked:
 
     async def on_message(self, message: discord.Message) -> None:
         """OK, but who asked?"""
-        if message.guild is not None and message.guild.id == self.guild and random.randint(0, 1000) == 0:
+        if self.enabled and message.guild is not None and message.guild.id == self.guild and random.randint(0, 1000) == 0:
             await message.reply("ok but who asked?")
 
 class MessageResender:
