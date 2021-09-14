@@ -41,22 +41,6 @@ class Voice(commands.Cog):
         await utilities.Commands.group(ctx, summary)
 
     @vc.command()
-    async def upload(self, ctx: commands.Context) -> None:
-        """Uploads a file to Bakerbot's music repository."""
-        embed = utilities.Embeds.status(True, "")
-        saved = 0
-
-        async with ctx.typing():
-            for attachment in ctx.message.attachments:
-                filepath = f"music/{attachment.filename}"
-                if pathlib.Path(filepath).is_file():
-                    await attachment.save(filepath)
-                    saved += 1
-
-        embed.description = f"Uploaded {saved} files!"
-        await ctx.reply(embed=embed)
-
-    @vc.command()
     async def play(self, ctx: commands.Context, track: t.Optional[str]) -> None:
         """Plays audio tracks from Bakerbot's music folder."""
         if track is None:
@@ -80,7 +64,7 @@ class Voice(commands.Cog):
             fail = utilities.Embeds.status(False, f"{track} is not a valid track.")
             return await ctx.reply(embed=fail)
 
-        if not (await self.ensure_client(ctx.author.voice)):
+        if not ctx.guild.voice_client and not (await self.ensure_client(ctx.author.voice)):
             fail = utilities.Embeds.status(False, "Unable to join a channel.")
             return await ctx.reply(embed=fail)
 
