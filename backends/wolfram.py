@@ -71,7 +71,7 @@ class Result:
         self.timed_out: str = data["timedout"]
         self.timed_out_pods: str = data["timedoutpods"]
         self.timing: float = data["timing"]
-        self.parse_timing: float = data["parsetiming"]
+        self.parse_timing: t.Optional[float] = data.get("parsetiming", None)
         self.parse_timed_out: bool = data["parsetimedout"]
         self.recalculate: str = data["recalculate"]
         self.id: str = data["id"]
@@ -79,7 +79,7 @@ class Result:
         self.server: str = data["server"]
         self.related: str = data["related"]
         self.version: str = data["version"]
-        self.input: str = data["inputstring"]
+        self.input: t.Optional[str] = data.get("inputstring", None)
 
         self.pods: t.List[Pod] = []
         for pod in data.get("pods", []):

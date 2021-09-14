@@ -17,8 +17,12 @@ class Wolfram(commands.Cog):
         async with ctx.typing():
             query = wolfram.Query(input=query, format="image", mag="3", width="1500", reinterpret="true")
             result = await wolfram.Backend.request(query)
-            view = WolframView(query, result)
 
+        if not result.success:
+            fail = utilities.Embeds.status(False, "WolframAlpha was not able to answer your query.")
+            return await ctx.reply(embed=fail)
+
+        view = WolframView(query, result)
         await ctx.reply("Press any button to view its content.", view=view)
 
 class WolframView(utilities.View):
