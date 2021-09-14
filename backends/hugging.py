@@ -11,7 +11,7 @@ class Model:
     def __init__(self) -> None:
         self.identifier = "EleutherAI/gpt-neo-2.7B"
         self.remove_input = False
-        self.temperature = 1.0
+        self.temperature = 0.9
         self.maximum = 200
 
     async def generate(self, query: str) -> None:

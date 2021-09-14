@@ -11,7 +11,7 @@ class Model:
     def __init__(self) -> None:
         self.identifier = "60ca2a1e54f6ecb69867c72c"
         self.remove_input = False
-        self.temperature = 1.0
+        self.temperature = 0.9
         self.maximum = 200
 
     async def generate(self, query: str) -> None:
