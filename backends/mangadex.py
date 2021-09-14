@@ -161,7 +161,7 @@ class Manga:
             limit = min(count, 500)
             parameters = {"limit": limit, "offset": offset, "translatedLanguage[]": language, "order[chapter]": "asc"}
             data = await Backend.get(f"manga/{self.identifier}/feed", params=parameters)
-            chapters = [Chapter(m["data"]) for m in data["results"] if m["result"] == "ok"]
+            chapters = [Chapter(m) for m in data["data"]]
             self.chapters.extend(chapters)
             count -= limit
             offset += limit
@@ -195,13 +195,13 @@ class Backend:
         parameters = {"limit": 1, "title": title}
         data = await cls.get("manga", params=parameters)
 
-        if data["results"][0]["result"] != "ok":
-            errored = data["results"][0]
+        if data["result"] != "ok":
+            errored = data["data"][0]
             errors = errored.get("errors", [])
             readable = ", ".join(errors) or None
             raise exceptions.HTTPUnexpected(http.HTTPStatus.OK, readable)
 
-        data = data["results"][0]["data"]
+        data = data["data"][0]
         return Manga(data)
 
     @classmethod
@@ -212,7 +212,7 @@ class Backend:
 
         parameters = {"limit": maximum, "title": title}
         data = await cls.get("manga", params=parameters)
-        return [Manga(m) for m in data["results"] if m["result"] == "ok"]
+        return [Manga(m) for m in data["data"]]
 
 def setup(bot: model.Bakerbot) -> None:
     Backend.setup(bot)
