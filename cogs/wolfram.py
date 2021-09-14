@@ -85,20 +85,25 @@ class WolframView(utilities.View):
         await interaction.response.edit_message(content=None, embed=embed, view=None)
 
         identifier = utilities.Identifiers.extract(interaction, str)
-        self.query.parameters["podindex"] = str(self.result.pods.index(self.current_pod) + 1)
+        self.query.parameters["includepodid"] = self.current_pod.id
         self.query.parameters.add("podstate", identifier)
 
         result = await wolfram.Backend.request(self.query)
+        pod = result.pods[0] if result.pods else self.current_pod
 
         if not result.success:
             fail = utilities.Embeds.status(False, "WolframAlpha was not able to answer your query.")
             return await interaction.edit_original_message(content=None, embed=fail, view=None)
 
+        if not result.pods:
+            fail = "No extra content was returned from the previous request."
+            await interaction.followup.send(content=fail, ephemeral=True)
+
         self.clear_items()
         self.show_control_buttons()
-        self.show_podstate_buttons(result.pods[0])
+        self.show_podstate_buttons(pod)
 
-        images = "\n".join(subpod.image.source for subpod in result.pods[0].subpods)
+        images = "\n".join(subpod.image.source for subpod in pod.subpods)
         await interaction.edit_original_message(content=images, embed=None, view=self)
 
     async def control_callback(self, interaction: discord.Interaction) -> None:
