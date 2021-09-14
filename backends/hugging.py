@@ -11,6 +11,7 @@ class Model:
     def __init__(self) -> None:
         self.identifier = "EleutherAI/gpt-neo-2.7B"
         self.remove_input = False
+        self.repetition_penalty = 1.0
         self.temperature = 0.9
         self.maximum = 200
 
@@ -55,7 +56,9 @@ class Backend:
             },
             "parameters": {
                 "max_length": model.maximum,
-                "temperature": model.temperature
+                "temperature": model.temperature,
+                "return_full_text": model.remove_input,
+                "repetition_penalty": model.repetition_penalty
             }
         }
 

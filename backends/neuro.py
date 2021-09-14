@@ -11,6 +11,7 @@ class Model:
     def __init__(self) -> None:
         self.identifier = "60ca2a1e54f6ecb69867c72c"
         self.remove_input = False
+        self.repetition_penalty = 1.0
         self.temperature = 0.9
         self.maximum = 200
 
@@ -53,7 +54,8 @@ class Backend:
             "input_kwargs": {
                 "response_length": model.maximum,
                 "remove_input": model.remove_input,
-                "temperature": model.temperature
+                "temperature": model.temperature,
+                "repetition_penalty": model.repetition_penalty
             }
         }
 

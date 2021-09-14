@@ -10,11 +10,12 @@ import io
 
 class ModelFlags(commands.FlagConverter):
     """An object representing possible modifiable attributes in a `Model`."""
-    backend: t.Optional[t.Literal["hugging", "neuro"]]
+    backend: t.Optional[str]
     identifier: t.Optional[str]
     remove_input: t.Optional[bool]
     temperature: t.Optional[float]
     maximum: t.Optional[int]
+    repetition_penalty: t.Optional[float]
 
 class Textgen(commands.Cog):
     """An interface to the Hugging Face and Neuro text-generating APIs."""
@@ -58,24 +59,49 @@ class Textgen(commands.Cog):
         """Updates your personal model configuration."""
         if flags.backend is not None:
             mapping = {"hugging": hugging.Model, "neuro": neuro.Model}
-            model = mapping[flags.backend]
-            self.models[ctx.author.id] = model()
+
+            if flags.backend in mapping:
+                default = mapping[flags.backend]
+                self.models[ctx.author.id] = default()
+            else:
+                options = ", ".join(mapping.keys())
+                fail = f"Invalid backend. Options include: {options}."
+                return await ctx.reply(fail)
 
         model = self.models[ctx.author.id]
         model.identifier = flags.identifier or model.identifier
         model.remove_input = flags.remove_input or model.remove_input
         model.temperature = flags.temperature or model.temperature
         model.maximum = flags.maximum or model.maximum
+        model.repetition_penalty = flags.repetition_penalty or model.repetition_penalty
 
-        binput = str(model.remove_input).lower()
-        message = (f"Current (or updated?) model configuration:\n"
-                   f" • Backend: {model.backend}\n"
-                   f" • Identifier: {model.identifier}\n"
-                   f" • Strip input from response? {binput}\n"
-                   f" • Maximum no. of characters: {model.maximum}\n"
-                   f" • Temperature: {model.temperature}")
+        hasflags = all(v is not None for k, v in flags)
+        verb = "Updated" if hasflags else "Current"
+        view = ConfigureView() if not hasflags else None
 
-        await ctx.reply(message)
+        text = (f"{verb} model configuration:\n"
+                f" • API backend/identifier: {model.backend} | {model.identifier}\n"
+                f" • Input stripping/character max: {str(model.remove_input).lower()} | {model.maximum}\n"
+                f" • Repetition penalty/temperature: {model.repetition_penalty} | {model.temperature}")
+
+        await ctx.reply(text, view=view)
+
+class ConfigureView(utilities.View):
+    """A subclass of `utilities.View` for displaying model configuration instructions."""
+    @discord.ui.button(label="Click here to learn how to configure your model!")
+    async def callback(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
+        """Handles model configuration help requests."""
+        tutorial = ("To modify your model, pass arguments like so:\n"
+                    "`$text configure temperature: 1.0 maximum: 9000`\n\n"
+                    "All arguments are optional. Here is the full list of parameters:\n"
+                    " • **backend** specifies the API to use.\n"
+                    " • **identifier** specifies the model and is specific to each API.\n"
+                    " • **remove_input** specifies whether the original input is included.\n"
+                    " • **temperature** specifies the model's temperature.\n"
+                    " • **maximum** specifies the maximum number of characters.\n"
+                    " • **repetition_penalty** specifies the repetition penalty.")
+
+        await interaction.response.send_message(tutorial, ephemeral=True)
 
 def setup(bot: model.Bakerbot) -> None:
     cog = Textgen(bot)
