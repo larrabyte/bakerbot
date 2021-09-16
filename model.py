@@ -24,7 +24,7 @@ class Bakerbot(commands.Bot):
         for module in (exceptions, utilities):
             importlib.reload(module)
 
-        for extension in [extension for extension in self.extensions.keys()]:
+        for extension in list(self.extensions.keys()):
             self.reload_extension(extension)
 
     def run(self) -> None:
