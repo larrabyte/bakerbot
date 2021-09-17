@@ -19,7 +19,8 @@ class Magic(commands.Cog):
 
     async def cog_check(self, ctx: commands.Context) -> None:
         """Ensures that commands are being run either by the owner or Team Magic."""
-        return (await self.bot.is_owner(ctx.author)) or ctx.guild.id == self.magic
+        owner = await self.bot.is_owner(ctx.author)
+        return owner or (ctx.guild is not None and ctx.guild.id == self.magic)
 
     @commands.group(invoke_without_subcommand=True)
     async def magic(self, ctx: commands.Context) -> None:
