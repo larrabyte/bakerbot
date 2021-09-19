@@ -3,6 +3,7 @@ import utilities
 import model
 
 import discord.ext.commands as commands
+import typing as t
 import titlecase
 import discord
 
@@ -15,11 +16,11 @@ class Wolfram(commands.Cog):
     async def wolfram(self, ctx: commands.Context, *, query: str) -> None:
         """Queries WolframAlpha with `query`."""
         async with ctx.typing():
-            query = wolfram.Query(input=query, format="image", mag="3", width="1500", reinterpret="true")
+            query = wolfram.Query(input=query, format="image", mag="3", width="1000", reinterpret="true")
             result = await wolfram.Backend.request(query)
 
         if not result.success:
-            fail = utilities.Embeds.status(False, "WolframAlpha was not able to answer your query.")
+            fail = utilities.Embeds.status(False, "WolframAlpha was unable to answer your query.")
             return await ctx.reply(embed=fail)
 
         view = WolframView(query, result)
@@ -34,6 +35,10 @@ class WolframView(utilities.View):
         self.current_pod = None
 
         self.show_pod_buttons()
+
+    def format(self, pod: wolfram.Pod) -> t.List[discord.Embed]:
+        blueprint = discord.Embed(colour=utilities.Colours.REGULAR)
+        return [blueprint.copy().set_image(url=subpod.image.source) for subpod in pod.subpods]
 
     def show_pod_buttons(self) -> None:
         """Adds buttons to the view that correspond to each pod in `self.result`."""
@@ -73,14 +78,16 @@ class WolframView(utilities.View):
         self.show_control_buttons()
         self.show_podstate_buttons(self.current_pod)
 
-        images = "\n".join(subpod.image.source for subpod in self.current_pod.subpods)
-        await interaction.response.edit_message(content=images, embed=None, view=self)
+        # Sending multiple embeds apparently means I need to defer.
+        await interaction.response.defer()
+        embeds = self.format(self.current_pod)
+        await interaction.edit_original_message(content=None, embeds=embeds, view=self)
 
     async def podstate_callback(self, interaction: discord.Interaction) -> None:
         """Handles requests to update the current pod's podstate."""
         # Defer the interaction as we need to make another request.
         embed = utilities.Embeds.standard()
-        embed.description = "Please wait as another WolframAlpha API request is made."
+        embed.description = "Please wait while another WolframAlpha API request is made."
         embed.set_footer(text="Interaction deferred.", icon_url=utilities.Icons.INFO)
         await interaction.response.edit_message(content=None, embed=embed, view=None)
 
@@ -91,20 +98,16 @@ class WolframView(utilities.View):
         result = await wolfram.Backend.request(self.query)
         pod = result.pods[0] if result.pods else self.current_pod
 
-        if not result.success:
-            fail = utilities.Embeds.status(False, "WolframAlpha was not able to answer your query.")
-            return await interaction.edit_original_message(content=None, embed=fail, view=None)
-
-        if not result.pods:
-            fail = "No extra content was returned from the previous request."
+        if not result.success or not result.pods:
+            fail = "WolframAlpha did not return any extra content."
             await interaction.followup.send(content=fail, ephemeral=True)
 
         self.clear_items()
         self.show_control_buttons()
         self.show_podstate_buttons(pod)
 
-        images = "\n".join(subpod.image.source for subpod in pod.subpods)
-        await interaction.edit_original_message(content=images, embed=None, view=self)
+        embeds = self.format(pod)
+        await interaction.edit_original_message(content=None, embeds=embeds, view=self)
 
     async def control_callback(self, interaction: discord.Interaction) -> None:
         """Handles control button requests."""
