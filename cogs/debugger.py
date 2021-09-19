@@ -72,7 +72,13 @@ class Debugger(commands.Cog):
             fail.set_footer(text=f"Command signature: {template}", icon_url=utilities.Icons.CROSS)
             await ctx.reply(embed=fail)
 
-        else: # Otherwise, we perform generic error handling.
+        elif isinstance(ex, (commands.CheckFailure, commands.CheckAnyFailure)):
+            fail = utilities.Embeds.status(False)
+            fail.description = "The current context does not support execution of this command."
+            fail.set_footer(text=f"Exception type: {ex.__module__}.{ex.__class__.__name__}.", icon_url=utilities.Icons.CROSS)
+            await ctx.reply(embed=fail)
+
+        else:
             embed = utilities.Embeds.error(error)
             await ctx.reply(embed=embed)
 
