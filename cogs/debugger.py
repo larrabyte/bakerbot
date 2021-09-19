@@ -3,7 +3,6 @@ import model
 
 import discord.ext.commands as commands
 import typing as t
-import traceback
 
 class Debugger(commands.Cog):
     """Provides a built-in debugger for Bakerbot."""
@@ -23,14 +22,16 @@ class Debugger(commands.Cog):
     async def load(self, ctx: commands.Context, cog: str):
         """Loads a command group."""
         self.bot.load_extension(cog)
-        embed = utilities.Embeds.status(True, f"{cog} has been loaded.")
+        embed = utilities.Embeds.status(True)
+        embed.description = f"{cog} has been loaded."
         await ctx.reply(embed=embed)
 
     @mod.command()
     async def unload(self, ctx: commands.Context, cog: str):
         """Unloads a command group."""
         self.bot.unload_extension(cog)
-        embed = utilities.Embeds.status(True, f"{cog} has been unloaded.")
+        embed = utilities.Embeds.status(True)
+        embed.description = f"{cog} has been unloaded."
         await ctx.reply(embed=embed)
 
     @mod.command()
@@ -43,7 +44,8 @@ class Debugger(commands.Cog):
             self.bot.reload()
             summary = "All modules reloaded."
 
-        embed = utilities.Embeds.status(True, summary)
+        embed = utilities.Embeds.status(True)
+        embed.description = summary
         await ctx.reply(embed=embed)
 
     @commands.Cog.listener()
@@ -57,42 +59,21 @@ class Debugger(commands.Cog):
 
         elif isinstance(ex, commands.CommandNotFound):
             command = ctx.message.content.split(" ")[0]
-            reason = f"`{command}` is not a valid command."
-            footer = "Try $help for a list of command groups."
-            fail = utilities.Embeds.status(False, reason)
-            fail.set_footer(text=footer, icon_url=utilities.Icons.CROSS)
+            fail = utilities.Embeds.status(False, description=f"`{command}` is not a valid command.")
+            fail.set_footer(text="Try $help for a list of command groups.", icon_url=utilities.Icons.CROSS)
             await ctx.reply(embed=fail)
 
         elif isinstance(ex, commands.MissingRequiredArgument):
             prefix = f"{ctx.command.full_parent_name} " if ctx.command.parent else ""
             template = f"{prefix}{ctx.command.name} {ctx.command.signature}"
-            reason = f"`{ex.param.name}` (type {ex.param.annotation.__name__}) is a required argument that is missing.\n"
 
-            fail = utilities.Embeds.status(False, reason)
-            footer = f"Command signature: {template}"
-            fail.set_footer(text=footer, icon_url=utilities.Icons.CROSS)
+            fail = utilities.Embeds.status(False)
+            fail.description = f"`{ex.param.name}` (type {ex.param.annotation.__name__}) is a required argument that is missing.\n"
+            fail.set_footer(text=f"Command signature: {template}", icon_url=utilities.Icons.CROSS)
             await ctx.reply(embed=fail)
 
         else: # Otherwise, we perform generic error handling.
-            embed = utilities.Embeds.status(False, "")
-            embed.title = "Exception raised. See below for more information."
-
-            # Extract traceback information if available.
-            if (trace := ex.__traceback__) is not None:
-                embed.title = "Exception raised. Traceback reads as follows:"
-
-                for l in traceback.extract_tb(trace):
-                    embed.description += f"Error occured in {l[2]}, line {l[1]}:\n"
-                    embed.description += f"    {l[3]}\n"
-
-            # Package the text/traceback data into an embed field and send it off.
-            readable = str(ex) or type(ex).__name__
-            embed.description += readable
-
-            maximum = utilities.Limits.EMBED_CHARACTERS - (len(embed.title) + 6)
-            embed.description = utilities.Limits.limit(embed.description, maximum)
-            embed.description = f"```{embed.description}```"
-
+            embed = utilities.Embeds.error(error)
             await ctx.reply(embed=embed)
 
 def setup(bot: model.Bakerbot) -> None:

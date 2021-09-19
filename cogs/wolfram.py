@@ -20,7 +20,8 @@ class Wolfram(commands.Cog):
             result = await wolfram.Backend.request(query)
 
         if not result.success:
-            fail = utilities.Embeds.status(False, "WolframAlpha was unable to answer your query.")
+            fail = utilities.Embeds.status(False)
+            fail.description = "WolframAlpha was unable to answer your query."
             return await ctx.reply(embed=fail)
 
         view = WolframView(query, result)

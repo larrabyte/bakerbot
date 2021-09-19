@@ -61,11 +61,13 @@ class Voice(commands.Cog):
 
         filepath = pathlib.Path(f"music/{track}")
         if not filepath.is_file():
-            fail = utilities.Embeds.status(False, f"{track} is not a valid track.")
+            fail = utilities.Embeds.status(False)
+            fail.description = f"{track} is not a valid track."
             return await ctx.reply(embed=fail)
 
         if not ctx.guild.voice_client and not (await self.ensure_client(ctx.author.voice)):
-            fail = utilities.Embeds.status(False, "Unable to join a channel.")
+            fail = utilities.Embeds.status(False)
+            fail.description = "Unable to join a channel."
             return await ctx.reply(embed=fail)
 
         track = await discord.FFmpegOpusAudio.from_probe(filepath)
@@ -85,8 +87,8 @@ class Voice(commands.Cog):
         channel = channel or getattr(ctx.author.voice, "channel", None)
 
         if channel is None:
-            response = "No available channels exist (either none specified or you aren't in one)."
-            fail = utilities.Embeds.status(False, response)
+            fail = utilities.Embeds.status(False)
+            fail.description = "No available channels exist (either none specified or you aren't in one)."
             return await ctx.reply(embed=fail)
 
         await self.connect(channel)

@@ -1,3 +1,5 @@
+from discord.colour import Colour
+from discord.embeds import Embed
 import discord.ext.commands as commands
 import typing as t
 import traceback
@@ -73,19 +75,42 @@ class Embeds:
     @staticmethod
     def standard(**kwargs: dict) -> discord.Embed:
         """Creates a standard Bakerbot embed."""
-        embed = discord.Embed(colour=Colours.REGULAR, timestamp=discord.utils.utcnow(), **kwargs)
+        embed = discord.Embed(colour=Colours.REGULAR, **kwargs)
         return embed
 
     @staticmethod
-    def status(success: bool, description: str) -> discord.Embed:
+    def status(success: bool, **kwargs: dict) -> discord.Embed:
         """Creates a standard Bakerbot status embed."""
         status = "Operation successful!" if success else "Operation failed!"
         colour = Colours.SUCCESS if success else Colours.FAILURE
         icon = Icons.TICK if success else Icons.CROSS
 
-        embed = discord.Embed(colour=colour, timestamp=discord.utils.utcnow())
+        embed = discord.Embed(colour=colour, **kwargs)
         embed.set_footer(text=status, icon_url=icon)
-        embed.description = description
+        return embed
+
+    @staticmethod
+    def error(exception: Exception) -> discord.Embed:
+        """Creates a standard Bakerbot exception embed."""
+        embed = discord.Embed(colour=Colours.FAILURE)
+        embed.title = "Exception raised. See below for more information."
+        description = ""
+
+        # Extract traceback information if available.
+        if (trace := exception.__traceback__) is not None:
+            embed.title = "Exception raised. Traceback reads as follows:"
+
+            for line in traceback.extract_tb(trace):
+                description += f"Error occured in {line[2]}, line {line[1]}:\n"
+                description += f"    {line[3]}\n"
+
+        # Package the text/traceback data into an embed field and send it off.
+        readable = str(exception) or type(exception).__name__
+        description += readable
+
+        maximum = Limits.EMBED_CHARACTERS - (len(embed.title) + 6)
+        description = Limits.limit(description, maximum)
+        embed.description = f"```{description}```"
         return embed
 
 class Commands:
@@ -96,11 +121,10 @@ class Commands:
             if ctx.subcommand_passed is None:
                 await ctx.reply(summary)
             else:
+                embed = Embeds.status(False)
                 classname = str(ctx.command.cog.__class__.__name__).lower()
-                summary = f"`{ctx.subcommand_passed}` is not a valid subcommand of `${ctx.command.name}`."
-                footer = f"Try $help {classname} for a list of subcommands."
-                embed = Embeds.status(False, summary)
-                embed.set_footer(text=footer, icon_url=Icons.CROSS)
+                embed.description = f"`{ctx.subcommand_passed}` is not a valid subcommand of `${ctx.command.name}`."
+                embed.set_footer(text=f"Try $help {classname} for a list of subcommands.", icon_url=Icons.CROSS)
                 await ctx.reply(embed=embed)
 
 class View(discord.ui.View):
@@ -108,25 +132,7 @@ class View(discord.ui.View):
         if not interaction.response.is_done():
             await interaction.response.defer()
 
-        embed = Embeds.status(False, "")
-        embed.title = "Exception raised. See below for more information."
-
-        # Extract traceback information if available.
-        if (trace := error.__traceback__) is not None:
-            embed.title = "Exception raised. Traceback reads as follows:"
-
-            for l in traceback.extract_tb(trace):
-                embed.description += f"Error occured in {l[2]}, line {l[1]}:\n"
-                embed.description += f"    {l[3]}\n"
-
-        # Package the text/traceback data into an embed field and send it off.
-        readable = str(error) or type(error).__name__
-        embed.description += readable
-
-        maximum = Limits.EMBED_CHARACTERS - (len(embed.title) + 6)
-        embed.description = Limits.limit(embed.description, maximum)
-        embed.description = f"```{embed.description}```"
-
+        embed = Embeds.error(error)
         await interaction.edit_original_message(content=None, embed=embed, view=None)
 
 class Paginator(View):
