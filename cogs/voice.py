@@ -17,6 +17,10 @@ class Voice(commands.Cog):
             coro = client.disconnect()
             self.bot.loop.create_task(coro)
 
+    async def cog_check(self, ctx: commands.Context) -> None:
+        """Ensures that commands are being executed in a guild context."""
+        return ctx.guild is not None
+
     async def connect(self, channel: discord.VoiceChannel) -> None:
         """Either connects or moves the bot to a specific voice channel."""
         client = channel.guild.voice_client
