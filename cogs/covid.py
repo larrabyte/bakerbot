@@ -17,7 +17,8 @@ class Covid(commands.Cog):
         if (channel := bot.get_channel(473426067823263753)) is not None:
             self.task.start(channel)
 
-    def cog_unload(self):
+    def cog_unload(self) -> None:
+        """Ensure no lingering tasks remain after unloading."""
         self.task.cancel()
 
     def embeddify(self, results: covid.Statistics) -> discord.Embed:
