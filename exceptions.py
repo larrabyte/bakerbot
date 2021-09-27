@@ -10,7 +10,3 @@ class HTTPUnexpected(Exception):
     def __init__(self, status: int, error: t.Optional[str]=None) -> None:
         message = error or f"Endpoint returned HTTP {status} {http.client.responses[status]}."
         super().__init__(message)
-
-class NoInformation(Exception):
-    """Raised whenever some information/resource/attribute is unavailable."""
-    pass

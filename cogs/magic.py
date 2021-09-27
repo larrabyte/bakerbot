@@ -83,7 +83,7 @@ class Magic(commands.Cog):
     async def whoasked(self, ctx: commands.Context) -> None:
         """OK, but who asked?"""
         self.asker.enabled = not self.asker.enabled
-        boolean = "disabled" if self.asker.enabled else "disabled"
+        boolean = "enabled" if self.asker.enabled else "disabled"
         await ctx.reply(f"Asking is now {boolean}.")
 
 class WhoAsked:

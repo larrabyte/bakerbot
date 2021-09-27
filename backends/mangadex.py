@@ -111,7 +111,7 @@ class Manga:
     def volume_count(self) -> int:
         """Returns the number of volumes in this manga."""
         if self.volumes is None:
-            raise exceptions.NoInformation("Aggregate not available.")
+            raise RuntimeError("Aggregate not available.")
 
         count = len(self.volumes.values())
         if "none" in self.volumes.values():
@@ -122,7 +122,7 @@ class Manga:
     def chapter_count(self) -> int:
         """Returns the number of chapters in this manga."""
         if self.volumes is None:
-            raise exceptions.NoInformation("Aggregate not available.")
+            raise RuntimeError("Aggregate not available.")
 
         return sum(volume["count"] for volume in self.volumes.values())
 
