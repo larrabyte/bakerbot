@@ -1,30 +1,20 @@
 import exceptions
+from abcs import text
 import model
 
 import ujson
 import http
 
-class Model:
-    """A class representing a Hugging Face model."""
-    backend = "Hugging Face API"
-
-    def __init__(self) -> None:
-        self.identifier = "EleutherAI/gpt-neo-2.7B"
-        self.remove_input = False
-        self.repetition_penalty = 1.0
-        self.temperature = 0.9
-        self.maximum = 200
-
-    async def generate(self, query: str) -> None:
-        """Generates text using this model's configuration."""
-        return await Backend.generate(self, query)
-
-class Backend:
+class Backend(text.Backend):
     @classmethod
     def setup(cls, bot: model.Bakerbot) -> None:
         cls.base = "https://api-inference.huggingface.co"
         cls.session = bot.session
         cls.token = bot.secrets.get("hugging-token", None)
+
+    @classmethod
+    def name(cls) -> str:
+        return "Hugging Face API"
 
     @classmethod
     async def post(cls, endpoint: str, **kwargs: dict) -> dict:
@@ -41,7 +31,7 @@ class Backend:
             return ujson.loads(data)
 
     @classmethod
-    async def generate(cls, model: Model, query: str) -> str:
+    async def generate(cls, model: text.Model, query: str) -> str:
         """Generates text using the Hugging Face API."""
         if cls.token is None:
             raise exceptions.SecretNotFound("hugging-token not found in secrets.json.")

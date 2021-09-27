@@ -1,5 +1,6 @@
 import backends.hugging as hugging
 import backends.neuro as neuro
+from abcs import text
 import utilities
 import model
 
@@ -20,13 +21,19 @@ class ModelFlags(commands.FlagConverter):
 class Textgen(commands.Cog):
     """An interface to the Hugging Face and Neuro text-generating APIs."""
     def __init__(self, bot: model.Bakerbot) -> None:
+        self.apis = {
+            "hugging": hugging.Backend,
+            "neuro": neuro.Backend
+        }
+
         self.models = {}
         self.bot = bot
 
     async def cog_before_invoke(self, ctx: commands.Context) -> None:
         """Ensures that a user has a model configuration in the dictionary."""
         if ctx.author.id not in self.models:
-            self.models[ctx.author.id] = neuro.Model()
+            model = text.Model(neuro.Backend, "60ca2a1e54f6ecb69867c72c")
+            self.models[ctx.author.id] = model
 
     @commands.group(invoke_without_subcommand=True)
     async def text(self, ctx: commands.Context) -> None:
@@ -39,12 +46,11 @@ class Textgen(commands.Cog):
     @text.command()
     async def generate(self, ctx: commands.Context, *, query: str) -> None:
         """Generates text with your personal model configuration."""
-        model = self.models[ctx.author.id]
-
         async with ctx.typing():
+            model = self.models[ctx.author.id]
             data = await model.generate(query)
-            data = discord.utils.escape_markdown(data)
 
+        data = discord.utils.escape_markdown(data)
         if len(data) < utilities.Limits.MESSAGE_CHARACTERS:
             return await ctx.reply(data)
 
@@ -57,30 +63,28 @@ class Textgen(commands.Cog):
     @text.command()
     async def configure(self, ctx: commands.Context, *, flags: ModelFlags) -> None:
         """Updates your personal model configuration."""
-        if flags.backend is not None:
-            mapping = {"hugging": hugging.Model, "neuro": neuro.Model}
+        model = self.models[ctx.author.id]
 
-            if flags.backend in mapping:
-                default = mapping[flags.backend]
-                self.models[ctx.author.id] = default()
+        if flags.backend is not None:
+            if flags.backend.lower() in self.apis:
+                model.backend = self.apis[flags.backend.lower()]
             else:
-                options = ", ".join(mapping.keys())
+                options = ", ".join(self.apis.keys())
                 fail = f"Invalid backend. Options include: {options}."
                 return await ctx.reply(fail)
 
-        model = self.models[ctx.author.id]
         model.identifier = flags.identifier or model.identifier
         model.remove_input = flags.remove_input or model.remove_input
         model.temperature = flags.temperature or model.temperature
         model.maximum = flags.maximum or model.maximum
         model.repetition_penalty = flags.repetition_penalty or model.repetition_penalty
 
-        hasflags = all(v is not None for k, v in flags)
-        verb = "Updated" if hasflags else "Current"
-        view = ConfigureView() if not hasflags else None
+        modified = all(v is not None for k, v in flags)
+        view = ConfigureView() if not modified else None
+        verb = "Updated" if modified else "Current"
 
         text = (f"{verb} model configuration:\n"
-                f" • API backend/identifier: {model.backend} | {model.identifier}\n"
+                f" • API backend/identifier: {model.backend.name()} | {model.identifier}\n"
                 f" • Input stripping/character max: {str(model.remove_input).lower()} | {model.maximum}\n"
                 f" • Repetition penalty/temperature: {model.repetition_penalty} | {model.temperature}")
 

@@ -1,31 +1,21 @@
 import exceptions
+from abcs import text
 import model
 
 import ujson
 import http
 
-class Model:
-    """A class representing a Neuro model."""
-    backend = "Neuro API"
-
-    def __init__(self) -> None:
-        self.identifier = "60ca2a1e54f6ecb69867c72c"
-        self.remove_input = False
-        self.repetition_penalty = 1.0
-        self.temperature = 0.9
-        self.maximum = 200
-
-    async def generate(self, query: str) -> None:
-        """Generates text using this model's configuration."""
-        return await Backend.generate(self, query)
-
-class Backend:
+class Backend(text.Backend):
     @classmethod
     def setup(cls, bot: model.Bakerbot) -> None:
         """Initialises an instance of `Backend` using objects from `bot`."""
         cls.base = "https://api.neuro-ai.co.uk"
         cls.session = bot.session
         cls.token = bot.secrets.get("neuro-token", None)
+
+    @classmethod
+    def name(cls) -> str:
+        return "Neuro API"
 
     @classmethod
     async def post(cls, endpoint: str, **kwargs) -> dict:
@@ -40,7 +30,7 @@ class Backend:
             return data
 
     @classmethod
-    async def generate(cls, model: Model, query: str) -> str:
+    async def generate(cls, model: text.Model, query: str) -> str:
         """Generates text using the Neuro API."""
         if cls.token is None:
             raise exceptions.SecretNotFound("neuro-token not found in secrets.json.")
