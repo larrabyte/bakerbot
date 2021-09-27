@@ -1,9 +1,9 @@
-import backends.covid as covid
+from backends import covid
 import utilities
 import model
 
-import discord.ext.commands as commands
-import discord.ext.tasks as tasks
+from discord.ext import commands
+from discord.ext import tasks
 import datetime
 import discord
 import asyncio

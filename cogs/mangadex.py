@@ -1,8 +1,8 @@
-import backends.mangadex as mangadex
+from backends import mangadex
 import utilities
 import model
 
-import discord.ext.commands as commands
+from discord.ext import commands
 import titlecase
 import discord
 

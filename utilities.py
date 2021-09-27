@@ -1,6 +1,4 @@
-from discord.colour import Colour
-from discord.embeds import Embed
-import discord.ext.commands as commands
+from discord.ext import commands
 import typing as t
 import traceback
 import titlecase

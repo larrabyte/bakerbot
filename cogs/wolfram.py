@@ -1,8 +1,8 @@
-import backends.wolfram as wolfram
+from backends import wolfram
 import utilities
 import model
 
-import discord.ext.commands as commands
+from discord.ext import commands
 import typing as t
 import titlecase
 import discord

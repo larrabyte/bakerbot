@@ -1,10 +1,10 @@
-import backends.hugging as hugging
-import backends.neuro as neuro
+from backends import hugging
+from backends import neuro
 from abcs import text
 import utilities
 import model
 
-import discord.ext.commands as commands
+from discord.ext import commands
 import typing as t
 import discord
 import io

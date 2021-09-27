@@ -1,7 +1,7 @@
 import utilities
 import model
 
-import discord.ext.commands as commands
+from discord.ext import commands
 import discord
 
 class Meta(commands.Cog):

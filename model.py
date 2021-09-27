@@ -1,7 +1,7 @@
 import exceptions
 import utilities
 
-import discord.ext.commands as commands
+from discord.ext import commands
 import importlib
 import aiohttp
 import ujson

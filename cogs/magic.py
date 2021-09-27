@@ -1,8 +1,8 @@
-import backends.discord as expcord
+from backends import discord as expcord
 import utilities
 import model
 
-import discord.ext.commands as commands
+from discord.ext import commands
 import typing as t
 import asyncio
 import discord
