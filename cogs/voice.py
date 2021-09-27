@@ -17,6 +17,20 @@ class Voice(commands.Cog):
             coro = client.disconnect()
             self.bot.loop.create_task(coro)
 
+    def paginate_tracks(self) -> utilities.Paginator:
+        """Returns an instance of `utilities.Paginator` containing all music tracks."""
+        paginator = utilities.Paginator()
+        paginator.placeholder = "Tracks"
+
+        for track in pathlib.Path("music").iterdir():
+            label = utilities.Limits.limit(track.name, utilities.Limits.SELECT_LABEL)
+            value = utilities.Limits.limit(track.name, utilities.Limits.SELECT_VALUE)
+            desc = utilities.Limits.limit(str(track), utilities.Limits.SELECT_DESCRIPTION)
+            option = discord.SelectOption(label=label, value=value, description=desc)
+            paginator.add(option)
+
+        return paginator
+
     async def cog_check(self, ctx: commands.Context) -> None:
         """Ensures that commands are being executed in a guild context."""
         return ctx.guild is not None
@@ -24,17 +38,10 @@ class Voice(commands.Cog):
     async def connect(self, channel: discord.VoiceChannel) -> None:
         """Either connects or moves the bot to a specific voice channel."""
         client = channel.guild.voice_client
-        offline = client is None or not client.is_connected()
-        function = channel.connect() if offline else client.move_to(channel)
-        await function
-
-    async def ensure_client(self, remote: t.Optional[discord.VoiceClient]) -> bool:
-        """Returns the state of the voice client after attempting a connection."""
-        if remote is None or remote.channel is None:
-            return False
-
-        await self.connect(remote.channel)
-        return True
+        if client is None or not client.is_connected():
+            await channel.connect()
+        elif client.channel != channel:
+            await client.move_to(channel)
 
     @commands.group(invoke_without_subcommand=True)
     async def vc(self, ctx: commands.Context) -> None:
@@ -48,35 +55,34 @@ class Voice(commands.Cog):
     async def play(self, ctx: commands.Context, track: t.Optional[str]) -> None:
         """Plays audio tracks from Bakerbot's music folder."""
         if track is None:
-            paginator = utilities.Paginator()
-            paginator.placeholder = "Tracks"
-
-            for track in pathlib.Path("music").iterdir():
-                label = utilities.Limits.limit(track.name, utilities.Limits.SELECT_LABEL)
-                value = utilities.Limits.limit(track.name, utilities.Limits.SELECT_VALUE)
-                desc = utilities.Limits.limit(str(track), utilities.Limits.SELECT_DESCRIPTION)
-                option = discord.SelectOption(label=label, value=value, description=desc)
-                paginator.add(option)
-
-            await ctx.reply("Please select a track from the dropdown menu.", view=paginator)
-            track = await paginator.wait()
-            if track is None:
+            paginator = self.paginate_tracks()
+            await ctx.reply("Select any track to begin playing it.", view=paginator)
+            if (track := await paginator.wait()) is None:
                 return
 
-        filepath = pathlib.Path(f"music/{track}")
-        if not filepath.is_file():
+        if not (filepath := pathlib.Path(f"music/{track}")).is_file():
             fail = utilities.Embeds.status(False)
-            fail.description = f"{track} is not a valid track."
+            fail.description = f"`{track}` is not a valid track."
+
+            trackcmd = f"{self.tracks.full_parent_name} {self.tracks.name}"
+            trackcmd += self.tracks.signature or ""
+            fail.set_footer(text=f"Consider invoking ${trackcmd} for a list of available tracks.", icon_url=utilities.Icons.INFO)
             return await ctx.reply(embed=fail)
 
-        if not ctx.guild.voice_client and not (await self.ensure_client(ctx.author.voice)):
+        if ctx.author.voice is not None and ctx.author.voice.channel is not None:
+            await self.connect(ctx.author.voice.channel)
+        elif ctx.voice_client is None:
             fail = utilities.Embeds.status(False)
-            fail.description = "Unable to join a channel."
+            fail.description = "What channel am I supposed to play audio in?"
+
+            joincmd = f"{self.join.full_parent_name} {self.join.name}"
+            joincmd += self.join.signature or ""
+            fail.set_footer(text=f"Consider invoking ${joincmd} to make Bakerbot join a voice channel.", icon_url=utilities.Icons.INFO)
             return await ctx.reply(embed=fail)
 
         track = await discord.FFmpegOpusAudio.from_probe(filepath)
         embed = utilities.Embeds.standard()
-        embed.set_footer(text="Interaction complete.", icon_url=utilities.Icons.INFO)
+        embed.set_footer(text=f"Interaction sent by {ctx.author}.", icon_url=utilities.Icons.INFO)
         embed.description = f"Now playing `{filepath}`."
 
         if ctx.voice_client.is_playing() or ctx.voice_client.is_paused():
@@ -85,7 +91,13 @@ class Voice(commands.Cog):
         ctx.voice_client.play(track)
         await ctx.reply(embed=embed)
 
-    @vc.command()
+    @vc.command(aliases=["list"])
+    async def tracks(self, ctx: commands.Context) -> None:
+        """Presents a list of Bakerbot's tracks."""
+        paginator = self.paginate_tracks()
+        await ctx.reply("These menus are only for viewing (selecting a track won't do anything).", view=paginator)
+
+    @vc.command(aliases=["connect"])
     async def join(self, ctx: commands.Context, *, channel: t.Optional[discord.VoiceChannel]) -> None:
         """Joins the voice channel that the invoker is in, or `channel` if specified."""
         channel = channel or getattr(ctx.author.voice, "channel", None)
@@ -97,12 +109,11 @@ class Voice(commands.Cog):
 
         await self.connect(channel)
 
-    @vc.command()
+    @vc.command(aliases=["disconnect"])
     async def leave(self, ctx: commands.Context) -> None:
         """Disconnects the bot from any voice channels."""
-        vc = ctx.guild.voice_client
-        if vc is not None and vc.is_connected():
-            await vc.disconnect()
+        if ctx.voice_client is not None and ctx.voice_client.is_connected():
+            await ctx.voice_client.disconnect()
 
 def setup(bot: model.Bakerbot) -> None:
     cog = Voice(bot)
