@@ -34,7 +34,6 @@ class Covid(commands.Cog):
 
         totals = (f"* **{results.tested:,}** tests have been administered.\n"
                   f"* **{results.cases:,}** cases have been recorded.\n"
-                  f"* **{results.recovered:,}** people have recovered.\n"
                   f"* **{results.deaths:,}** deaths have been recorded.")
 
         embed.add_field(name="New Acquisitions", value=acquisitions)

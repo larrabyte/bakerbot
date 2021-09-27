@@ -7,7 +7,6 @@ import http
 class Statistics:
     """A COVID-19 data object."""
     def __init__(self, data: dict) -> None:
-        self.recovered: int = data["Recovered"]
         self.overseas: int = data["AcquiredOverseas"]
         self.local: int = data["AcquiredLocally"]
         self.deaths: int = data["Deaths"]
