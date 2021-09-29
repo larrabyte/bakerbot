@@ -33,9 +33,19 @@ class Helper(commands.Cog):
 
         if cog is None:
             instructions = "Use the dropbown menu below to see help for a specific command group."
-            await ctx.reply(instructions, view=view)
+            return await ctx.reply(instructions, view=view)
+
+        sanitised = cog.lower()
+        if sanitised.startswith(("cogs.", "local.")):
+            sanitised = sanitised.split(".")[1]
+
+        if (name := sanitised.capitalize()) not in self.bot.cogs:
+            fail = utilities.Embeds.status(False)
+            fail.description = f"`{sanitised}` is not a cog."
+            fail.set_footer(text="Consider using the dropdown menu from $help instead.", icon_url=utilities.Icons.CROSS)
+            await ctx.reply(embed=fail)
         else:
-            cog = self.bot.cogs[cog.capitalize()]
+            cog = self.bot.cogs[name]
             embed = self.embeddify(cog)
             await ctx.reply(embed=embed, view=view)
 
