@@ -43,7 +43,7 @@ class Mangadex(commands.Cog):
         embed.description = "No description available."
         if manga.description is not None:
             stripped = manga.description.strip()
-            embed.description = f"{stripped[0:256]}..." if len(stripped) > 256 else stripped
+            embed.description = utilities.Limits.limit(stripped, 256)
 
         if cover is not None:
             embed.set_thumbnail(url=cover)

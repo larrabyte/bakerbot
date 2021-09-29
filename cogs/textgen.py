@@ -51,7 +51,7 @@ class Textgen(commands.Cog):
             data = await model.generate(query)
 
         data = discord.utils.escape_markdown(data)
-        if len(data) < utilities.Limits.MESSAGE_CHARACTERS:
+        if len(data) <= utilities.Limits.MESSAGE_CHARACTERS:
             return await ctx.reply(data)
 
         # Upload the message as a file if it's over the limit.
