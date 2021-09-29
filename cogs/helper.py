@@ -14,16 +14,14 @@ class Helper(commands.Cog):
         """Transforms command group documentation into the format of a Discord embed."""
         embed = utilities.Embeds.standard(description=cog.description)
         embed.title = f"Documentation for `{cog.__class__.__module__}`:"
-        footer = "Arguments enclosed in <> are required while [] are optional."
-        embed.set_footer(text=footer, icon_url=utilities.Icons.INFO)
+        embed.set_footer(text="Arguments enclosed in <> are required while [] are optional.", icon_url=utilities.Icons.INFO)
 
         for command in cog.walk_commands():
             # We don't want group parent commands listed, ignore those.
             if isinstance(command, commands.Group):
                 continue
 
-            prefix = f"{command.full_parent_name} " if command.parent else ""
-            signature = f"${prefix}{command.name} {command.signature}"
+            signature = utilities.Commands.signature(command)
             embed.add_field(name=signature, value=command.help)
 
         return embed
@@ -52,8 +50,10 @@ class DocumentationView(utilities.View):
         self.menu.callback = self.cog_callback
 
         for name, cog in self.cogs.items():
-            label = cog.__class__.__module__
-            self.menu.add_option(label=label, value=name, description=cog.description)
+            label = utilities.Limits.limit(cog.__class__.__module__, utilities.Limits.SELECT_LABEL)
+            name = utilities.Limits.limit(name, utilities.Limits.SELECT_VALUE)
+            description = utilities.Limits.limit(cog.description, utilities.Limits.SELECT_DESCRIPTION)
+            self.menu.add_option(label=label, value=name, description=description)
 
         self.add_item(self.menu)
 

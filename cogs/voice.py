@@ -20,7 +20,7 @@ class Voice(commands.Cog):
     def paginate_tracks(self) -> utilities.Paginator:
         """Returns an instance of `utilities.Paginator` containing all music tracks."""
         paginator = utilities.Paginator()
-        paginator.placeholder = "Tracks"
+        paginator.placeholder = "Audio tracks: Options"
 
         for track in pathlib.Path("music").iterdir():
             label = utilities.Limits.limit(track.name, utilities.Limits.SELECT_LABEL)
@@ -38,6 +38,7 @@ class Voice(commands.Cog):
     async def connect(self, channel: discord.VoiceChannel) -> None:
         """Either connects or moves the bot to a specific voice channel."""
         client = channel.guild.voice_client
+
         if client is None or not client.is_connected():
             await channel.connect()
         elif client.channel != channel:
@@ -63,9 +64,7 @@ class Voice(commands.Cog):
         if not (filepath := pathlib.Path(f"music/{track}")).is_file():
             fail = utilities.Embeds.status(False)
             fail.description = f"`{track}` is not a valid track."
-
-            trackcmd = f"{self.tracks.full_parent_name} {self.tracks.name}"
-            trackcmd += self.tracks.signature or ""
+            trackcmd = utilities.Commands.signature(self.tracks)
             fail.set_footer(text=f"Consider invoking ${trackcmd} for a list of available tracks.", icon_url=utilities.Icons.INFO)
             return await ctx.reply(embed=fail)
 
@@ -74,9 +73,7 @@ class Voice(commands.Cog):
         elif ctx.voice_client is None:
             fail = utilities.Embeds.status(False)
             fail.description = "What channel am I supposed to play audio in?"
-
-            joincmd = f"{self.join.full_parent_name} {self.join.name}"
-            joincmd += self.join.signature or ""
+            joincmd = utilities.Commands.signature(self.join)
             fail.set_footer(text=f"Consider invoking ${joincmd} to make Bakerbot join a voice channel.", icon_url=utilities.Icons.INFO)
             return await ctx.reply(embed=fail)
 

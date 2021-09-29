@@ -42,15 +42,6 @@ class Limits:
 
         return string
 
-class Text:
-    @staticmethod
-    def titlecase(string: t.Optional[str], default: str) -> str:
-        """Optionally applies a titlecase transformation on `string`, else returns the default."""
-        if string is not None:
-            return titlecase.titlecase(string)
-
-        return default
-
 class Identifiers:
     bytelength = 16
 
@@ -124,6 +115,14 @@ class Commands:
                 embed.description = f"`{ctx.subcommand_passed}` is not a valid subcommand of `${ctx.command.name}`."
                 embed.set_footer(text=f"Try $help {classname} for a list of subcommands.", icon_url=Icons.CROSS)
                 await ctx.reply(embed=embed)
+
+    @staticmethod
+    def signature(command: commands.Command) -> str:
+        """Returns the signature of a command (including the bot's prefix)."""
+        parameters = f" {command.signature}" if command.signature else ""
+        parents = f"{command.full_parent_name} " if command.full_parent_name else ""
+        signature = f"${parents}{command.name}{parameters}"
+        return signature
 
 class View(discord.ui.View):
     async def on_error(self, error: Exception, item: discord.ui.Item, interaction: discord.Interaction) -> None:

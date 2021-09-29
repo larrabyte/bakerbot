@@ -3,6 +3,7 @@ import utilities
 import model
 
 from discord.ext import commands
+import typing as t
 import titlecase
 import discord
 
@@ -10,6 +11,13 @@ class Mangadex(commands.Cog):
     """Bakerbot's implementation of the Mangadex API (v5)."""
     def __init__(self, bot: model.Bakerbot) -> None:
         self.bot = bot
+
+    def optional_titlecase(self, string: t.Optional[str], default: str) -> str:
+        """Optionally applies a titlecase transformation on `string`, else returns the default."""
+        if string is not None:
+            return titlecase.titlecase(string)
+
+        return default
 
     @commands.group(invoke_without_subcommand=True)
     async def manga(self, ctx: commands.Context) -> None:
@@ -45,10 +53,10 @@ class Mangadex(commands.Cog):
         tgenre = "📖  Genres" if len(manga.tags) > 1 else "📖  Genre"
         embed.add_field(name=tgenre, value=genres)
 
-        demographic = utilities.Text.titlecase(manga.demographic, "Unknown demographic.")
-        status = utilities.Text.titlecase(manga.status, "Unknown status.")
+        demographic = self.optional_titlecase(manga.demographic, "Unknown demographic.")
+        status = self.optional_titlecase(manga.status, "Unknown status.")
         rating = titlecase.titlecase(manga.content_rating)
-        last_chapter = utilities.Text.titlecase(manga.last_chapter, "Not available.")
+        last_chapter = self.optional_titlecase(manga.last_chapter, "Not available.")
         embed.add_field(name="🤺  Demographic", value=demographic)
         embed.add_field(name="✍🏼  Status", value=status)
         embed.add_field(name="👹  Content Rating", value=rating)
@@ -64,9 +72,10 @@ class Mangadex(commands.Cog):
             await manga.feed(language="en")
 
         paginator = utilities.Paginator()
+        paginator.placeholder = "Manga chapters: Options"
+        available = []
 
         for index, chapter in enumerate(manga.chapters):
-            available = []
             if chapter.volume is not None:
                 available.append(f"Volume {chapter.volume}")
             if chapter.chapter is not None:
@@ -77,6 +86,7 @@ class Mangadex(commands.Cog):
             value = utilities.Limits.limit(description, utilities.Limits.SELECT_DESCRIPTION)
             option = discord.SelectOption(label=label, value=str(index), description=value)
             paginator.add(option)
+            available.clear()
 
         message = await ctx.reply("Select a chapter to start reading.", view=paginator)
         if (choice := await paginator.wait()) is not None:

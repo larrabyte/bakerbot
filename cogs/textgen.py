@@ -54,7 +54,7 @@ class Textgen(commands.Cog):
         if len(data) < utilities.Limits.MESSAGE_CHARACTERS:
             return await ctx.reply(data)
 
-        # Chunk the message if it's over the limit.
+        # Upload the message as a file if it's over the limit.
         encoded = data.encode("utf-8")
         rawdata = io.BytesIO(encoded)
         uploadable = discord.File(rawdata, "generated.txt")
