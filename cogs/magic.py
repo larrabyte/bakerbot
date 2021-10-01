@@ -56,11 +56,11 @@ class Magic(commands.Cog):
         for i in range(10 - len(hooks)):
             rand = random.randint(0, 2**32)
             name = f"bakerbot hook #{rand}"
-            await expcord.Webhooks.create(self.bot, source, name)
+            await expcord.Webhooks.create(source, name)
 
         # Refresh the list of hooks after we create more.
         for webhook in (await source.webhooks()):
-            await expcord.Webhooks.move(self.bot, webhook, destination)
+            await expcord.Webhooks.move(webhook, destination)
 
         await ctx.reply("Webhooks created and moved.")
 
