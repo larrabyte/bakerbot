@@ -8,6 +8,7 @@ from discord.ext import commands
 import typing as t
 import discord
 import random
+import string
 import io
 
 class ModelFlags(commands.FlagConverter):

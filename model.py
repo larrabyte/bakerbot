@@ -9,7 +9,7 @@ import ujson
 class Bakerbot(commands.Bot):
     def __init__(self, *args: tuple, **kwargs: dict) -> None:
         super().__init__(*args, **kwargs)
-        self.session = aiohttp.ClientSession()
+        self.session = aiohttp.ClientSession(json_serialize=ujson.dumps)
         self.secrets = self.spice()
 
     def spice(self) -> dict:
