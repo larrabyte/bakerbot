@@ -6,10 +6,6 @@ import model
 from discord.ext import commands
 import discord
 import asyncio
-import random
-import string
-import ujson
-import io
 
 class Random(commands.Cog):
     """Random ideas that I come up with every now and again."""
