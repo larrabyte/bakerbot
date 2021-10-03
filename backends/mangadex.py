@@ -111,7 +111,7 @@ class Manga:
     def volume_count(self) -> int:
         """Returns the number of volumes in this manga."""
         if self.volumes is None:
-            raise RuntimeError("Aggregate not available.")
+            raise NoAggregate
 
         count = len(self.volumes.values())
         if "none" in self.volumes.values():
@@ -122,7 +122,7 @@ class Manga:
     def chapter_count(self) -> int:
         """Returns the number of chapters in this manga."""
         if self.volumes is None:
-            raise RuntimeError("Aggregate not available.")
+            raise NoAggregate
 
         return sum(volume["count"] for volume in self.volumes.values())
 
@@ -213,6 +213,10 @@ class Backend:
         parameters = {"limit": maximum, "title": title}
         data = await cls.get("manga", params=parameters)
         return [Manga(m) for m in data["data"]]
+
+class NoAggregate(Exception):
+    """Raised when a manga's aggregate is not available."""
+    pass
 
 def setup(bot: model.Bakerbot) -> None:
     Backend.setup(bot)

@@ -22,6 +22,8 @@ class Backend:
                 # Retry the response after waiting 1s (probably some form of rate-limiting).
                 await asyncio.sleep(1)
                 return await cls.post(endpoint, **kwargs)
+            elif response.status == http.HTTPStatus.UNPROCESSABLE_ENTITY:
+                raise Unprocessable
             elif response.status != http.HTTPStatus.OK:
                 raise exceptions.HTTPUnexpected(response.status)
 
@@ -35,6 +37,10 @@ class Backend:
         filename = response["wavNames"][0]
 
         return f"{cls.cdn}/audio/{filename}"
+
+class Unprocessable(Exception):
+    """Raised when the API refuses a request due to invalid text input."""
+    pass
 
 def setup(bot: model.Bakerbot) -> None:
     Backend.setup(bot)

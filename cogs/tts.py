@@ -7,7 +7,6 @@ import typing as t
 import collections
 import discord
 import asyncio
-import re
 
 class TTSFlags(commands.FlagConverter):
     """An object containing the parameters required to execute a FifteenAPI request."""
@@ -17,9 +16,9 @@ class TTSFlags(commands.FlagConverter):
 class TTS(commands.Cog):
     """Text-to-speech using FifteenAI."""
     def __init__(self, bot: model.Bakerbot) -> None:
-        self.bot = bot
         self.lock = asyncio.Lock()
         self.queues = {}
+        self.bot = bot
 
     def queue(self, guild: discord.Guild) -> collections.deque:
         """Returns the guild's TTS queue."""
@@ -43,7 +42,7 @@ class TTS(commands.Cog):
 
         options = {
             "codec": codec,
-            "bitrate": bitrate if bitrate <= 512 else 512,
+            "bitrate": bitrate if bitrate is not None and bitrate <= 512 else 512,
             "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
             "options": "-vn"
         }
@@ -67,11 +66,18 @@ class TTS(commands.Cog):
 
         flags.voice = flags.voice or "The Narrator"
 
-        # Chunk the text into 200-character pieces and send a seperate API request for each one.
         async with ctx.typing():
-            chunks = [flags.text[i:i + 200] for i in range(0, len(flags.text), 200)]
+            # Chunk the text into 200-character pieces and send a seperate API request for each one.
+            chunks = (flags.text[i:i + 200] for i in range(0, len(flags.text), 200))
             coroutines = [self.generator(flags.voice, chunk) for chunk in chunks]
-            results = await asyncio.gather(*coroutines)
+
+            try:
+                results = await asyncio.gather(*coroutines)
+            except fifteen.Unprocessable:
+                fail = utilities.Embeds.status(False)
+                fail.description = f"API refused to process your input."
+                fail.set_footer(text="Maybe there are numbers in your text?", icon_url=utilities.Icons.CROSS)
+                return await ctx.reply(embed=fail)
 
         queue = self.queue(ctx.guild)
         async with self.lock:

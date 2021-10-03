@@ -1,7 +1,6 @@
 from discord.ext import commands
 import typing as t
 import traceback
-import titlecase
 import discord
 import os
 
