@@ -1,6 +1,7 @@
 import exceptions
 import model
 
+import asyncio
 import ujson
 import http
 
@@ -17,9 +18,10 @@ class Backend:
         async with cls.session.post(f"{cls.base}/{endpoint}", **kwargs) as response:
             data = await response.json(loads=ujson.loads, content_type=None)
 
-            if response.status == http.HTTPStatus.NOT_FOUND:
-                message = data.get("message", None)
-                raise exceptions.HTTPUnexpected(response.status, message)
+            if response.status == http.HTTPStatus.NOT_FOUND and "message" in data and data["message"] == "server error":
+                # Retry the response after waiting 1s (probably some form of rate-limiting).
+                await asyncio.sleep(1)
+                return await cls.post(endpoint, **kwargs)
             elif response.status != http.HTTPStatus.OK:
                 raise exceptions.HTTPUnexpected(response.status)
 
