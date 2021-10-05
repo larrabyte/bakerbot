@@ -1,4 +1,4 @@
-import backends.discord as expcord
+from backends import discord as expcord
 import exceptions
 import utilities
 import model
@@ -10,6 +10,7 @@ import asyncio
 class Random(commands.Cog):
     """Random ideas that I come up with every now and again."""
     def __init__(self, bot: model.Bakerbot) -> None:
+        self.lock = asyncio.Lock()
         self.bot = bot
 
     @commands.group(aliases=["discord"])
@@ -35,17 +36,21 @@ class Random(commands.Cog):
         identifier = self.bot.secrets["discord-user-id"]
         token = self.bot.secrets["discord-user-token"]
 
+        if expcord.User.lock.locked():
+            fail = utilities.Embeds.status(False)
+            fail.description = "Already streaming!"
+            return await ctx.reply(embed=fail)
+
         if ctx.guild.get_member(identifier) is None:
             fail = utilities.Embeds.status(False)
             fail.description = "Someone is missing..."
             fail.set_footer(text="Consider inviting them?", icon_url=utilities.Icons.CROSS)
             return await ctx.reply(embed=fail)
 
-        async with expcord.User(token) as remote:
+        async with expcord.User(ctx, token, identifier) as remote:
             await remote.connect(channel)
-            await remote.stream(channel)
-
-            await asyncio.sleep(5)
+            await remote.stream()
+            await asyncio.sleep(10)
             await remote.disconnect()
 
 def setup(bot: model.Bakerbot) -> None:

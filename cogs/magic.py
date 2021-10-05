@@ -1,4 +1,5 @@
 from backends import discord as expcord
+import exceptions
 import utilities
 import model
 
@@ -85,6 +86,30 @@ class Magic(commands.Cog):
         self.asker.enabled = not self.asker.enabled
         boolean = "enabled" if self.asker.enabled else "disabled"
         await ctx.reply(f"Asking is now {boolean}.")
+
+    @magic.command()
+    async def shitting(self, ctx: commands.Context) -> None:
+        """Live shitting event."""
+        if not ("discord-user-token" in self.bot.secrets and "discord-user-id" in self.bot.secrets):
+            raise exceptions.SecretNotFound("discord-user secrets not specified in secrets.json.")
+
+        identifier = self.bot.secrets["discord-user-id"]
+        token = self.bot.secrets["discord-user-token"]
+
+        if ctx.guild.get_member(identifier) is None:
+            fail = utilities.Embeds.status(False)
+            fail.description = "Someone is missing..."
+            fail.set_footer(text="Consider inviting them?", icon_url=utilities.Icons.CROSS)
+            return await ctx.reply(embed=fail)
+
+        if ctx.author.voice is None or ctx.author.voice.channel is None:
+            fail = utilities.Embeds.status(False)
+            fail.description = "You aren't in a voice channel!"
+            return await ctx.reply(embed=fail)
+
+        title = "live shitting event"
+        description = "improved shitting setup for higher-quality shitting"
+        await expcord.User.create_event(ctx.author.voice.channel, token, title, description)
 
 class WhoAsked:
     """A wrapper around `on_message()` for Team Magic."""

@@ -51,31 +51,32 @@ class Debugger(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: commands.CommandError) -> None:
         """Catches any exceptions thrown from commands and forwards them to Discord."""
-        ex = error.original if isinstance(error, commands.CommandInvokeError) else error
+        if isinstance(error, commands.CommandInvokeError):
+            error = error.original
 
         # Perform custom error handling depending on the type of exception.
         if ctx.message.content[1].isdigit():
             pass
 
-        elif isinstance(ex, commands.CommandNotFound):
+        elif isinstance(error, commands.CommandNotFound):
             command = ctx.message.content.split(" ")[0]
             fail = utilities.Embeds.status(False, description=f"`{command}` is not a valid command.")
             fail.set_footer(text="Try $help for a list of command groups.", icon_url=utilities.Icons.CROSS)
             await ctx.reply(embed=fail)
 
-        elif isinstance(ex, commands.MissingRequiredArgument):
+        elif isinstance(error, commands.MissingRequiredArgument):
             prefix = f"{ctx.command.full_parent_name} " if ctx.command.parent else ""
             template = f"{prefix}{ctx.command.name} {ctx.command.signature}"
 
             fail = utilities.Embeds.status(False)
-            fail.description = f"`{ex.param.name}` (type {ex.param.annotation.__name__}) is a required argument that is missing.\n"
+            fail.description = f"`{error.param.name}` (type {error.param.annotation.__name__}) is a required argument that is missing.\n"
             fail.set_footer(text=f"Command signature: {template}", icon_url=utilities.Icons.CROSS)
             await ctx.reply(embed=fail)
 
-        elif isinstance(ex, (commands.CheckFailure, commands.CheckAnyFailure)):
+        elif isinstance(error, (commands.CheckFailure, commands.CheckAnyFailure)):
             fail = utilities.Embeds.status(False)
             fail.description = "The current context does not support execution of this command."
-            fail.set_footer(text=f"Exception type: {ex.__module__}.{ex.__class__.__name__}.", icon_url=utilities.Icons.CROSS)
+            fail.set_footer(text=f"Exception type: {error.__module__}.{error.__class__.__name__}.", icon_url=utilities.Icons.CROSS)
             await ctx.reply(embed=fail)
 
         else:
