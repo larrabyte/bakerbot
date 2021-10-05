@@ -2,7 +2,6 @@ import utilities
 import model
 
 from discord.ext import commands
-import typing as t
 import pathlib
 import discord
 
@@ -53,7 +52,7 @@ class Voice(commands.Cog):
         await utilities.Commands.group(ctx, summary)
 
     @vc.command()
-    async def play(self, ctx: commands.Context, track: t.Optional[str]) -> None:
+    async def play(self, ctx: commands.Context, track: str | None) -> None:
         """Plays audio tracks from Bakerbot's music folder."""
         if track is None:
             paginator = self.paginate_tracks()
@@ -95,7 +94,7 @@ class Voice(commands.Cog):
         await ctx.reply("These menus are only for viewing (selecting a track won't do anything).", view=paginator)
 
     @vc.command(aliases=["connect"])
-    async def join(self, ctx: commands.Context, *, channel: t.Optional[discord.VoiceChannel]) -> None:
+    async def join(self, ctx: commands.Context, *, channel: discord.VoiceChannel | None) -> None:
         """Joins the voice channel that the invoker is in, or `channel` if specified."""
         channel = channel or getattr(ctx.author.voice, "channel", None)
 

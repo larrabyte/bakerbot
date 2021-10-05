@@ -10,7 +10,7 @@ class Relationship:
     def __init__(self, data: dict) -> None:
         self.identifier: str = data["id"]
         self.type: str = data["type"]
-        self.attributes: t.Optional[t.Dict] = data.get("attributes", None)
+        self.attributes: dict | None = data.get("attributes", None)
 
 class Tag:
     """A class that represents Mangadex's `Tag` object."""
@@ -34,8 +34,8 @@ class Chapter:
     def __init__(self, data: dict) -> None:
         self.identifier: str = data["id"]
         self.title: str = data["attributes"]["title"]
-        self.volume: t.Optional[str] = data["attributes"]["volume"]
-        self.chapter: t.Optional[str] = data["attributes"]["chapter"]
+        self.volume: str | None = data["attributes"]["volume"]
+        self.chapter: str | None = data["attributes"]["chapter"]
         self.language: str = data["attributes"]["translatedLanguage"]
         self.hash: str = data["attributes"]["hash"]
         self.data: t.List[str] = data["attributes"]["data"]
@@ -44,7 +44,7 @@ class Chapter:
         # WTFMD: `uploader` does not exist here???
         # self.uploader: str = data["attributes"]["uploader"]
 
-        self.external_url: t.Optional[str] = data["attributes"]["externalUrl"]
+        self.external_url: str | None = data["attributes"]["externalUrl"]
         self.version: int = data["attributes"]["version"]
         self.created_at: int = data["attributes"]["createdAt"]
         self.updated_at: int = data["attributes"]["updatedAt"]
@@ -55,7 +55,7 @@ class Chapter:
             ship = Relationship(relationship)
             self.relationships.append(ship)
 
-        self.base_url: t.Optional[str] = None
+        self.base_url: str | None = None
 
     async def base(self) -> None:
         """Populates the base URL attribute for this chapter."""
@@ -80,11 +80,11 @@ class Manga:
 
         self.links: t.Dict[str, str] = data["attributes"]["links"]
         self.original_language: str = data["attributes"]["originalLanguage"]
-        self.last_volume: t.Optional[str] = data["attributes"]["lastVolume"]
-        self.last_chapter: t.Optional[str] = data["attributes"]["lastChapter"]
-        self.demographic: t.Optional[str] = data["attributes"]["publicationDemographic"]
-        self.status: t.Optional[str] = data["attributes"]["status"]
-        self.year: t.Optional[int] = data["attributes"]["year"]
+        self.last_volume: str | None = data["attributes"]["lastVolume"]
+        self.last_chapter: str | None = data["attributes"]["lastChapter"]
+        self.demographic: str | None = data["attributes"]["publicationDemographic"]
+        self.status: str | None = data["attributes"]["status"]
+        self.year: int | None = data["attributes"]["year"]
         self.content_rating: str = data["attributes"]["contentRating"]
 
         self.tags: t.List[Tag] = []
@@ -101,8 +101,8 @@ class Manga:
             ship = Relationship(relationship)
             self.relationships.append(ship)
 
-        self.volumes: t.Optional[dict] = None
-        self.chapters: t.Optional[t.List[Chapter]] = None
+        self.volumes: dict | None = None
+        self.chapters: t.List[Chapter] | None = None
 
     def search_relationships(self, identifier: str) -> t.List[Relationship]:
         """Searches the list of relationships for `identifier`."""
@@ -126,7 +126,7 @@ class Manga:
 
         return sum(volume["count"] for volume in self.volumes.values())
 
-    async def cover(self) -> t.Optional[str]:
+    async def cover(self) -> str | None:
         """Returns the cover for this manga."""
         if (covers := self.search_relationships("cover_art")):
             # Just pick the first cover for now.
@@ -136,7 +136,7 @@ class Manga:
 
         return None
 
-    async def author(self) -> t.Optional[str]:
+    async def author(self) -> str | None:
         """Returns the author for this manga."""
         if (authors := self.search_relationships("author")):
             # Just pick the first author for now.

@@ -41,15 +41,15 @@ class HelloPayload:
 @dataclasses.dataclass
 class ReadyPayload:
     v: int
-    users: t.Optional[t.Any]
+    users: t.Any | None
     user_settings: t.Any
     user: t.Any
-    tutorial: t.Optional[t.Any]
+    tutorial: t.Any | None
     session_id: str
     relationships: t.Any
     read_state: t.Any
     private_channels: t.Any
-    merged_members: t.Optional[t.Any]
+    merged_members: t.Any | None
     guilds: t.Any
     guild_join_requests: t.Any
     guild_experiments: t.Any
@@ -67,19 +67,19 @@ class ReadyPayload:
 
 @dataclasses.dataclass
 class VoiceStateUpdatePayload:
-    guild_id: t.Optional[str]
-    channel_id: t.Optional[str]
+    guild_id: str | None
+    channel_id: str | None
     user_id: str
-    member: t.Optional[t.Any]
+    member: t.Any | None
     session_id: str
     deaf: bool
     mute: bool
     self_deaf: bool
     self_mute: bool
-    self_stream: t.Optional[bool]
+    self_stream: bool | None
     self_video: bool
     suppress: bool
-    request_to_speak_timestamp: t.Optional[dt.datetime]
+    request_to_speak_timestamp: dt.datetime | None
 
     @classmethod
     def from_dict(cls, data: dict) -> "VoiceStateUpdatePayload":
@@ -102,7 +102,7 @@ class StreamCreatePayload:
 class VoiceServerUpdatePayload:
     token: str
     guild_id: str
-    endpoint: t.Optional[str]
+    endpoint: str | None
 
     @classmethod
     def from_dict(cls, data: dict) -> "VoiceServerUpdatePayload":
@@ -112,7 +112,7 @@ class VoiceServerUpdatePayload:
 class StreamServerUpdatePayload:
     token: str
     stream_key: str
-    guild_id: t.Optional[str]
+    guild_id: str | None
     endpoint: str
 
     @classmethod
@@ -134,15 +134,15 @@ class EventWaiter:
 
 class UDPConnectionState:
     def __init__(self) -> None:
-        self.guild_id: t.Optional[int] = None
-        self.channel_id: t.Optional[int] = None
-        self.voice_token: t.Optional[str] = None
-        self.voice_endpoint: t.Optional[str] = None
-        self.stream_token: t.Optional[str] = None
-        self.stream_key: t.Optional[str] = None
-        self.stream_endpoint: t.Optional[str] = None
-        self.stream_region: t.Optional[str] = None
-        self.rtc_server_id: t.Optional[str] = None
+        self.guild_id: int | None = None
+        self.channel_id: int | None = None
+        self.voice_token: str | None = None
+        self.voice_endpoint: str | None = None
+        self.stream_token: str | None = None
+        self.stream_key: str | None = None
+        self.stream_endpoint: str | None = None
+        self.stream_region: str | None = None
+        self.rtc_server_id: str | None = None
 
 class InfiniteWrapper:
     @staticmethod
@@ -303,8 +303,8 @@ class User:
         self.ctx = ctx
 
         # Assigned during asynchronous context entry.
-        self.conn: t.Optional[DiscordWebSocket] = None
-        self.session: t.Optional[str] = None
+        self.conn: DiscordWebSocket | None = None
+        self.session: str | None = None
 
     async def __aenter__(self) -> "User":
         # Ensure there is only one instance active.
@@ -351,7 +351,7 @@ class User:
         self.udp.stream_endpoint = payload.endpoint
 
     @staticmethod
-    async def create_event(channel: discord.VoiceChannel, token: str, name: str, description: str, *, time: t.Optional[dt.datetime]=None) -> None:
+    async def create_event(channel: discord.VoiceChannel, token: str, name: str, description: str, *, time: dt.datetime | None=None) -> None:
         """Creates a Guild Event for `channel` with a name, description and optional time."""
         time = time or dt.datetime.utcnow() + dt.timedelta(seconds=5)
 

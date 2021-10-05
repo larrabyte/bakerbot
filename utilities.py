@@ -179,7 +179,7 @@ class Paginator(View):
         for menu in self.active():
             self.add_item(menu)
 
-    async def wait(self) -> t.Optional[str]:
+    async def wait(self) -> str | None:
         """Returns either the selected value or `None`."""
         await super().wait()
         return self.selection
