@@ -14,8 +14,8 @@ class Covid(commands.Cog):
         self.bot = bot
 
         # Start the statistics task if this channel exists in the bot's list.
-        if (channel := bot.get_channel(473426067823263753)) is not None:
-            self.task.start(channel)
+        # if (channel := bot.get_channel(473426067823263753)) is not None:
+        #     self.task.start(channel)
 
     def cog_unload(self) -> None:
         """Ensure no lingering tasks remain after unloading."""

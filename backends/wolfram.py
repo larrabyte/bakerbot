@@ -32,13 +32,13 @@ class Subpod:
     def __init__(self, data: dict) -> None:
         self.title: str = data["title"]
 
-        self.image: Image | None = None
+        self.image: t.Optional[Image] = None
         if "img" in data:
             image = data["img"]
             wrapper = Image(image)
             self.image = wrapper
 
-        self.plaintext: str | None = data.get("plaintext", None)
+        self.plaintext: t.Optional[str] = data.get("plaintext", None)
 
 class Pod:
     """A representation of WolframAlpha's `Pod` object."""
@@ -71,7 +71,7 @@ class Result:
         self.timed_out: str = data["timedout"]
         self.timed_out_pods: str = data["timedoutpods"]
         self.timing: float = data["timing"]
-        self.parse_timing: float | None = data.get("parsetiming", None)
+        self.parse_timing: t.Optional[float] = data.get("parsetiming", None)
         self.parse_timed_out: bool = data["parsetimedout"]
         self.recalculate: str = data["recalculate"]
         self.id: str = data["id"]
@@ -79,14 +79,14 @@ class Result:
         self.server: str = data["server"]
         self.related: str = data["related"]
         self.version: str = data["version"]
-        self.input: str | None = data.get("inputstring", None)
+        self.input: t.Optional[str] = data.get("inputstring", None)
 
         self.pods: t.List[Pod] = []
         for pod in data.get("pods", []):
             wrapper = Pod(pod)
             self.pods.append(wrapper)
 
-        self.error_message: str | None = None
+        self.error_message: t.Optional[str] = None
 
         if data["error"]:
             # The API will return a dictionary in this field if it's not false.

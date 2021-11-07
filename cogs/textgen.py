@@ -5,6 +5,7 @@ import utilities
 import model
 
 from discord.ext import commands
+import typing as t
 import discord
 import random
 import string
@@ -12,12 +13,12 @@ import io
 
 class ModelFlags(commands.FlagConverter):
     """An object representing possible modifiable attributes in a `Model`."""
-    backend: str | None
-    identifier: str | None
-    remove_input: bool | None
-    temperature: float | None
-    maximum: int | None
-    repetition_penalty: float | None
+    backend: t.Optional[str]
+    identifier: t.Optional[str]
+    remove_input: t.Optional[bool]
+    temperature: t.Optional[float]
+    maximum: t.Optional[int]
+    repetition_penalty: t.Optional[float]
 
 class Textgen(commands.Cog):
     """An interface to the Hugging Face and Neuro text-generating APIs."""

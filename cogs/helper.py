@@ -27,7 +27,7 @@ class Helper(commands.Cog):
         return embed
 
     @commands.command()
-    async def help(self, ctx: commands.Context, cog: str | None) -> None:
+    async def help(self, ctx: commands.Context, cog: t.Optional[str]) -> None:
         """Sends Bakerbot's documentation in a neatly formatted message."""
         view = DocumentationView(self.bot.cogs, self.embeddify)
 

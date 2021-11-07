@@ -4,6 +4,7 @@ import utilities
 import model
 
 from discord.ext import commands
+import typing as t
 import asyncio
 import discord
 import random
@@ -49,7 +50,7 @@ class Magic(commands.Cog):
         await asyncio.gather(*tasks)
 
     @magic.command()
-    async def hookify(self, ctx: commands.Context, source: discord.TextChannel, destination: discord.TextChannel | None) -> None:
+    async def hookify(self, ctx: commands.Context, source: discord.TextChannel, destination: t.Optional[discord.TextChannel]) -> None:
         """So it turns out you can have more than 10 webooks in a channel..."""
         hooks = await source.webhooks()
 

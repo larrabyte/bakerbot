@@ -29,15 +29,15 @@ class HelloPayload:
 @dataclasses.dataclass
 class ReadyPayload:
     v: int
-    users: t.Any | None
+    users: t.Optional[t.Any]
     user_settings: t.Any
     user: t.Any
-    tutorial: t.Any | None
+    tutorial: t.Optional[t.Any]
     session_id: str
     relationships: t.Any
     read_state: t.Any
     private_channels: t.Any
-    merged_members: t.Any | None
+    merged_members: t.Optional[t.Any]
     guilds: t.Any
     guild_join_requests: t.Any
     guild_experiments: t.Any
@@ -55,10 +55,10 @@ class ReadyPayload:
 
 @dataclasses.dataclass
 class VoiceStateUpdatePayload:
-    guild_id: str | None
-    channel_id: str | None
+    guild_id: t.Optional[str]
+    channel_id: t.Optional[str]
     user_id: str
-    member: t.Any | None
+    member: t.Optional[t.Any]
     session_id: str
     deaf: bool
     mute: bool
@@ -67,7 +67,7 @@ class VoiceStateUpdatePayload:
     self_stream: t.Optional[bool]
     self_video: bool
     suppress: bool
-    request_to_speak_timestamp: dt.datetime | None
+    request_to_speak_timestamp: t.Optional[dt.datetime]
 
     @classmethod
     def from_dict(cls, data: dict) -> "VoiceStateUpdatePayload":
@@ -90,7 +90,7 @@ class StreamCreatePayload:
 class VoiceServerUpdatePayload:
     token: str
     guild_id: str
-    endpoint: str | None
+    endpoint: t.Optional[str]
 
     @classmethod
     def from_dict(cls, data: dict) -> "VoiceServerUpdatePayload":
@@ -100,7 +100,7 @@ class VoiceServerUpdatePayload:
 class StreamServerUpdatePayload:
     token: str
     stream_key: str
-    guild_id: str | None
+    guild_id: t.Optional[str]
     endpoint: str
 
     @classmethod
@@ -135,7 +135,7 @@ class MediaReadyPayload:
 
 @dataclasses.dataclass
 class MediaSessionDescriptionPayload:
-    audio_codec: str | None
+    audio_codec: t.Optional[str]
     media_session_id: str
     mode: str
     secret_key: t.List[int]
@@ -174,19 +174,19 @@ class EventCallbackHandler:
 class EventWaiter:
     future: asyncio.Future
     predicate: t.Callable
-    event: str | int
+    event: t.Union[str, int]
 
 class UDPConnectionState:
     def __init__(self) -> None:
-        self.guild_id: int | None = None
-        self.channel_id: int | None = None
-        self.voice_token: str | None = None
-        self.voice_endpoint: str | None = None
-        self.stream_token: str | None = None
-        self.stream_key: str | None = None
-        self.stream_endpoint: str | None = None
-        self.stream_region: str | None = None
-        self.rtc_server_id: str | None = None
+        self.guild_id: t.Optional[int] = None
+        self.channel_id: t.Optional[int] = None
+        self.voice_token: t.Optional[str] = None
+        self.voice_endpoint: t.Optional[str] = None
+        self.stream_token: t.Optional[str] = None
+        self.stream_key: t.Optional[str] = None
+        self.stream_endpoint: t.Optional[str] = None
+        self.stream_region: t.Optional[str] = None
+        self.rtc_server_id: t.Optional[str] = None
 
 class InfiniteWrapper:
     @staticmethod
@@ -588,9 +588,9 @@ class User:
         self.ctx = ctx
 
         # Assigned during asynchronous context entry.
-        self.gateway: DiscordWebSocket | None = None
-        self.stream_connection: DiscordStreamConnection | None = None
-        self.session_id: str | None = None
+        self.gateway: t.Optional[DiscordWebSocket] = None
+        self.stream_connection: t.Optional[DiscordStreamConnection] = None
+        self.session_id: t.Optional[str] = None
 
     async def __aenter__(self) -> "User":
         # Ensure there is only one instance active.
@@ -634,7 +634,7 @@ class User:
         self.udp.stream_token = payload.token
         self.udp.stream_endpoint = payload.endpoint
 
-    async def create_event(self, channel: discord.VoiceChannel, name: str, description: str, *, time: dt.datetime | None=None) -> None:
+    async def create_event(self, channel: discord.VoiceChannel, name: str, description: str, *, time: t.Optional[dt.datetime]=None) -> None:
         """Creates a Guild Event for `channel` with a name, description and optional time."""
         time = time or dt.datetime.utcnow() + dt.timedelta(seconds=5)
 

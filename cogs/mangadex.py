@@ -3,6 +3,7 @@ import utilities
 import model
 
 from discord.ext import commands
+import typing as t
 import titlecase
 import discord
 
@@ -11,7 +12,7 @@ class Mangadex(commands.Cog):
     def __init__(self, bot: model.Bakerbot) -> None:
         self.bot = bot
 
-    def optional_titlecase(self, string: str | None, default: str) -> str:
+    def optional_titlecase(self, string: t.Optional[str], default: str) -> str:
         """Optionally applies a titlecase transformation on `string`, else returns the default."""
         if string is not None:
             return titlecase.titlecase(string)

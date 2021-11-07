@@ -2,6 +2,7 @@ import utilities
 import model
 
 from discord.ext import commands
+import typing as t
 
 class Debugger(commands.Cog):
     """Provides a built-in debugger for Bakerbot."""
@@ -34,7 +35,7 @@ class Debugger(commands.Cog):
         await ctx.reply(embed=embed)
 
     @mod.command()
-    async def reload(self, ctx: commands.Context, cog: str | None) -> None:
+    async def reload(self, ctx: commands.Context, cog: t.Optional[str]) -> None:
         """Reloads `cog` if specified, otherwise refreshes the bot's internal state."""
         if cog is not None:
             self.bot.reload_extension(cog)

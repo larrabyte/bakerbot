@@ -3,14 +3,15 @@ import utilities
 import model
 
 from discord.ext import commands
+import typing as t
 import collections
 import discord
 import asyncio
 
 class TTSFlags(commands.FlagConverter):
     """An object containing the parameters required to execute a FifteenAPI request."""
-    voice: str | None
-    text: str | None
+    voice: t.Optional[str]
+    text: t.Optional[str]
 
 class TTS(commands.Cog):
     """Text-to-speech using FifteenAI."""
