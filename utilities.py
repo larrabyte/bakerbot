@@ -28,7 +28,7 @@ class Limits:
     EMBED_AUTHOR_NAME = 256
     VIEW_CHILDREN = 25
     VIEW_ITEMS_PER_ROW = 5
-    SELECT_LABEL = 100
+    SELECT_LABEL = 80
     SELECT_VALUE = 100
     SELECT_DESCRIPTION = 100
     SELECT_OPTIONS = 25
@@ -40,6 +40,13 @@ class Limits:
             return f"{string[0:limit - 3]}..."
 
         return string
+
+class Async:
+    """Inheriting this class allows for an asynchronous `__init__` method."""
+    async def __new__(cls, *args: tuple, **kwargs: dict) -> "Async":
+        instance = super().__new__(cls)
+        await instance.__init__(*args, **kwargs)
+        return instance
 
 class Identifiers:
     bytelength = 16

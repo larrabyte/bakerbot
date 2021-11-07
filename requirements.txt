@@ -4,3 +4,4 @@ titlecase
 pynacl
 dacite
 ujson
+anyio

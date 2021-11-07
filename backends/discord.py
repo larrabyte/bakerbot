@@ -1,4 +1,5 @@
 import exceptions
+import utilities
 import model
 
 from discord.ext import commands
@@ -6,32 +7,19 @@ import datetime as dt
 import typing as t
 import dataclasses
 import discord
-import aiohttp
 import asyncio
 import base64
 import dacite
+import random
+import struct
+import anyio
 import ujson
 import types
 import http
 
-class Gateway:
-    DISPATCH = 0
-    HEARTBEAT = 1
-    IDENTIFY = 2
-    PRESENCE_UPDATE = 3
-    VOICE_STATE_UPDATE = 4
-    RESUME = 6
-    RECONNECT = 7
-    REQUEST_QUILD_MEMBERS = 8
-    INVALID_SESSION = 9
-    HELLO = 10
-    HEARTBEAT_ACK = 11
-    GUILD_SYNC = 12
-    START_STREAM = 18
-    DELETE_STREAM = 19
-
 @dataclasses.dataclass
 class HelloPayload:
+    v: t.Optional[int]
     heartbeat_interval: int
 
     @classmethod
@@ -76,7 +64,7 @@ class VoiceStateUpdatePayload:
     mute: bool
     self_deaf: bool
     self_mute: bool
-    self_stream: bool | None
+    self_stream: t.Optional[bool]
     self_video: bool
     suppress: bool
     request_to_speak_timestamp: dt.datetime | None
@@ -120,6 +108,62 @@ class StreamServerUpdatePayload:
         return dacite.from_dict(cls, data)
 
 @dataclasses.dataclass
+class MediaStreamType:
+    active: bool
+    quality: int
+    rid: str
+    rtx_ssrc: int
+    ssrc: int
+    type: str
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "MediaStreamType":
+        return dacite.from_dict(cls, data)
+
+@dataclasses.dataclass
+class MediaReadyPayload:
+    experiments: t.List[str]
+    ip: str
+    modes: t.List[str]
+    port: int
+    ssrc: int
+    streams: t.List[MediaStreamType]
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "MediaReadyPayload":
+        return dacite.from_dict(cls, data)
+
+@dataclasses.dataclass
+class MediaSessionDescriptionPayload:
+    audio_codec: str | None
+    media_session_id: str
+    mode: str
+    secret_key: t.List[int]
+    video_codec: str
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "MediaSessionDescriptionPayload":
+        return dacite.from_dict(cls, data)
+
+@dataclasses.dataclass
+class MediaSpeakingPayload:
+    speaking: int
+    delay: int
+    ssrc: int
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "MediaSpeakingPayload":
+        return dacite.from_dict(cls, data)
+
+@dataclasses.dataclass
+class MediaVideoOpcodeResponsePayload:
+    any: int
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "MediaSpeakingPayload":
+        return dacite.from_dict(cls, data)
+
+@dataclasses.dataclass
 class EventCallbackHandler:
     """Handles """
     payload_type: t.Type
@@ -130,7 +174,7 @@ class EventCallbackHandler:
 class EventWaiter:
     future: asyncio.Future
     predicate: t.Callable
-    event: str
+    event: str | int
 
 class UDPConnectionState:
     def __init__(self) -> None:
@@ -160,8 +204,23 @@ class InfiniteWrapper:
             await asyncio.sleep(interval)
             await coroutine()
 
-class DiscordWebSocket:
-    def __init__(self, ctx: commands.Context, ws: aiohttp.ClientWebSocketResponse, hello: HelloPayload) -> None:
+class DiscordWebSocket(utilities.Async):
+    DISPATCH = 0
+    HEARTBEAT = 1
+    IDENTIFY = 2
+    PRESENCE_UPDATE = 3
+    VOICE_STATE_UPDATE = 4
+    RESUME = 6
+    RECONNECT = 7
+    REQUEST_QUILD_MEMBERS = 8
+    INVALID_SESSION = 9
+    HELLO = 10
+    HEARTBEAT_ACK = 11
+    GUILD_SYNC = 12
+    START_STREAM = 18
+    DELETE_STREAM = 19
+
+    async def __init__(self, ctx: commands.Context) -> None:
         self.dispatch = {
             "READY": EventCallbackHandler(ReadyPayload),
             "VOICE_STATE_UPDATE": EventCallbackHandler(VoiceStateUpdatePayload),
@@ -170,16 +229,22 @@ class DiscordWebSocket:
             "STREAM_SERVER_UPDATE": EventCallbackHandler(StreamServerUpdatePayload)
         }
 
-        self.heartbeater = InfiniteWrapper.create(self.heartbeat, self.callback, hello.heartbeat_interval / 1000.0)
+        gateway = await Backend.gateway() + "/?v=9&encoding=json"
+        self.ws = await Backend.session.ws_connect(gateway)
+
+        hello = await self.ws.receive_json(loads=ujson.loads)
+        hello = HelloPayload.from_dict(hello["d"])
+        interval = hello.heartbeat_interval / 1000.0
+
         self.poller = InfiniteWrapper.create(self.poll, self.callback, 0.0)
+        self.heartbeater = InfiniteWrapper.create(self.heartbeat, self.callback, interval)
         self.sequence = 0
         self.ctx = ctx
-        self.ws = ws
 
     async def heartbeat(self) -> None:
         """Sends an Opcode 1 Heartbeat payload."""
         payload = {
-            "op": Gateway.HEARTBEAT,
+            "op": self.HEARTBEAT,
             "d": self.sequence
         }
 
@@ -188,7 +253,7 @@ class DiscordWebSocket:
     async def identify(self, token: str) -> None:
         """Sends an Opcode 2 Identify payload."""
         payload = {
-            "op": Gateway.IDENTIFY,
+            "op": self.IDENTIFY,
             "d": {
                 "token": token,
                 "properties": {
@@ -204,7 +269,7 @@ class DiscordWebSocket:
     async def voice_state_update(self, guild: int, channel: int, *, mute: bool=False, deaf: bool=False, video: bool=False) -> None:
         """Sends an Opcode 4 Voice State Update payload."""
         payload = {
-            "op": Gateway.VOICE_STATE_UPDATE,
+            "op": self.VOICE_STATE_UPDATE,
             "d": {
                 "guild_id": guild,
                 "channel_id": channel,
@@ -219,7 +284,7 @@ class DiscordWebSocket:
     async def stream_create(self, guild: int, channel: int) -> None:
         """Sends an Opcode 18 Create Stream payload."""
         payload = {
-            "op": Gateway.START_STREAM,
+            "op": self.START_STREAM,
             "d": {
                 "type": "guild",
                 "guild_id": guild,
@@ -266,9 +331,9 @@ class DiscordWebSocket:
         op, t, d = payload["op"], payload["t"], payload["d"]
         self.sequence = payload["s"] or self.sequence
 
-        print(f"[bakerbot] gateway payload received (opcode {op}, event {t})")
+        print(f"[bakerbot] Gateway payload received (opcode {op}, event {t}).")
 
-        if op == Gateway.DISPATCH and t in self.dispatch:
+        if op == self.DISPATCH and t in self.dispatch:
             handler = self.dispatch[t]
 
             c = handler.payload_type.from_dict(d)
@@ -280,14 +345,234 @@ class DiscordWebSocket:
             for waiter in done_waiters:
                 waiter.future.set_result(c)
 
-        elif op == Gateway.HEARTBEAT:
+        elif op == self.HEARTBEAT:
             await self.heartbeat()
 
-        elif op == Gateway.INVALID_SESSION:
+        elif op == self.INVALID_SESSION:
             return await self.close(4444)
 
     async def close(self, code: int) -> None:
         """Cancels websocket-related tasks and closes the connection."""
+        self.heartbeater.cancel()
+        self.poller.cancel()
+        await self.ws.close(code=code)
+
+class DiscordStreamConnection(utilities.Async):
+    IDENTIFY = 0
+    SELECT_PROTOCOL = 1
+    READY = 2
+    HEARTBEAT = 3
+    SESSION_DESCRIPTION = 4
+    SPEAKING = 5
+    HEARTBEAT_ACK = 6
+    RESUME = 7
+    HELLO = 8
+    RESUMED = 9
+    VIDEO_OPCODE = 12
+    CLIENT_DISCONNECT = 13
+    VIDEO_OPCODE_RESPONSE = 15
+
+    async def __init__(self, session_id: str, token: str, state: UDPConnectionState) -> None:
+        self.dispatch = {
+            self.READY: EventCallbackHandler(MediaReadyPayload),
+            self.SESSION_DESCRIPTION: EventCallbackHandler(MediaSessionDescriptionPayload),
+            self.SPEAKING: EventCallbackHandler(MediaSpeakingPayload),
+            self.HELLO: EventCallbackHandler(HelloPayload),
+            self.VIDEO_OPCODE_RESPONSE: EventCallbackHandler(MediaVideoOpcodeResponsePayload)
+        }
+
+        self.user_token = token
+        self.session_id = session_id
+        self.key = state.stream_key
+        self.region = state.stream_region
+        self.stream_token = state.stream_token
+        self.rtc_server_id = state.rtc_server_id
+        self.endpoint = f"wss://{state.stream_endpoint}/?v=6"
+        self.ws = await Backend.session.ws_connect(self.endpoint)
+
+        hello = await self.ws.receive_json(loads=ujson.loads)
+        hello = HelloPayload.from_dict(hello["d"])
+        interval = hello.heartbeat_interval / 1000.0
+        self.heartbeater = InfiniteWrapper.create(self.heartbeat, self.callback, interval)
+        self.poller = InfiniteWrapper.create(self.poll, self.callback, 0.0)
+
+        await self.identify()
+        ready = await self.wait_for(self.READY)
+        self.rtx_ssrc = ready.streams[0].rtx_ssrc
+        self.video_ssrc = ready.streams[0].ssrc
+        self.ssrc = ready.ssrc
+        self.port = ready.port
+        self.ip = ready.ip
+
+        print(f"[bakerbot] UDP endpoint opened to {self.ip}:{self.port}.")
+        self.raw_connection = await anyio.create_connected_udp_socket(self.ip, self.port)
+        local_ip, local_port = await self.ip_discovery()
+        print(f"[bakerbot] IP discovery yielded {local_ip}:{local_port}.")
+        await self.select_protocol(local_ip, local_port)
+        await self.speaking(False)
+        await self.video_opcode(use_ssrcs=False, active=False)
+        await self.video_opcode(use_ssrcs=True, active=True)
+
+        description = await self.wait_for(self.SESSION_DESCRIPTION)
+        await self.wait_for(self.VIDEO_OPCODE_RESPONSE)
+        await self.video_opcode(use_ssrcs=True, active=True)
+        self.media_session_id = description.media_session_id
+        self.secret_key = description.secret_key
+
+    def callback(self, future: asyncio.Future) -> None:
+        """Called if any of our `InfiniteWrapper` tasks returns."""
+        try:
+            raise future.exception()
+        except asyncio.CancelledError:
+            pass
+
+    async def ip_discovery(self) -> t.Tuple[str, int]:
+        """Returns the IP/port of this user using IP discovery."""
+        payload = struct.pack("!HHI 64s H", 0x1, 70, self.ssrc, bytes(), self.port)
+        await self.raw_connection.send(payload)
+
+        returned = await self.raw_connection.receive()
+        unpacked = struct.unpack("!HHI 64s H", returned)
+
+        # Remove trailing zero bytes and convert.
+        address = unpacked[3].replace(b"\x00", b"").decode("utf-8")
+        return (address, unpacked[4])
+
+    async def play(self, source: t.Any) -> None:
+        """Plays a video."""
+        pass
+
+    async def video_opcode(self, *, use_ssrcs: bool, active: bool) -> None:
+        """Sends an undocumented Opcode 12 payload."""
+        payload = {
+            "op": self.VIDEO_OPCODE,
+            "d": {
+                "audio_ssrc": self.ssrc,
+                "video_ssrc": self.video_ssrc if use_ssrcs else 0,
+                "rtx_ssrc": self.rtx_ssrc if use_ssrcs else 0,
+                "streams": [
+                    {
+                        "active": active,
+                        "max_bitrate": 8000000,
+                        "max_framerate": 60,
+                        "quality": 100,
+                        "rid": "100",
+                        "rtx_ssrc": self.rtx_ssrc,
+                        "ssrc": self.video_ssrc,
+                        "type": "video",
+                        "max_resolution": {
+                            "type": "fixed",
+                            "width": 1920,
+                            "height": 1080,
+                        }
+                    }
+                ]
+            }
+        }
+
+        await self.ws.send_json(payload, dumps=ujson.dumps)
+
+    async def select_protocol(self, ip: str, port: int) -> None:
+        """Sends an Opcode 1 Select Protocol payload."""
+        payload = {
+            "op": self.SELECT_PROTOCOL,
+            "d": {
+                "address": ip,
+                "experiments": [],
+                "port": port,
+                "protocol": "udp",
+                "rtc_connection_id": "bd62b3de-5311-4e8f-9472-748f3e26e786",
+                "data": {
+                    "address": ip,
+                    "mode": "xsalsa20_poly1305_lite",
+                    "port": port,
+                },
+                "codecs": [
+                    {
+                        "name": "H264",
+                        "payload_type": 101,
+                        "priority": 1000,
+                        "rtx_payload_type": 102,
+                        "type": "video"
+                    }
+                ]
+            }
+        }
+
+        await self.ws.send_json(payload, dumps=ujson.dumps)
+
+    async def speaking(self, speak: bool) -> None:
+        """Sends an Opcode 5 speaking payload."""
+        payload = {
+            "op": self.SPEAKING,
+            "d": {
+                "speaking": speak,
+                "delay": 0,
+                "ssrc": self.ssrc
+            }
+        }
+
+        await self.ws.send_json(payload, dumps=ujson.dumps)
+
+    async def heartbeat(self) -> None:
+        """Sends an Opcode 3 Heartbeat payload."""
+        payload = {
+            "op": self.HEARTBEAT,
+            "d": random.randint(0, 0xFFFFFFFFFFFF)
+        }
+
+        await self.ws.send_json(payload, dumps=ujson.dumps)
+
+    async def identify(self) -> None:
+        payload = {
+            "op": self.IDENTIFY,
+            "d": {
+                "server_id": self.rtc_server_id,
+                "session_id": self.session_id,
+                "token": self.stream_token,
+                "user_id": self.user_token,
+                "video": True,
+                "streams": [
+                    {
+                        "quality": 100,
+                        "rid": "100",
+                        "type": "video"
+                    }
+                ]
+            }
+        }
+
+        await self.ws.send_json(payload, dumps=ujson.dumps)
+
+    async def wait_for(self, opcode: int, predicate: t.Callable=lambda p: True) -> asyncio.Future:
+        """Awaits for a specific opcode payload."""
+        if opcode not in self.dispatch:
+            raise UnknownEvent
+
+        handler = self.dispatch[opcode]
+        future = asyncio.get_running_loop().create_future()
+        waiter = EventWaiter(future, predicate, opcode)
+        handler.waiters.append(waiter)
+        return await future
+
+    async def poll(self) -> None:
+        """Awaits for data from the websocket and dispatches it appropriately."""
+        payload = await self.ws.receive_json(loads=ujson.loads)
+        op, d = payload["op"], payload["d"]
+
+        print(f"[bakerbot] Voice payload received with opcode {op}.")
+
+        if op in self.dispatch:
+            handler = self.dispatch[op]
+            c = handler.payload_type.from_dict(d)
+
+            done_waiters = [waiter for waiter in handler.waiters if op == waiter.event and waiter.predicate(c)]
+            handler.waiters = [waiter for waiter in handler.waiters if waiter not in done_waiters]
+            for waiter in done_waiters:
+                waiter.future.set_result(c)
+
+    async def close(self, code: int) -> None:
+        """Closes all network connections handled by this object."""
         self.heartbeater.cancel()
         self.poller.cancel()
         await self.ws.close(code=code)
@@ -303,33 +588,32 @@ class User:
         self.ctx = ctx
 
         # Assigned during asynchronous context entry.
-        self.conn: DiscordWebSocket | None = None
-        self.session: str | None = None
+        self.gateway: DiscordWebSocket | None = None
+        self.stream_connection: DiscordStreamConnection | None = None
+        self.session_id: str | None = None
 
     async def __aenter__(self) -> "User":
         # Ensure there is only one instance active.
         await self.lock.acquire()
-
-        gateway = await Backend.gateway()
-        ws = await Backend.session.ws_connect(gateway)
-        hello = await ws.receive_json(loads=ujson.loads)
-        converted = HelloPayload.from_dict(hello["d"])
-        self.conn = DiscordWebSocket(self.ctx, ws, converted)
+        self.gateway = await DiscordWebSocket(self.ctx)
 
         # Register event handlers before we start sending data.
-        self.conn.add_listener("VOICE_STATE_UPDATE", self.on_voice_state_update)
-        self.conn.add_listener("STREAM_CREATE", self.on_stream_create)
-        self.conn.add_listener("VOICE_SERVER_UPDATE", self.on_voice_server_update)
-        self.conn.add_listener("STREAM_SERVER_UPDATE", self.on_stream_server_update)
+        self.gateway.add_listener("VOICE_STATE_UPDATE", self.on_voice_state_update)
+        self.gateway.add_listener("STREAM_CREATE", self.on_stream_create)
+        self.gateway.add_listener("VOICE_SERVER_UPDATE", self.on_voice_server_update)
+        self.gateway.add_listener("STREAM_SERVER_UPDATE", self.on_stream_server_update)
 
-        await self.conn.identify(self.token)
-        ready = await self.conn.wait_for("READY")
+        await self.gateway.identify(self.token)
+        ready = await self.gateway.wait_for("READY")
         self.session_id = ready.session_id
-
         return self
 
     async def __aexit__(self, typename: BaseException, exception: Exception, traceback: types.TracebackType) -> None:
-        await self.conn.close(1000)
+        if self.gateway is not None:
+            await self.gateway.close(1000)
+        if self.stream_connection is not None:
+            await self.stream_connection.close(1000)
+
         self.lock.release()
 
     async def on_voice_state_update(self, payload: VoiceStateUpdatePayload) -> None:
@@ -350,8 +634,7 @@ class User:
         self.udp.stream_token = payload.token
         self.udp.stream_endpoint = payload.endpoint
 
-    @staticmethod
-    async def create_event(channel: discord.VoiceChannel, token: str, name: str, description: str, *, time: dt.datetime | None=None) -> None:
+    async def create_event(self, channel: discord.VoiceChannel, name: str, description: str, *, time: dt.datetime | None=None) -> None:
         """Creates a Guild Event for `channel` with a name, description and optional time."""
         time = time or dt.datetime.utcnow() + dt.timedelta(seconds=5)
 
@@ -383,29 +666,35 @@ class User:
         }
 
         properties = base64.b64encode(ujson.dumps(properties).encode("utf-8")).decode("utf-8")
-        headers = {"Authorization": token, "X-Super-Properties": properties}
+        headers = {"Authorization": self.token, "X-Super-Properties": properties}
         await Backend.post(f"guilds/{channel.guild.id}/events", json=payload, headers=headers)
 
     async def connect(self, channel: discord.VoiceChannel) -> None:
         """Connects this user to a voice channel."""
-        await self.conn.voice_state_update(channel.guild.id, channel.id)
-        await self.conn.wait_for("VOICE_STATE_UPDATE", lambda p: int(p.user_id) == self.identifier)
-        await self.conn.wait_for("VOICE_SERVER_UPDATE", lambda p: int(p.guild_id) == channel.guild.id)
+        await self.gateway.voice_state_update(channel.guild.id, channel.id)
+        await self.gateway.wait_for("VOICE_STATE_UPDATE", lambda p: int(p.user_id) == self.identifier)
+        await self.gateway.wait_for("VOICE_SERVER_UPDATE", lambda p: int(p.guild_id) == channel.guild.id)
 
     async def stream(self) -> None:
         """Starts a Go Live stream in the currently connected channel."""
         if self.udp is None or self.udp.guild_id is None or self.udp.channel_id is None:
             raise commands.ChannelNotFound("None")
 
-        await self.conn.stream_create(self.udp.guild_id, self.udp.channel_id)
-        await self.conn.wait_for("STREAM_CREATE")
-        await self.conn.wait_for("VOICE_STATE_UPDATE", lambda p: int(p.user_id) == self.identifier)
-        await self.conn.wait_for("STREAM_SERVER_UPDATE")
+        await self.gateway.stream_create(self.udp.guild_id, self.udp.channel_id)
+        await self.gateway.wait_for("STREAM_CREATE")
+        await self.gateway.wait_for("VOICE_STATE_UPDATE", lambda p: int(p.user_id) == self.identifier)
+        await self.gateway.wait_for("STREAM_SERVER_UPDATE")
+
+        self.stream_connection = await DiscordStreamConnection(self.session_id, self.identifier, self.udp)
 
     async def disconnect(self) -> None:
         """Disconnects this user from any currently connected channels."""
-        await self.conn.voice_state_update(None, None)
-        await self.conn.wait_for("VOICE_STATE_UPDATE", lambda p: int(p.user_id) == self.identifier)
+        if self.stream_connection is not None:
+            await self.stream_connection.close(1000)
+            self.stream_connection = None
+
+        await self.gateway.voice_state_update(None, None)
+        await self.gateway.wait_for("VOICE_STATE_UPDATE", lambda p: int(p.user_id) == self.identifier)
 
 class Webhooks:
     @staticmethod
@@ -469,7 +758,7 @@ class Backend:
             result = await cls.get("gateway")
             cls.gateway_url = result["url"]
 
-        return cls.gateway_url + "/?v=9&encoding=json"
+        return cls.gateway_url
 
 class UnknownEvent(Exception):
     """Raised when an unknown event is passed into `DiscordWebSocket.wait_for()`."""
