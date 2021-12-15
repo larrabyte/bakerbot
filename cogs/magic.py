@@ -118,7 +118,8 @@ class Magic(commands.Cog):
 
         title = "live shitting event"
         description = "improved shitting setup for higher-quality shitting"
-        await expcord.User.create_event(ctx.author.voice.channel, token, title, description)
+        async with expcord.User(ctx, token, identifier) as remote:
+            await remote.create_event(ctx.author.voice.channel, title, description)
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState) -> None:
