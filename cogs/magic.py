@@ -8,7 +8,6 @@ import typing as t
 import asyncio
 import discord
 import random
-import re
 
 class Magic(commands.Cog):
     """You can find dumb ideas from Team Magic here."""
@@ -20,8 +19,13 @@ class Magic(commands.Cog):
         self.dozza = Dozza(bot, self.magic)
         self.bot = bot
 
-        # Starboard-related things.
-        self.lunchboard = Lunchboard(bot, 524100289897431040, self.magic, 899503266386292758, 3)
+        self.bot.loop.create_task(self.register_extras())
+
+    async def register_extras(self) -> None:
+        """Registers Team Magic into certain event handlers."""
+        await self.bot.wait_until_ready()
+        if (board := self.bot.get_cog("Starboard")) is not None:
+            board.register(self.magic, 524100289897431040, 899503266386292758, 3)
 
     async def cog_check(self, ctx: commands.Context) -> None:
         """Ensures that commands are being run either by the owner or Team Magic."""
@@ -116,68 +120,6 @@ class Magic(commands.Cog):
         description = "improved shitting setup for higher-quality shitting"
         await expcord.User.create_event(ctx.author.voice.channel, token, title, description)
 
-    @magic.group(invoke_without_subcommand=True)
-    async def lunchboard(self, ctx: commands.Context) -> None:
-        """Starboard implementation for Team Magic."""
-        summary = ("You've encountered Team Magic's lunchboard!"
-                    "See `$help magic` for a full list of available subcommands.")
-
-        await utilities.Commands.group(ctx, summary)
-
-class Lunchboard:
-    """A starboard implementation for Team Magic."""
-    def __init__(self, bot: model.Bakerbot, emote: int, guild: int, channel: int, limit: int) -> None:
-        self.spoilers = re.compile(r"\|\|(.+?)\|\|")
-        self.threshold = limit
-        self.guild = guild
-        self.bot = bot
-
-        # Asynchronous initialisation.
-        self.emote = None
-        self.boarding = None
-        self.bot.loop.create_task(self.initialise(emote, channel))
-
-        bot.add_listener(self.on_raw_reaction_add)
-
-    async def initialise(self, emote: int, channel: int) -> None:
-        """Asynchronous initialisation."""
-        await self.bot.wait_until_ready()
-        self.boarding = self.bot.get_channel(channel)
-        self.emote = self.bot.get_emoji(emote)
-
-    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
-        """If we encounter a message with a special reaction, send it to the lunchboard channel."""
-        if payload.channel_id == self.boarding.id:
-            return
-
-        channel = self.bot.get_channel(payload.channel_id)
-        message = await channel.fetch_message(payload.message_id)
-        reaction = next((reaction for reaction in message.reactions if reaction.emoji == self.emote), None)
-
-        if reaction is not None and reaction.count >= self.threshold:
-            embed = utilities.Embeds.standard(timestamp=message.created_at)
-            embed.set_footer(text=f"NUTS!", icon_url=utilities.Icons.INFO)
-            embed.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
-            embed.add_field(name="Original", value=f"[Jump!]({message.jump_url})")
-            embed.description = message.content
-
-            if (ref := message.reference) is not None and isinstance(ref.resolved, discord.Message):
-                embed.add_field(name="Replying to...", value=f"[{ref.resolved.author}]({ref.resolved.jump_url})")
-
-            if message.embeds and message.embeds[0].type == "image" and message.embeds[0].url not in self.spoilers.findall(message.content):
-                embed.set_image(url=message.embeds[0].url)
-
-            if message.attachments:
-                file = message.attachments[0]
-                if not file.is_spoiler() and file.url.lower().endswith(("png", "jpeg", "jpg", "gif", "webp")):
-                    embed.set_image(url=file.url)
-                elif file.is_spoiler():
-                    embed.add_field(name="Attachment", value=f"||[{file.filename}]({file.url})||", inline=False)
-                else:
-                    embed.add_field(name="Attachment", value=f"[{file.filename}]({file.url})", inline=False)
-
-            await self.boarding.send(embed=embed)
-
 class WhoAsked:
     """A wrapper around `on_message()` for Team Magic."""
     def __init__(self, bot: model.Bakerbot, guild: int) -> None:
@@ -244,27 +186,7 @@ class Dozza:
     async def post(self, message: discord.Message) -> None:
         """Posts a message to Big Dominic's inbox."""
         if (dozza := self.bot.get_user(self.identifier)) is not None:
-            embed = utilities.Embeds.standard(timestamp=message.created_at)
-            embed.set_footer(text=f"NUTS!", icon_url=utilities.Icons.INFO)
-            embed.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
-            embed.add_field(name="Original", value=f"[Jump!]({message.jump_url})")
-            embed.description = message.content
-
-            if (ref := message.reference) is not None and isinstance(ref.resolved, discord.Message):
-                embed.add_field(name="Replying to...", value=f"[{ref.resolved.author}]({ref.resolved.jump_url})")
-
-            if message.embeds and message.embeds[0].type == "image" and message.embeds[0].url not in self.spoilers.findall(message.content):
-                embed.set_image(url=message.embeds[0].url)
-
-            if message.attachments:
-                file = message.attachments[0]
-                if not file.is_spoiler() and file.url.lower().endswith(("png", "jpeg", "jpg", "gif", "webp")):
-                    embed.set_image(url=file.url)
-                elif file.is_spoiler():
-                    embed.add_field(name="Attachment", value=f"||[{file.filename}]({file.url})||", inline=False)
-                else:
-                    embed.add_field(name="Attachment", value=f"[{file.filename}]({file.url})", inline=False)
-
+            embed = utilities.Embeds.package(message)
             await dozza.send(embed=embed)
 
     async def on_message(self, message: discord.Message) -> None:

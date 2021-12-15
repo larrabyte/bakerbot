@@ -3,6 +3,7 @@ import typing as t
 import traceback
 import discord
 import os
+import re
 
 class Colours:
     REGULAR = 0xF5CC00
@@ -106,6 +107,34 @@ class Embeds:
         maximum = Limits.EMBED_CHARACTERS - (len(embed.title) + 6)
         description = Limits.limit(description, maximum)
         embed.description = f"```{description}```"
+        return embed
+
+    @staticmethod
+    def package(message: discord.Message) -> discord.Embed:
+        """Packages a message into an embed, complete with surrounding context."""
+        embed = Embeds.standard(timestamp=message.created_at)
+        embed.set_footer(text=f"NUTS!", icon_url=Icons.INFO)
+        embed.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
+        embed.add_field(name="Original", value=f"[Jump!]({message.jump_url})")
+        embed.description = message.content
+
+        if (ref := message.reference) is not None and isinstance(ref.resolved, discord.Message):
+            jump = f"[{ref.resolved.author}]({ref.resolved.jump_url})"
+            embed.add_field(name="Replying to...", value=jump)
+
+        if message.embeds and message.embeds[0].type == "image":
+            if message.embeds[0].url not in re.findall(r"\|\|(.+?)\|\|", message.content):
+                embed.set_image(url=message.embeds[0].url)
+
+        if message.attachments:
+            file = message.attachments[0]
+            if not file.is_spoiler() and file.url.lower().endswith(("png", "jpeg", "jpg", "gif", "webp")):
+                embed.set_image(url=file.url)
+            elif file.is_spoiler():
+                embed.add_field(name="Attachment", value=f"||[{file.filename}]({file.url})||", inline=False)
+            else:
+                embed.add_field(name="Attachment", value=f"[{file.filename}]({file.url})", inline=False)
+
         return embed
 
 class Commands:
