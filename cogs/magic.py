@@ -17,6 +17,7 @@ class Magic(commands.Cog):
         self.sniper = MessageResender(bot, self.magic)
         self.disconnecter = Disconnecter(bot, self.magic)
         self.asker = WhoAsked(bot, self.magic)
+        self.dozza = Dozza(bot, self.magic)
         self.bot = bot
 
         # Starboard-related things.
@@ -227,6 +228,55 @@ class Disconnecter:
         """Team Magic-specific listener for preventing members from joining voice channels."""
         if member.id in self.targets and after.channel is not None:
             await member.move_to(None)
+
+class Dozza:
+    """A wrapper around `on_message()` just for the Big Dominic."""
+    def __init__(self, bot: model.Bakerbot, guild: int) -> None:
+        self.guild = guild
+        self.identifier = 212076374226108417
+        self.bot = bot
+        bot.add_listener(self.on_message)
+
+    def identifier_check(self, message: discord.Message) -> bool:
+        """The predicate for checking if the message is for the Big Dominic."""
+        return self.identifier in [member.id for member in message.mentions]
+
+    async def post(self, message: discord.Message) -> None:
+        """Posts a message to Big Dominic's inbox."""
+        if (dozza := self.bot.get_user(self.identifier)) is not None:
+            embed = utilities.Embeds.standard(timestamp=message.created_at)
+            embed.set_footer(text=f"NUTS!", icon_url=utilities.Icons.INFO)
+            embed.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
+            embed.add_field(name="Original", value=f"[Jump!]({message.jump_url})")
+            embed.description = message.content
+
+            if (ref := message.reference) is not None and isinstance(ref.resolved, discord.Message):
+                embed.add_field(name="Replying to...", value=f"[{ref.resolved.author}]({ref.resolved.jump_url})")
+
+            if message.embeds and message.embeds[0].type == "image" and message.embeds[0].url not in self.spoilers.findall(message.content):
+                embed.set_image(url=message.embeds[0].url)
+
+            if message.attachments:
+                file = message.attachments[0]
+                if not file.is_spoiler() and file.url.lower().endswith(("png", "jpeg", "jpg", "gif", "webp")):
+                    embed.set_image(url=file.url)
+                elif file.is_spoiler():
+                    embed.add_field(name="Attachment", value=f"||[{file.filename}]({file.url})||", inline=False)
+                else:
+                    embed.add_field(name="Attachment", value=f"[{file.filename}]({file.url})", inline=False)
+
+            await dozza.send(embed=embed)
+
+    async def on_message(self, message: discord.Message) -> None:
+        """Personal message inbox."""
+        if message.guild is not None and message.guild.id == self.guild:
+            if self.identifier_check(message):
+                await self.post(message)
+
+            elif message.reference is not None and message.reference.message_id is not None:
+                resolved = await message.channel.fetch_message(message.reference.message_id)
+                if self.identifier_check(resolved):
+                    await self.post(resolved)
 
 def setup(bot):
     cog = Magic(bot)
