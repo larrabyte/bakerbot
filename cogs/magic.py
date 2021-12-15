@@ -12,11 +12,9 @@ import random
 class Magic(commands.Cog):
     """You can find dumb ideas from Team Magic here."""
     def __init__(self, bot: model.Bakerbot):
-        self.magic = 473426067823263749
-        self.sniper = MessageResender(bot, self.magic)
-        self.disconnecter = Disconnecter(bot, self.magic)
-        self.asker = WhoAsked(bot, self.magic)
-        self.dozza = Dozza(bot, self.magic)
+        self.guild_id = 473426067823263749
+        self.pns = PersonalNotificationSystem(bot, self.guild_id)
+        self.vc_targets = set()
         self.bot = bot
 
         self.bot.loop.create_task(self.register_extras())
@@ -25,12 +23,16 @@ class Magic(commands.Cog):
         """Registers Team Magic into certain event handlers."""
         await self.bot.wait_until_ready()
         if (board := self.bot.get_cog("Starboard")) is not None:
-            board.register(self.magic, 524100289897431040, 899503266386292758, 3)
+            board.register(self.guild_id, 524100289897431040, 899503266386292758, 3)
+
+        if (random := self.bot.get_cog("Random")) is not None:
+            random.sniper.register(self.guild_id)
+            random.asker.register(self.guild_id)
 
     async def cog_check(self, ctx: commands.Context) -> None:
         """Ensures that commands are being run either by the owner or Team Magic."""
         owner = await self.bot.is_owner(ctx.author)
-        return owner or (ctx.guild is not None and ctx.guild.id == self.magic)
+        return owner or (ctx.guild is not None and ctx.guild.id == self.guild_id)
 
     @commands.group(invoke_without_subcommand=True)
     async def magic(self, ctx: commands.Context) -> None:
@@ -43,8 +45,13 @@ class Magic(commands.Cog):
     @magic.command()
     async def nodelete(self, ctx: commands.Context) -> None:
         """Enables/disables the `on_message_delete()` listener for Team Magic."""
-        self.sniper.enabled = not self.sniper.enabled
-        await ctx.reply(f"`on_message_delete()` listener is (now?) set to: `{self.sniper.enabled}`")
+        if (random := self.bot.get_cog("Random")) is not None:
+            if (membership := self.guild_id in random.sniper):
+                random.sniper.unregister(self.guild_id)
+            else:
+                random.sniper.register(self.guild_id)
+
+            await ctx.reply(f"`on_message_delete()` listener is (now?) set to: `{membership}`")
 
     @magic.command()
     async def demux(self, ctx: commands.Context, channel: discord.TextChannel, *, message: str) -> None:
@@ -79,22 +86,15 @@ class Magic(commands.Cog):
         """Prevents a member from joining a voice channel."""
         mentions = discord.AllowedMentions.none()
 
-        if member.id in self.disconnecter.targets:
-            self.disconnecter.targets.remove(member.id)
+        if member.id in self.vc_targets:
+            self.vc_targets.remove(member.id)
             await ctx.reply(f"{member.mention} shall pass!", allowed_mentions=mentions)
         else:
-            self.disconnecter.targets.add(member.id)
+            self.vc_targets.add(member.id)
             if member.voice is not None and member.voice.channel is not None:
                 await member.move_to(None)
 
             await ctx.reply(f"{member.mention} shall not pass!", allowed_mentions=mentions)
-
-    @magic.command()
-    async def whoasked(self, ctx: commands.Context) -> None:
-        """OK, but who asked?"""
-        self.asker.enabled = not self.asker.enabled
-        boolean = "enabled" if self.asker.enabled else "disabled"
-        await ctx.reply(f"Asking is now {boolean}.")
 
     @magic.command()
     async def shitting(self, ctx: commands.Context) -> None:
@@ -120,77 +120,33 @@ class Magic(commands.Cog):
         description = "improved shitting setup for higher-quality shitting"
         await expcord.User.create_event(ctx.author.voice.channel, token, title, description)
 
-class WhoAsked:
-    """A wrapper around `on_message()` for Team Magic."""
-    def __init__(self, bot: model.Bakerbot, guild: int) -> None:
-        self.guild = guild
-        self.enabled = True
-
-        bot.add_listener(self.on_message)
-
-    async def on_message(self, message: discord.Message) -> None:
-        """OK, but who asked?"""
-        if self.enabled and message.guild is not None and message.guild.id == self.guild and random.randint(0, 1000) == 0:
-            await message.reply("ok but who asked?")
-
-class MessageResender:
-    """A wrapper around `on_message_delete()` for Team Magic."""
-    def __init__(self, bot: model.Bakerbot, guild: int) -> None:
-        self.ignore = set()
-        self.guild = guild
-        self.enabled = False
-
-        bot.loop.create_task(self.initialise(bot))
-        bot.add_listener(self.on_message_delete)
-
-    async def initialise(self, bot: model.Bakerbot) -> None:
-        """Initialises a `MessageResender` instance."""
-        if bot.user is None:
-            await bot.wait_until_ready()
-
-        self.ignore.add(bot.user.id)
-
-    async def on_message_delete(self, message: discord.Message) -> None:
-        """Team Magic-specific listener for resending deleted messages."""
-        if self.enabled and message.author.id not in self.ignore and message.guild.id == self.guild:
-            embed = discord.Embed(colour=utilities.Colours.REGULAR, timestamp=message.created_at)
-            embed.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
-            embed.set_footer(text="NUTS!", icon_url=utilities.Icons.INFO)
-            embed.description = message.content
-            await message.channel.send(embed=embed)
-
-class Disconnecter:
-    """A wrapper around `on_voice_state_update()` for Team Magic."""
-    def __init__(self, bot: model.Bakerbot, guild: int) -> None:
-        self.guild = guild
-        self.targets = set()
-        bot.add_listener(self.on_voice_state_update)
-
+    @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState) -> None:
         """Team Magic-specific listener for preventing members from joining voice channels."""
-        if member.id in self.targets and after.channel is not None:
+        if member.id in self.vc_targets and after.channel is not None:
             await member.move_to(None)
 
-class Dozza:
+class PersonalNotificationSystem:
     """A wrapper around `on_message()` just for the Big Dominic."""
-    def __init__(self, bot: model.Bakerbot, guild: int) -> None:
-        self.guild = guild
-        self.identifier = 212076374226108417
+    def __init__(self, bot: model.Bakerbot, guild_id: int) -> None:
         self.bot = bot
+        self.guild = guild_id
+        self.identifiers = set([212076374226108417])
         bot.add_listener(self.on_message)
 
     def identifier_check(self, message: discord.Message) -> bool:
-        """The predicate for checking if the message is for the Big Dominic."""
-        return self.identifier in [member.id for member in message.mentions]
+        """Checks whether tracked users are mentioned or replied to."""
+        return self.identifiers.intersection(set(member.id for member in message.mentions))
 
     async def post(self, message: discord.Message) -> None:
-        """Posts a message to Big Dominic's inbox."""
-        if (dozza := self.bot.get_user(self.identifier)) is not None:
-            embed = utilities.Embeds.package(message)
-            await dozza.send(embed=embed)
+        """Posts a message to each person's inbox."""
+        for identifier in self.identifiers:
+            if (user := self.bot.get_user(identifier)) is not None:
+                embed = utilities.Embeds.package(message)
+                await user.send(embed=embed)
 
     async def on_message(self, message: discord.Message) -> None:
-        """Personal message inbox."""
+        """Tracks each message and posts mentioned messages to each person's inbox."""
         if message.guild is not None and message.guild.id == self.guild:
             if self.identifier_check(message):
                 await self.post(message)

@@ -110,17 +110,24 @@ class Embeds:
         return embed
 
     @staticmethod
-    def package(message: discord.Message) -> discord.Embed:
+    def package(message: discord.Message, link: bool=True) -> discord.Embed:
         """Packages a message into an embed, complete with surrounding context."""
         embed = Embeds.standard(timestamp=message.created_at)
         embed.set_footer(text=f"NUTS!", icon_url=Icons.INFO)
-        embed.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
-        embed.add_field(name="Original", value=f"[Jump!]({message.jump_url})")
-        embed.description = message.content
 
-        if (ref := message.reference) is not None and isinstance(ref.resolved, discord.Message):
-            jump = f"[{ref.resolved.author}]({ref.resolved.jump_url})"
-            embed.add_field(name="Replying to...", value=jump)
+        if message.embeds and message.embeds[0].type == "rich":
+            source = message.embeds[0]
+            embed.set_author(name=source.author.name, icon_url=source.author.icon_url)
+            embed.description = source.description
+        else:
+            embed.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
+            embed.description = message.content
+
+        if link:
+            embed.add_field(name="Original", value=f"[Jump!]({message.jump_url})")
+            if (ref := message.reference) is not None and isinstance(ref.resolved, discord.Message):
+                jump = f"[{ref.resolved.author}]({ref.resolved.jump_url})"
+                embed.add_field(name="Replying to...", value=jump)
 
         if message.embeds and message.embeds[0].type == "image":
             if message.embeds[0].url not in re.findall(r"\|\|(.+?)\|\|", message.content):
