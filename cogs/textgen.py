@@ -1,4 +1,5 @@
 from backends import hugging
+from backends import openai
 from backends import neuro
 from abcs import text
 import utilities
@@ -25,7 +26,8 @@ class Textgen(commands.Cog):
     def __init__(self, bot: model.Bakerbot) -> None:
         self.apis = {
             "hugging": hugging.Backend,
-            "neuro": neuro.Backend
+            "neuro": neuro.Backend,
+            "openai": openai.Backend
         }
 
         self.models = {}
@@ -34,7 +36,8 @@ class Textgen(commands.Cog):
     async def cog_before_invoke(self, ctx: commands.Context) -> None:
         """Ensures that a user has a model configuration in the dictionary."""
         if ctx.author.id not in self.models:
-            model = text.Model(neuro.Backend, "60ca2a1e54f6ecb69867c72c")
+            # text.Model(neuro.Backend, "60ca2a1e54f6ecb69867c72c")
+            model = text.Model(openai.Backend, "davinci")
             self.models[ctx.author.id] = model
 
     async def common_predefined_generator(self, ctx: commands.Context, available: str, length: int) -> str:
