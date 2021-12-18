@@ -1,5 +1,3 @@
-from backends import discord as expcord
-import exceptions
 import utilities
 import model
 
@@ -29,32 +27,6 @@ class Random(commands.Cog):
         """Starts typing in every available text channel."""
         coroutines = [channel.trigger_typing() for channel in ctx.guild.text_channels]
         await asyncio.gather(*coroutines)
-
-    @discordo.command()
-    async def live(self, ctx: commands.Context, *, channel: discord.VoiceChannel) -> None:
-        """Anybody want an Opcode 18 payload?"""
-        if not ("discord-user-token" in self.bot.secrets and "discord-user-id" in self.bot.secrets):
-            raise exceptions.SecretNotFound("discord-user secrets not specified in secrets.json.")
-
-        identifier = self.bot.secrets["discord-user-id"]
-        token = self.bot.secrets["discord-user-token"]
-
-        if expcord.User.lock.locked():
-            fail = utilities.Embeds.status(False)
-            fail.description = "Already streaming!"
-            return await ctx.reply(embed=fail)
-
-        if ctx.guild.get_member(identifier) is None:
-            fail = utilities.Embeds.status(False)
-            fail.description = "Someone is missing..."
-            fail.set_footer(text="Consider inviting them?", icon_url=utilities.Icons.CROSS)
-            return await ctx.reply(embed=fail)
-
-        async with expcord.User(ctx, token, identifier) as remote:
-            await remote.connect(channel)
-            await remote.stream()
-            await asyncio.sleep(10)
-            await remote.disconnect()
 
 class MessageResender:
     """A wrapper around `on_message_delete()` for sniping deleted messages."""

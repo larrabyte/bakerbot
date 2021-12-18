@@ -2,6 +2,4 @@ git+https://github.com/Rapptz/discord.py@master
 aiohttp[speedups]
 titlecase
 pynacl
-dacite
 ujson
-anyio
