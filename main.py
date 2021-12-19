@@ -23,8 +23,8 @@ if __name__ == "__main__":
     async def on_message(message: discord.Message) -> None:
         """Event handler to ignore messages from certain channels."""
         if message.guild is not None:
-            config = await database.GuildConfiguration.ensure(bot.db, message.guild.id)
-            if message.channel.id in config.ignored_channels:
+            config = await database.GuildConfiguration.get(bot.db, message.guild.id)
+            if config is None or message.channel.id in config.ignored_channels:
                 return
 
         await bot.process_commands(message)
