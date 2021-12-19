@@ -33,6 +33,9 @@ class StarboardMessage:
     @classmethod
     async def new(cls, message: discord.Message, reactions: int) -> "StarboardMessage":
         """Creates a new instance of `StarboardMessage` for a message with a specified reaction count."""
+        attachment_urls = [attachment.url for attachment in message.attachments]
+        sticker_urls = [sticker.url for sticker in message.stickers]
+
         return cls(
             message_id=message.id,
             author_id=message.author.id,
@@ -41,7 +44,7 @@ class StarboardMessage:
             reply_target_id=message.reference.message_id if message.reference is not None else None,
             timestamp=message.created_at,
             message_content=message.content,
-            attachment_urls=[attachment.url for attachment in message.attachments],
+            attachment_urls=attachment_urls + sticker_urls,
             reaction_count=reactions
         )
 

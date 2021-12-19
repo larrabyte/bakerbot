@@ -135,6 +135,9 @@ class Embeds:
             else:
                 embed.add_field(name="Attachment", value=f"[{file.filename}]({file.url})", inline=False)
 
+        if message.stickers:
+            embed.set_image(url=message.stickers[0].url)
+
         return embed
 
 class Commands:
