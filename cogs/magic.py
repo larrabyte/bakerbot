@@ -17,15 +17,6 @@ class Magic(commands.Cog):
         self.vc_targets = set()
         self.bot = bot
 
-        self.bot.loop.create_task(self.register_extras())
-
-    async def register_extras(self) -> None:
-        """Registers Team Magic into certain event handlers."""
-        await self.bot.wait_until_ready()
-        if (random := self.bot.get_cog("Random")) is not None:
-            random.sniper.register(self.guild_id)
-            random.asker.register(self.guild_id)
-
     async def cog_check(self, ctx: commands.Context) -> None:
         """Ensures that commands are being run either by the owner or Team Magic."""
         owner = await self.bot.is_owner(ctx.author)
@@ -38,17 +29,6 @@ class Magic(commands.Cog):
                     "See `$help magic` for a full list of available subcommands.")
 
         await utilities.Commands.group(ctx, summary)
-
-    @magic.command()
-    async def nodelete(self, ctx: commands.Context) -> None:
-        """Enables/disables the `on_message_delete()` listener for Team Magic."""
-        if (random := self.bot.get_cog("Random")) is not None:
-            if (membership := self.guild_id in random.sniper):
-                random.sniper.unregister(self.guild_id)
-            else:
-                random.sniper.register(self.guild_id)
-
-            await ctx.reply(f"`on_message_delete()` listener is (now?) set to: `{membership}`")
 
     @magic.command()
     async def demux(self, ctx: commands.Context, channel: discord.TextChannel, *, message: str) -> None:

@@ -62,6 +62,21 @@ class GuildConfiguration:
     message_resender_enabled: bool
     starboard_enabled: bool
 
+    @staticmethod
+    async def ensure(db: motor_asyncio.AsyncIOMotorDatabase, identifier: int) -> "GuildConfiguration":
+        """"Returns the starboard configuration for a guild (inserting a new one if necessary)."""
+        if db is None:
+            raise RuntimeError("Database not connected!")
+
+        if (config := await GuildConfiguration.get(db, identifier)) is not None:
+            # If a configuration was already in the database, return it.
+            return config
+
+        # Otherwise, create a new one, write it to the database and return that instead.
+        config = GuildConfiguration.new(identifier)
+        await config.write(db)
+        return config
+
     @classmethod
     def new(cls, identifier: int) -> "GuildConfiguration":
         """Creates a new instance of `GuildConfiguration` for a guild with ID `identifier`."""

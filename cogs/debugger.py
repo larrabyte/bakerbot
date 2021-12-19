@@ -11,7 +11,7 @@ class Debugger(commands.Cog):
 
     @commands.is_owner()
     @commands.group(invoke_without_subcommand=True)
-    async def mod(self, ctx: commands.Context):
+    async def mod(self, ctx: commands.Context) -> None:
         """The parent command for the module manager."""
         summary = ("You've encountered Bakerbot's module manager! "
                    "See `$help debugger` for a full list of available subcommands.")
@@ -19,7 +19,7 @@ class Debugger(commands.Cog):
         await utilities.Commands.group(ctx, summary)
 
     @mod.command()
-    async def load(self, ctx: commands.Context, cog: str):
+    async def load(self, ctx: commands.Context, cog: str) -> None:
         """Loads a command group."""
         self.bot.load_extension(cog)
         embed = utilities.Embeds.status(True)
@@ -27,7 +27,7 @@ class Debugger(commands.Cog):
         await ctx.reply(embed=embed)
 
     @mod.command()
-    async def unload(self, ctx: commands.Context, cog: str):
+    async def unload(self, ctx: commands.Context, cog: str) -> None:
         """Unloads a command group."""
         self.bot.unload_extension(cog)
         embed = utilities.Embeds.status(True)

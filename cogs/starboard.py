@@ -20,17 +20,6 @@ class Starboard(commands.Cog):
 
         return None
 
-    async def ensure_config(self, identifier: int) -> database.GuildConfiguration:
-        """"Returns the starboard configuration for a guild (inserting a new one if necessary)."""
-        if (config := await database.GuildConfiguration.get(self.bot.db, identifier)) is not None:
-            # If a configuration was already in the database, return it.
-            return config
-
-        # Otherwise, create a new one, write it to the database and return that instead.
-        config = database.GuildConfiguration.new(identifier)
-        await config.write(self.bot.db)
-        return config
-
     @commands.group(invoke_without_subcommand=True)
     async def starboard(self, ctx: commands.Context) -> None:
         """The parent command for the starboard."""
@@ -42,7 +31,7 @@ class Starboard(commands.Cog):
     @starboard.command()
     async def status(self, ctx: commands.Context) -> None:
         """Displays this guild's starboard status."""
-        config = await self.ensure_config(ctx.guild.id)
+        config = await database.GuildConfiguration.ensure(ctx.guild.id)
         embed = utilities.Embeds.standard()
         icon = ctx.guild.icon.url if ctx.guild.icon is not None else None
         embed.set_author(name=ctx.guild.name, icon_url=icon)
@@ -70,7 +59,7 @@ class Starboard(commands.Cog):
     @starboard.command()
     async def enable(self, ctx: commands.Context) -> None:
         """Enables this guild's starboard."""
-        config = await self.ensure_config(ctx.guild.id)
+        config = await database.GuildConfiguration.ensure(ctx.guild.id)
 
         if None in (config.starboard_channel_id, config.starboard_emoji_id):
             return await ctx.reply("Please set the channel and/or emoji before enabling the starboard.")
@@ -82,7 +71,7 @@ class Starboard(commands.Cog):
     @starboard.command()
     async def disable(self, ctx: commands.Context) -> None:
         """Disables this guild's starboard."""
-        config = await self.ensure_config(ctx.guild.id)
+        config = await database.GuildConfiguration.ensure(ctx.guild.id)
         config.starboard_enabled = False
         await config.write(self.bot.db)
         await ctx.reply("Starboard disabled.")
@@ -90,7 +79,7 @@ class Starboard(commands.Cog):
     @starboard.command()
     async def threshold(self, ctx: commands.Context, threshold: t.Optional[int]) -> None:
         """Sets or reads this guild's starboard threshold."""
-        config = await self.ensure_config(ctx.guild.id)
+        config = await database.GuildConfiguration.ensure(ctx.guild.id)
 
         if threshold is None:
             return await ctx.reply(f"Current starboard threshold: {config.starboard_threshold}")
@@ -102,7 +91,7 @@ class Starboard(commands.Cog):
     @starboard.command()
     async def channel(self, ctx: commands.Context, channel: t.Optional[discord.TextChannel]) -> None:
         """Sets or reads this guild's starboard channel."""
-        config = await self.ensure_config(ctx.guild.id)
+        config = await database.GuildConfiguration.ensure(ctx.guild.id)
         configured = self.bot.get_channel(config.starboard_channel_id)
 
         if channel is None:
@@ -117,7 +106,7 @@ class Starboard(commands.Cog):
     @starboard.command()
     async def emote(self, ctx: commands.Context, emoji: t.Optional[discord.Emoji]) -> None:
         """Sets or reads this guild's starboard emote."""
-        config = await self.ensure_config(ctx.guild.id)
+        config = await database.GuildConfiguration.ensure(ctx.guild.id)
         configured = self.bot.get_emoji(config.starboard_emoji_id)
 
         if emoji is None:
