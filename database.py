@@ -3,6 +3,7 @@ import dataclasses
 import typing as t
 import datetime
 import discord
+import copy
 
 @dataclasses.dataclass
 class StarboardMessage:
@@ -61,6 +62,7 @@ class GuildConfiguration:
     who_asked_enabled: bool
     message_resender_enabled: bool
     starboard_enabled: bool
+    ignored_channels: t.List[int]
 
     @staticmethod
     async def ensure(db: motor_asyncio.AsyncIOMotorDatabase, identifier: int) -> "GuildConfiguration":
@@ -87,7 +89,8 @@ class GuildConfiguration:
             starboard_emoji_id=None,
             who_asked_enabled=False,
             message_resender_enabled=False,
-            starboard_enabled=False
+            starboard_enabled=False,
+            ignored_channels=[]
         )
 
     @classmethod
@@ -99,6 +102,18 @@ class GuildConfiguration:
 
         if document is None:
             return None
+
+        # Find the set of fields that are defined in the dataclass but not present in the document.
+        fields = set((field.name for field in dataclasses.fields(cls)))
+        section = set(document.keys())
+        construct = fields - section
+
+        # Add these fields to the document using values from a template.
+        template = dataclasses.asdict(GuildConfiguration.new(0))
+
+        for field in construct:
+            obj = copy.deepcopy(template[field])
+            document[field] = obj
 
         return cls(**document)
 

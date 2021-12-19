@@ -1,6 +1,8 @@
+import database
+import model
+
 import discord
 import pathlib
-import model
 
 if __name__ == "__main__":
     # Setup Discord API intents.
@@ -16,6 +18,16 @@ if __name__ == "__main__":
 
     # Instantiate the bot with the required arguments.
     bot = model.Bakerbot(command_prefix="$", help_command=None, case_insensitive=True, intents=intents, activity=activity)
+
+    @bot.event
+    async def on_message(message: discord.Message) -> None:
+        """Event handler to ignore messages from certain channels."""
+        if message.guild is not None:
+            config = await database.GuildConfiguration.ensure(bot.db, message.guild.id)
+            if message.channel.id in config.ignored_channels:
+                return
+
+        await bot.process_commands(message)
 
     # Load extensions from these folders.
     for folder in ("abcs", "backends", "cogs", "local"):
