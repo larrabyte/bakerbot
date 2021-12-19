@@ -42,13 +42,6 @@ class Limits:
 
         return string
 
-class Async:
-    """Inheriting this class allows for an asynchronous `__init__` method."""
-    async def __new__(cls, *args: tuple, **kwargs: dict) -> "Async":
-        instance = super().__new__(cls)
-        await instance.__init__(*args, **kwargs)
-        return instance
-
 class Identifiers:
     bytelength = 16
 

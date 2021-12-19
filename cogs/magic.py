@@ -22,9 +22,6 @@ class Magic(commands.Cog):
     async def register_extras(self) -> None:
         """Registers Team Magic into certain event handlers."""
         await self.bot.wait_until_ready()
-        if (board := self.bot.get_cog("Starboard")) is not None:
-            board.register(self.guild_id, 524100289897431040, 899503266386292758, 3)
-
         if (random := self.bot.get_cog("Random")) is not None:
             random.sniper.register(self.guild_id)
             random.asker.register(self.guild_id)

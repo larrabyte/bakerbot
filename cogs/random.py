@@ -9,7 +9,6 @@ import random
 class Random(commands.Cog):
     """Random ideas that I come up with every now and again."""
     def __init__(self, bot: model.Bakerbot) -> None:
-        self.lock = asyncio.Lock()
         self.sniper = MessageResender(bot)
         self.asker = WhoAsked(bot)
         self.bot = bot
