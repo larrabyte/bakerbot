@@ -48,6 +48,40 @@ class Debugger(commands.Cog):
         embed.description = summary
         await ctx.reply(embed=embed)
 
+    @commands.is_owner()
+    @commands.group(invoke_without_subcommand=True)
+    async def debug(self, ctx: commands.Context) -> None:
+        """The parent command for debugging commands."""
+        summary = ("You've encountered Bakerbot's debug module! "
+                   "See `$help debugger` for a full list of available subcommands.")
+
+        await utilities.Commands.group(ctx, summary)
+
+    @debug.command()
+    async def message(self, ctx: commands.Command, url: str) -> None:
+        """Examine a message using its jump URL."""
+        parts = url.split("/")
+        channel_id = int(parts[5])
+        channel = self.bot.get_channel(channel_id)
+        if channel is None:
+            return await ctx.reply(f"Channel ID `{channel_id}` not found.")
+
+        message_id = int(parts[6])
+        message = await channel.fetch_message(message_id)
+        if message is None:
+            return await ctx.reply(f"Message ID `{message_id}` not found.")
+
+        await ctx.reply(repr(message))
+
+    @debug.command()
+    async def guild(self, ctx: commands.Context, identifier: int) -> None:
+        """Examine a guild using its identifier."""
+        guild = self.bot.get_guild(identifier)
+        if guild is None:
+            return await ctx.reply(f"Guild ID `{identifier}` not found.")
+
+        await ctx.reply(repr(guild))
+
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: commands.CommandError) -> None:
         """Catches any exceptions thrown from commands and forwards them to Discord."""
