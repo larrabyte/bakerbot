@@ -22,7 +22,7 @@ class Voice(commands.Cog):
         paginator = utilities.Paginator()
         paginator.placeholder = "Audio tracks: Options"
 
-        for track in pathlib.Path("music").iterdir():
+        for track in pathlib.Path("../music/").iterdir():
             label = utilities.Limits.limit(track.name, utilities.Limits.SELECT_LABEL)
             value = utilities.Limits.limit(track.name, utilities.Limits.SELECT_VALUE)
             desc = utilities.Limits.limit(str(track), utilities.Limits.SELECT_DESCRIPTION)
@@ -61,7 +61,7 @@ class Voice(commands.Cog):
             if (track := await paginator.wait()) is None:
                 return
 
-        if not (filepath := pathlib.Path(f"music/{track}")).is_file():
+        if not (filepath := pathlib.Path(f"../music/{track}")).is_file():
             fail = utilities.Embeds.status(False)
             fail.description = f"`{track}` is not a valid track."
             trackcmd = utilities.Commands.signature(self.tracks)
