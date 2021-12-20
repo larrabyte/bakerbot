@@ -46,53 +46,33 @@ class Management(commands.Cog):
         else:
             await ctx.reply("Bakerbot does not currently ignore messages from any channels in this guild.")
 
-    @commands.command()
-    async def nodelete(self, ctx: commands.Context, toggle: t.Optional[str]) -> None:
+    @guild.command()
+    async def nodelete(self, ctx: commands.Context, toggle: t.Optional[bool]) -> None:
         """Controls the message persistence system."""
         config = await database.GuildConfiguration.ensure(self.bot.db, ctx.guild.id)
-        enablers = ("on", "enable", "true")
-        disablers = ("off", "disable", "false")
 
         if toggle is None:
-            noun = "enabled" if config.message_resender_enabled else "disabled"
-            return await ctx.reply(f"The message persistence system is currently {noun}.")
+            status = "enabled" if config.message_resender_enabled else "disabled"
+            return await ctx.reply(f"The message persistence system is currently {status}.")
 
-        if toggle.lower() in enablers:
-            config.message_resender_enabled = True
-            await ctx.reply("The message persistence system has been enabled.")
-            await config.write(self.bot.db)
-        elif toggle.lower() in disablers:
-            config.message_resender_enabled = False
-            await ctx.reply("The message persistence system has been disabled.")
-            await config.write(self.bot.db)
-        else:
-            allowables = ", ".join(enablers + disablers)
-            await ctx.reply(f"Invalid `toggle` parameter. Valid options are: {allowables}.")
+        config.message_resender_enabled = toggle
+        word_to_use = "enabled" if toggle else "disabled"
+        await config.write(self.bot.db)
+        await ctx.reply(f"The message persistence system has been {word_to_use}.")
 
-    @commands.command()
-    async def whoasked(self, ctx: commands.Context, toggle: t.Optional[str]) -> None:
+    @guild.command()
+    async def whoasked(self, ctx: commands.Context, toggle: t.Optional[bool]) -> None:
         """Controls the message autoreply system."""
         config = await database.GuildConfiguration.ensure(self.bot.db, ctx.guild.id)
-        enablers = ("on", "enable", "true")
-        disablers = ("off", "disable", "false")
 
         if toggle is None:
-            noun = "enabled" if config.who_asked_enabled else "disabled"
-            return await ctx.reply(f"The message autoreply system is currently {noun}.")
+            status = "enabled" if config.who_asked_enabled else "disabled"
+            return await ctx.reply(f"The message persistence system is currently {status}.")
 
-        if toggle.lower() in enablers:
-            config.who_asked_enabled = True
-            await ctx.reply("The message autoreply system has been enabled.")
-            await config.write(self.bot.db)
-
-        elif toggle.lower() in disablers:
-            config.who_asked_enabled = False
-            await ctx.reply("The message autoreply system has been disabled.")
-            await config.write(self.bot.db)
-
-        else:
-            allowables = ", ".join(enablers + disablers)
-            await ctx.reply(f"Invalid `toggle` parameter. Valid options are: {allowables}.")
+        config.who_asked_enabled = toggle
+        word_to_use = "enabled" if toggle else "disabled"
+        await config.write(self.bot.db)
+        await ctx.reply(f"The message autoreply system has been {word_to_use}.")
 
     async def who_asked(self, message: discord.Message) -> None:
         """Handles the "ok but who asked?" reply feature."""
