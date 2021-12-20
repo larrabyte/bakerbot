@@ -121,8 +121,8 @@ class Starboard(commands.Cog):
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
         """If we encounter a message with a special reaction, send it to that guild's starboard channel."""
-        config = await database.GuildConfiguration.ensure(self.bot.db, payload.guild_id)
-        if not config.starboard_ready() or payload.channel_id == config.starboard_channel_id:
+        config = await database.GuildConfiguration.get(self.bot.db, payload.guild_id)
+        if config is not None or not config.starboard_ready() or payload.channel_id == config.starboard_channel_id:
             return
 
         channel = self.bot.get_channel(payload.channel_id)
