@@ -25,37 +25,26 @@ class Management(commands.Cog):
         """Makes Bakerbot ignore/unignore messages from certain channels."""
         config = await database.GuildConfiguration.ensure(self.bot.db, ctx.guild.id)
 
-        if len(channels) > 0:
-            # Add channels to the ignore set only if they're
-            # not already in it. Otherwise, remove them.
-            ignore_set = set(config.ignored_channels)
-            for channel in [c.id for c in channels]:
-                if channel in ignore_set:
-                    ignore_set.remove(channel)
-                else:
-                    ignore_set.add(channel)
+        # Get the set of channels that are either already ignored or in the set of
+        # to-be ignored channels, but not in both. Implements channel toggling.
+        symmetric_difference = set(config.ignored_channels) ^ set(c.id for c in channels)
+        config.ignored_channels = list(symmetric_difference)
+        await config.write(self.bot.db)
 
-            config.ignored_channels = list(ignore_set)
-            await config.write(self.bot.db)
+        if len(config.ignored_channels) > 0:
+            list_modified = "Bakerbot will no longer respond to messages in these channels:\n"
+            unchanged = "Bakerbot currently ignores messages in these channels:\n"
+            text = list_modified if len(channels) > 0 else unchanged
 
-            if len(config.ignored_channels) > 0:
-                text = f"Bakerbot will no longer respond to messages in these channels:\n"
-                objects = [self.bot.get_channel(c) for c in config.ignored_channels]
-                text += "\n".join(f" • {channel.mention}" for channel in objects)
-            else:
-                text = "Bakerbot will no longer ignore any channels in this guild."
+            generator = (self.bot.get_channel(c) for c in config.ignored_channels if c is not None)
+            text += "\n".join(f" • {channel.mention}" for channel in generator)
+            await ctx.reply(text)
 
-        elif len(config.ignored_channels) > 0:
-            # Otherwise, simply list the ignored channels for this guild.
-            text = f"Bakerbot currently ignores these channels:\n"
-            ignored = [self.bot.get_channel(identifier) for identifier in config.ignored_channels]
-            text += "\n".join(f" • {channel.mention}" for channel in ignored)
+        elif len(channels) > 0:
+            await ctx.reply("Bakerbot will no longer ignore messages from any channels in this guild.")
 
         else:
-            # If we actually aren't ignoring anything, just say that.
-            text = "Bakerbot does not ignore any channels from this guild."
-
-        await ctx.reply(text)
+            await ctx.reply("Bakerbot does not currently ignore messages from any channels in this guild.")
 
     @commands.command()
     async def nodelete(self, ctx: commands.Context, toggle: t.Optional[str]) -> None:
