@@ -1,6 +1,7 @@
-from motor import motor_asyncio
+import model
+
+import motor.motor_asyncio as motor
 import dataclasses
-import typing as t
 import datetime
 import discord
 import copy
@@ -12,16 +13,16 @@ class StarboardMessage:
     author_id: int
     channel_id: int
     guild_id: int
-    reply_target_id: t.Optional[int]
+    reply_target_id: int | None
     timestamp: datetime.datetime
     message_content: str
-    attachment_urls: t.List[str]
+    attachment_urls: list[str]
     reaction_count: int
 
     @classmethod
-    async def get(cls, db: motor_asyncio.AsyncIOMotorDatabase, identifier: int) -> t.Optional["StarboardMessage"]:
+    async def get(cls, identifier: int) -> "StarboardMessage | None":
         """Get the StarboardMessage instance for a message from the database. Returns `None` if the message is not in the database."""
-        collection = db["starboarded_messages"]
+        collection = Backend.db["starboarded_messages"]
         query = {"message_id": identifier}
         document = await collection.find_one(query, {"_id": False})
 
@@ -48,9 +49,9 @@ class StarboardMessage:
             reaction_count=reactions
         )
 
-    async def write(self, db: motor_asyncio.AsyncIOMotorDatabase) -> None:
+    async def write(self) -> None:
         """Write this StarboardMessage instance to the database."""
-        starboard = db["starboarded_messages"]
+        starboard = Backend.db["starboarded_messages"]
         query = {"message_id": self.message_id}
         document = dataclasses.asdict(self)
         await starboard.replace_one(query, document, upsert=True)
@@ -60,26 +61,23 @@ class GuildConfiguration:
     """The database guild configuration template."""
     guild_id: int
     starboard_threshold: int
-    starboard_channel_id: t.Optional[int]
-    starboard_emoji_id: t.Optional[int]
+    starboard_channel_id: int | None
+    starboard_emoji_id: int | None
     who_asked_enabled: bool
     message_resender_enabled: bool
     starboard_enabled: bool
-    ignored_channels: t.List[int]
+    ignored_channels: list[int]
 
     @staticmethod
-    async def ensure(db: motor_asyncio.AsyncIOMotorDatabase, identifier: int) -> "GuildConfiguration":
+    async def ensure(identifier: int) -> "GuildConfiguration":
         """"Return the starboard configuration for a guild (inserting a new one if necessary)."""
-        if db is None:
-            raise RuntimeError("Database not connected!")
-
-        if (config := await GuildConfiguration.get(db, identifier)) is not None:
+        if (config := await GuildConfiguration.get(identifier)) is not None:
             # If a configuration was already in the database, return it.
             return config
 
         # Otherwise, create a new one, write it to the database and return that instead.
         config = GuildConfiguration.new(identifier)
-        await config.write(db)
+        await config.write()
         return config
 
     @classmethod
@@ -97,9 +95,9 @@ class GuildConfiguration:
         )
 
     @classmethod
-    async def get(cls, db: motor_asyncio.AsyncIOMotorDatabase, identifier: int) -> t.Optional["GuildConfiguration"]:
+    async def get(cls, identifier: int) -> "GuildConfiguration | None":
         """Get the GuildConfiguration instance for a guild from the database. Returns `None` if the guild is not in the database."""
-        collection = db["guild_settings"]
+        collection = Backend.db["guild_settings"]
         query = {"guild_id": identifier}
         document = await collection.find_one(query, {"_id": False})
 
@@ -120,9 +118,9 @@ class GuildConfiguration:
 
         return cls(**document)
 
-    async def write(self, db: motor_asyncio.AsyncIOMotorDatabase) -> None:
+    async def write(self) -> None:
         """Write the guild's configuration to the database."""
-        collection = db["guild_settings"]
+        collection = Backend.db["guild_settings"]
         query = {"guild_id": self.guild_id}
         document = dataclasses.asdict(self)
         await collection.replace_one(query, document, upsert=True)
@@ -131,3 +129,26 @@ class GuildConfiguration:
         """Check whether this guild has its starboard configuration set."""
         members = (self.starboard_channel_id, self.starboard_emoji_id)
         return self.starboard_enabled == True and None not in members
+
+class Backend:
+    @classmethod
+    def setup(cls, bot: model.Bakerbot) -> None:
+        cls.db_object = bot.db
+        cls.db_address = bot.secrets.get("mongodb-address", None)
+
+    @classmethod
+    @property
+    def db(cls) -> motor.AsyncIOMotorDatabase:
+        """Return the bot's database object, throws an exception if not available."""
+        if cls.db_object is None:
+            address = cls.db_address or "No address specified."
+            raise DatabaseNotConnected(address)
+
+        return cls.db_object
+
+class DatabaseNotConnected(Exception):
+    """Raised when the database object is `None`."""
+    pass
+
+def setup(bot: model.Bakerbot) -> None:
+    Backend.setup(bot)

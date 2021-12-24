@@ -2,7 +2,6 @@ import utilities
 import model
 
 from discord.ext import commands
-import typing as t
 import discord
 import pathlib
 
@@ -31,10 +30,6 @@ class Voice(commands.Cog):
 
         return paginator
 
-    async def cog_check(self, ctx: commands.Context) -> None:
-        """Ensure that commands are being executed in a guild context."""
-        return ctx.guild is not None
-
     async def connect(self, channel: discord.VoiceChannel) -> None:
         """Either connect or move the bot to a specific voice channel."""
         client = channel.guild.voice_client
@@ -52,8 +47,10 @@ class Voice(commands.Cog):
 
         await utilities.Commands.group(ctx, summary)
 
+
     @vc.command()
-    async def play(self, ctx: commands.Context, track: t.Optional[str]) -> None:
+    @commands.guild_only()
+    async def play(self, ctx: commands.Context, track: str | None) -> None:
         """Play audio tracks from Bakerbot's music folder."""
         if track is None:
             paginator = self.paginate_tracks()
@@ -95,7 +92,8 @@ class Voice(commands.Cog):
         await ctx.reply("These menus are only for viewing (selecting a track won't do anything).", view=paginator)
 
     @vc.command(aliases=["connect"])
-    async def join(self, ctx: commands.Context, *, channel: t.Optional[discord.VoiceChannel]) -> None:
+    @commands.guild_only()
+    async def join(self, ctx: commands.Context, *, channel: discord.VoiceChannel | None) -> None:
         """Join the voice channel that the invoker is in, or `channel` if specified."""
         channel = channel or getattr(ctx.author.voice, "channel", None)
 
@@ -107,6 +105,7 @@ class Voice(commands.Cog):
         await self.connect(channel)
 
     @vc.command(aliases=["disconnect"])
+    @commands.guild_only()
     async def leave(self, ctx: commands.Context) -> None:
         """Disconnect the bot from any voice channels."""
         if ctx.voice_client is not None and ctx.voice_client.is_connected():

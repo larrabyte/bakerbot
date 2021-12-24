@@ -59,7 +59,7 @@ class Webhooks:
     async def create(channel: discord.TextChannel, name: str) -> None:
         """Create a new webhook in `channel`."""
         if Backend.token is None:
-            raise exceptions.SecretNotFound("discord-token not specified in secrets.json.")
+            raise model.SecretNotFound("discord-token not specified in secrets.json.")
 
         headers = {"Authorization": f"Bot {Backend.token}"}
         payload = {"name": name}
@@ -70,7 +70,7 @@ class Webhooks:
     async def move(webhook: discord.Webhook, channel: discord.TextChannel) -> None:
         """Move `webhook` from its current channel to the specified `channel`."""
         if Backend.token is None:
-            raise exceptions.SecretNotFound("discord-token not specified in secrets.json.")
+            raise model.SecretNotFound("discord-token not specified in secrets.json.")
 
         headers = {"Authorization": f"Bot {Backend.token}"}
         payload = {"channel_id": channel.id}

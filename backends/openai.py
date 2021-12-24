@@ -31,7 +31,7 @@ class Backend(text.Backend):
     async def generate(cls, model: text.Model, query: str) -> str:
         """Generate text using OpenAI."""
         if cls.token is None:
-            raise exceptions.SecretNotFound("openai-token not found in secrets.json.")
+            raise model.SecretNotFound("openai-token not found in secrets.json.")
 
         headers = {"Authorization": f"Bearer {cls.token}"}
 

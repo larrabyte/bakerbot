@@ -34,7 +34,7 @@ class Backend(text.Backend):
     async def generate(cls, model: text.Model, query: str) -> str:
         """Generate text using the Hugging Face API."""
         if cls.token is None:
-            raise exceptions.SecretNotFound("hugging-token not found in secrets.json.")
+            raise model.SecretNotFound("hugging-token not found in secrets.json.")
 
         headers = {"Authorization": f"Bearer {cls.token}"}
 

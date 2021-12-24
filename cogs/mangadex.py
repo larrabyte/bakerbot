@@ -3,16 +3,16 @@ import utilities
 import model
 
 from discord.ext import commands
-import typing as t
 import titlecase
 import discord
+import typing
 
 class Mangadex(commands.Cog):
     """Bakerbot's implementation of the Mangadex API (v5)."""
     def __init__(self, bot: model.Bakerbot) -> None:
         self.bot = bot
 
-    def optional_titlecase(self, string: t.Optional[str], default: str) -> str:
+    def optional_titlecase(self, string: str | None, default: str) -> str:
         """Optionally apply a titlecase transformation on `string`, else return the default."""
         if string is not None:
             return titlecase.titlecase(string)
@@ -95,7 +95,7 @@ class Mangadex(commands.Cog):
 
 class MangaReaderView(utilities.View):
     """A manga reader view that can be used to navigate through a manga's chapters."""
-    def __init__(self, manga: mangadex.Manga, index: int, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self, manga: mangadex.Manga, index: int, *args: typing.Any, **kwargs: typing.Any) -> None:
         super().__init__(*args, **kwargs)
         self.manga = manga
         self.current_chapter = index

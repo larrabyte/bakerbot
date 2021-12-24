@@ -2,8 +2,8 @@ import utilities
 import model
 
 from discord.ext import commands
-import typing as t
 import discord
+import typing
 
 class Helper(commands.Cog):
     """Bakerbot's documentation lives here."""
@@ -27,7 +27,7 @@ class Helper(commands.Cog):
         return embed
 
     @commands.command()
-    async def help(self, ctx: commands.Context, cog: t.Optional[str]) -> None:
+    async def help(self, ctx: commands.Context, cog: str | None) -> None:
         """Send Bakerbot's documentation in a neatly formatted message."""
         view = DocumentationView(self.bot.cogs, self.embeddify)
 
@@ -51,7 +51,7 @@ class Helper(commands.Cog):
 
 class DocumentationView(utilities.View):
     """Provides a method of browsing command group documentation."""
-    def __init__(self, cogs: t.Mapping[str, commands.Cog], formatter: t.Callable, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self, cogs: dict[str, commands.Cog], formatter: typing.Callable, *args: typing.Any, **kwargs: typing.Any) -> None:
         super().__init__(*args, **kwargs)
         self.formatter = formatter
         self.cogs = cogs

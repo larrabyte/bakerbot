@@ -2,7 +2,6 @@ import exceptions
 import model
 
 import urllib.parse
-import typing as t
 import multidict
 import hashlib
 import ujson
@@ -32,13 +31,13 @@ class Subpod:
     def __init__(self, data: dict) -> None:
         self.title: str = data["title"]
 
-        self.image: t.Optional[Image] = None
+        self.image: Image | None = None
         if "img" in data:
             image = data["img"]
             wrapper = Image(image)
             self.image = wrapper
 
-        self.plaintext: t.Optional[str] = data.get("plaintext", None)
+        self.plaintext: str | None = data.get("plaintext", None)
 
 class Pod:
     """Represents WolframAlpha's `Pod` API object."""
@@ -49,12 +48,12 @@ class Pod:
         self.posititon: str = data["position"]
         self.error: bool = data["error"]
 
-        self.subpods: t.List[Subpod] = []
+        self.subpods: list[Subpod] = []
         for subpod in data.get("subpods", []):
             wrapper = Subpod(subpod)
             self.subpods.append(wrapper)
 
-        self.states: t.List[t.Dict[str, str]] = []
+        self.states: list[dict[str, str]] = []
         for state in data.get("states", []):
             if "states" in state:
                 for substate in state["states"]:
@@ -71,7 +70,7 @@ class Result:
         self.timed_out: str = data["timedout"]
         self.timed_out_pods: str = data["timedoutpods"]
         self.timing: float = data["timing"]
-        self.parse_timing: t.Optional[float] = data.get("parsetiming", None)
+        self.parse_timing: float | None = data.get("parsetiming", None)
         self.parse_timed_out: bool = data["parsetimedout"]
         self.recalculate: str = data["recalculate"]
         self.id: str = data["id"]
@@ -79,14 +78,14 @@ class Result:
         self.server: str = data["server"]
         self.related: str = data["related"]
         self.version: str = data["version"]
-        self.input: t.Optional[str] = data.get("inputstring", None)
+        self.input: str | None = data.get("inputstring", None)
 
-        self.pods: t.List[Pod] = []
+        self.pods: list[Pod] = []
         for pod in data.get("pods", []):
             wrapper = Pod(pod)
             self.pods.append(wrapper)
 
-        self.error_message: t.Optional[str] = None
+        self.error_message: str | None = None
 
         if data["error"]:
             # The API will return a dictionary in this field if it's not false.
@@ -96,14 +95,14 @@ class Query:
     """Represents the results of a WolframAlpha API request."""
     def __init__(self, **kwargs: dict) -> None:
         if Backend.id is None:
-            raise exceptions.SecretNotFound("wolfram-id not specified in secrets.json.")
+            raise model.SecretNotFound("wolfram-id not specified in secrets.json.")
 
         self.parameters = multidict.MultiDict(appid=Backend.id, output="json", **kwargs)
 
     def digest(self) -> str:
         """Return the MD5 digest for this query."""
         if Backend.salt is None:
-            raise exceptions.SecretNotFound("wolfram-salt not specified in secrets.json.")
+            raise model.SecretNotFound("wolfram-salt not specified in secrets.json.")
 
         items = sorted(self.parameters.items())
         encoded = multidict.MultiDict((k, urllib.parse.quote_plus(v)) for k, v in items)

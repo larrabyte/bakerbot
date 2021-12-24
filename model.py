@@ -1,16 +1,11 @@
-import exceptions
-import utilities
-import database
-
 from discord.ext import commands
-from motor import motor_asyncio
-import typing as t
-import importlib
+import motor.motor_asyncio as motor
 import aiohttp
+import typing
 import ujson
 
 class Bakerbot(commands.Bot):
-    def __init__(self, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
         super().__init__(*args, **kwargs)
         self.session = aiohttp.ClientSession(json_serialize=ujson.dumps)
         self.secrets = self.load_secrets()
@@ -21,32 +16,34 @@ class Bakerbot(commands.Bot):
         with open("secrets.json", "r") as file:
             return ujson.load(file)
 
-    def connect_database(self) -> t.Optional[motor_asyncio.AsyncIOMotorDatabase]:
-        """Connect to the specified MongoDB database in `secrets.json`."""
+    def connect_database(self) -> motor.AsyncIOMotorDatabase | None:
+        """Return the bot's database from the specified MongoDB address in `secrets.json`."""
         if "mongodb-address" not in self.secrets:
             return None
 
         address = self.secrets["mongodb-address"]
         options = {"serverSelectionTimeoutMS": 2000}
-        client = motor_asyncio.AsyncIOMotorClient(address, **options)
+        client = motor.AsyncIOMotorClient(address, **options)
 
-        # Make sure that the address is valid.
+        # Make sure that the address is valid. If the database
+        # `anthony_baker` doesn't exist, just let the exception propagate.
         self.loop.run_until_complete(client.server_info())
         return client["anthony_baker"]
 
     def reload(self) -> None:
         """Reload the bot's internal state without logging out of Discord."""
         self.secrets = self.load_secrets()
-
-        for module in (exceptions, utilities, database):
-            importlib.reload(module)
         for extension in list(self.extensions.keys()):
             self.reload_extension(extension)
 
     def run(self) -> None:
         """Start the bot. This should be the last function that is called."""
         if "discord-token" not in self.secrets:
-            raise exceptions.SecretNotFound("discord-token not specified in secrets.json.")
+            raise SecretNotFound("discord-token not specified in secrets.json.")
 
         token = self.secrets["discord-token"]
         super().run(token)
+
+class SecretNotFound(Exception):
+    """Raised whenever a secret cannot be found."""
+    pass

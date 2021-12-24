@@ -3,9 +3,9 @@ import utilities
 import model
 
 from discord.ext import commands
-import typing as t
 import titlecase
 import discord
+import typing
 
 class Wolfram(commands.Cog):
     """Bakerbot's interface to WolframAlpha. Supports unlimited requests and step-by-step solutions."""
@@ -29,7 +29,7 @@ class Wolfram(commands.Cog):
 
 class WolframView(utilities.View):
     """Displays results retrieved from WolframAlpha."""
-    def __init__(self, query: wolfram.Query, result: wolfram.Result, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self, query: wolfram.Query, result: wolfram.Result, *args: typing.Any, **kwargs: typing.Any) -> None:
         super().__init__(*args, **kwargs)
         self.query = query
         self.result = result
@@ -37,7 +37,7 @@ class WolframView(utilities.View):
 
         self.show_pod_buttons()
 
-    def format(self, pod: wolfram.Pod) -> t.List[discord.Embed]:
+    def format(self, pod: wolfram.Pod) -> list[discord.Embed]:
         blueprint = discord.Embed(colour=utilities.Colours.REGULAR)
         return [blueprint.copy().set_image(url=subpod.image.source) for subpod in pod.subpods]
 

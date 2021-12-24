@@ -1,10 +1,8 @@
 from backends import expcord
-import exceptions
 import utilities
 import model
 
 from discord.ext import commands
-import typing as t
 import asyncio
 import discord
 import random
@@ -17,7 +15,7 @@ class Magic(commands.Cog):
         self.vc_targets = set()
         self.bot = bot
 
-    async def cog_check(self, ctx: commands.Context) -> None:
+    async def cog_check(self, ctx: commands.Context) -> bool:
         """Ensure that commands are being run either by me or Team Magic."""
         owner = await self.bot.is_owner(ctx.author)
         return owner or (ctx.guild is not None and ctx.guild.id == self.guild_id)
@@ -39,7 +37,7 @@ class Magic(commands.Cog):
         await asyncio.gather(*tasks)
 
     @magic.command()
-    async def hookify(self, ctx: commands.Context, source: discord.TextChannel, destination: t.Optional[discord.TextChannel]) -> None:
+    async def hookify(self, ctx: commands.Context, source: discord.TextChannel, destination: discord.TextChannel | None) -> None:
         """So it turns out you can have more than 10 webooks in a channel..."""
         hooks = await source.webhooks()
 
@@ -77,7 +75,7 @@ class Magic(commands.Cog):
     async def shitting(self, ctx: commands.Context) -> None:
         """Create a live shitting event."""
         if not ("discord-user-token" in self.bot.secrets and "discord-user-id" in self.bot.secrets):
-            raise exceptions.SecretNotFound("discord-user secrets not specified in secrets.json.")
+            raise model.SecretNotFound("discord-user secrets not specified in secrets.json.")
 
         identifier = self.bot.secrets["discord-user-id"]
         token = self.bot.secrets["discord-user-token"]

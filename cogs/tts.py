@@ -1,17 +1,16 @@
-import backends.fifteen as fifteen
+from backends import fifteen
 import utilities
 import model
 
 from discord.ext import commands
-import typing as t
 import collections
 import discord
 import asyncio
 
 class TTSFlags(commands.FlagConverter):
     """Parameters required to execute a FifteenAPI request."""
-    voice: t.Optional[str]
-    text: t.Optional[str]
+    voice: str | None
+    text: str | None
 
 class TTS(commands.Cog):
     """Text-to-speech using FifteenAI."""
@@ -34,6 +33,10 @@ class TTS(commands.Cog):
         elif len(queue) > 0:
             now = queue.popleft()
             client.play(now, after=lambda e: self.callback(client, queue))
+
+    async def cog_check(self, ctx: commands.Context) -> bool:
+        """Ensure commands are being executed in a guild context."""
+        return ctx.guild is not None
 
     async def generator(self, voice: str, text: str) -> discord.FFmpegOpusAudio:
         """API request routine: called multiple times over different `text` inputs."""

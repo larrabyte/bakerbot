@@ -32,7 +32,7 @@ class Backend(text.Backend):
     async def generate(cls, model: text.Model, query: str) -> str:
         """Generate text using the Neuro API."""
         if cls.token is None:
-            raise exceptions.SecretNotFound("neuro-token not found in secrets.json.")
+            raise model.SecretNotFound("neuro-token not found in secrets.json.")
 
         parameters = {"include_result": "true"}
         headers = {"Authorization": f"Bearer {cls.token}"}

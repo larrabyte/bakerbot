@@ -1,7 +1,9 @@
+import model
+
 from discord.ext import commands
-import typing as t
 import traceback
 import discord
+import typing
 import os
 import re
 
@@ -46,14 +48,14 @@ class Identifiers:
     bytelength = 16
 
     @classmethod
-    def generate(cls, obj: t.Any) -> str:
+    def generate(cls, obj: typing.Any) -> str:
         """Generate a random identifier (along with a bonus `str(obj)` if given)."""
         rand = os.urandom(cls.bytelength).hex()
         representation = str(obj)
         return f"{rand}{representation}"
 
     @classmethod
-    def extract(cls, interaction: discord.Interaction, obj: t.Any) -> t.Any:
+    def extract(cls, interaction: discord.Interaction, obj: typing.Any) -> typing.Any:
         """Extract the object representation passed in via `Identifiers.generate()`."""
         start = cls.bytelength * 2
         identifier = interaction.data["custom_id"]
@@ -171,7 +173,7 @@ class View(discord.ui.View):
         await interaction.edit_original_message(content=None, embed=embed, view=None)
 
 class Paginator(View):
-    def __init__(self, placeholder: str="Options", *args: tuple, **kwargs: dict) -> None:
+    def __init__(self, placeholder: str="Options", *args: typing.Any, **kwargs: typing.Any) -> None:
         super().__init__(*args, **kwargs)
         self.placeholder = placeholder
         self.menus = []
@@ -180,7 +182,7 @@ class Paginator(View):
         # The value that was selected.
         self.selection = None
 
-    def active(self) -> t.List[discord.ui.Select]:
+    def active(self) -> list[discord.ui.Select]:
         """Return the list of active menus (according to `self.menus` and `self.page`)."""
         constant = Limits.VIEW_ITEMS_PER_ROW - 1
         begin, end = constant * self.page, constant * (self.page + 1)
@@ -218,7 +220,7 @@ class Paginator(View):
         for menu in self.active():
             self.add_item(menu)
 
-    async def wait(self) -> t.Optional[str]:
+    async def wait(self) -> str | None:
         """Return either the selected value or `None`."""
         await super().wait()
         return self.selection
@@ -265,3 +267,6 @@ class Paginator(View):
         self.display()
 
         await interaction.response.edit_message(view=self)
+
+def setup(bot: model.Bakerbot) -> None:
+    pass

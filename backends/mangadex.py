@@ -1,7 +1,6 @@
 import exceptions
 import model
 
-import typing as t
 import ujson
 import http
 
@@ -10,7 +9,7 @@ class Relationship:
     def __init__(self, data: dict) -> None:
         self.identifier: str = data["id"]
         self.type: str = data["type"]
-        self.attributes: t.Optional[dict] = data.get("attributes", None)
+        self.attributes: dict | None = data.get("attributes", None)
 
 class Tag:
     """Represents Mangadex's `Tag` API object."""
@@ -19,12 +18,12 @@ class Tag:
         self.name: str = data["attributes"]["name"]["en"]
 
         # WTFMD: `description` is documented to be of type `LocalizedString`, but is a list.
-        # self.description: t.List[str] = data["attributes"]["description"]
+        # self.description: list[str] = data["attributes"]["description"]
 
         self.group: str = data["attributes"]["group"]
         self.version: int = data["attributes"]["version"]
 
-        self.relationships: t.List[Relationship] = []
+        self.relationships: list[Relationship] = []
         for relationship in data["relationships"]:
             ship = Relationship(relationship)
             self.relationships.append(ship)
@@ -34,28 +33,28 @@ class Chapter:
     def __init__(self, data: dict) -> None:
         self.identifier: str = data["id"]
         self.title: str = data["attributes"]["title"]
-        self.volume: t.Optional[str] = data["attributes"]["volume"]
-        self.chapter: t.Optional[str] = data["attributes"]["chapter"]
+        self.volume: str | None = data["attributes"]["volume"]
+        self.chapter: str | None = data["attributes"]["chapter"]
         self.language: str = data["attributes"]["translatedLanguage"]
         self.hash: str = data["attributes"]["hash"]
-        self.data: t.List[str] = data["attributes"]["data"]
-        self.data_saver: t.List[str] = data["attributes"]["dataSaver"]
+        self.data: list[str] = data["attributes"]["data"]
+        self.data_saver: list[str] = data["attributes"]["dataSaver"]
 
         # WTFMD: `uploader` does not exist here???
         # self.uploader: str = data["attributes"]["uploader"]
 
-        self.external_url: t.Optional[str] = data["attributes"]["externalUrl"]
+        self.external_url: str | None = data["attributes"]["externalUrl"]
         self.version: int = data["attributes"]["version"]
         self.created_at: int = data["attributes"]["createdAt"]
         self.updated_at: int = data["attributes"]["updatedAt"]
         self.publish_at: int = data["attributes"]["publishAt"]
 
-        self.relationships: t.List[Relationship] = []
+        self.relationships: list[Relationship] = []
         for relationship in data["relationships"]:
             ship = Relationship(relationship)
             self.relationships.append(ship)
 
-        self.base_url: t.Optional[str] = None
+        self.base_url: str | None = None
 
     async def base(self) -> None:
         """Populate the base URL attribute for this chapter."""
@@ -68,7 +67,7 @@ class Manga:
         self.identifier: str = data["id"]
         self.title: str = data["attributes"]["title"]["en"]
 
-        self.alt_titles: t.List[str] = []
+        self.alt_titles: list[str] = []
         for titles in data["attributes"]["altTitles"]:
             titles = list(titles.values())
             self.alt_titles.extend(titles)
@@ -78,16 +77,16 @@ class Manga:
         # WTFMD: `isLocked` was removed from the API, but it's still in the docs.
         # self.is_locked: bool = data["attributes"]["isLocked"]
 
-        self.links: t.Dict[str, str] = data["attributes"]["links"]
+        self.links: dict[str, str] = data["attributes"]["links"]
         self.original_language: str = data["attributes"]["originalLanguage"]
-        self.last_volume: t.Optional[str] = data["attributes"]["lastVolume"]
-        self.last_chapter: t.Optional[str] = data["attributes"]["lastChapter"]
-        self.demographic: t.Optional[str] = data["attributes"]["publicationDemographic"]
-        self.status: t.Optional[str] = data["attributes"]["status"]
-        self.year: t.Optional[int] = data["attributes"]["year"]
+        self.last_volume: str | None = data["attributes"]["lastVolume"]
+        self.last_chapter: str | None = data["attributes"]["lastChapter"]
+        self.demographic: str | None = data["attributes"]["publicationDemographic"]
+        self.status: str | None = data["attributes"]["status"]
+        self.year: int | None = data["attributes"]["year"]
         self.content_rating: str = data["attributes"]["contentRating"]
 
-        self.tags: t.List[Tag] = []
+        self.tags: list[Tag] = []
         for tag in data["attributes"]["tags"]:
             taggified = Tag(tag)
             self.tags.append(taggified)
@@ -96,15 +95,15 @@ class Manga:
         self.created_at: str = data["attributes"]["createdAt"]
         self.updated_at: str = data["attributes"]["updatedAt"]
 
-        self.relationships: t.List[Relationship] = []
+        self.relationships: list[Relationship] = []
         for relationship in data["relationships"]:
             ship = Relationship(relationship)
             self.relationships.append(ship)
 
-        self.volumes: t.Optional[dict] = None
-        self.chapters: t.Optional[t.List[Chapter]] = None
+        self.volumes: dict | None = None
+        self.chapters: list[Chapter] | None = None
 
-    def search_relationships(self, identifier: str) -> t.List[Relationship]:
+    def search_relationships(self, identifier: str) -> list[Relationship]:
         """Search the list of relationships for `identifier`."""
         return [r for r in self.relationships if r.type == identifier]
 
@@ -126,7 +125,7 @@ class Manga:
 
         return sum(volume["count"] for volume in self.volumes.values())
 
-    async def cover(self) -> t.Optional[str]:
+    async def cover(self) -> str | None:
         """Return the cover for this manga."""
         if (covers := self.search_relationships("cover_art")):
             # Just pick the first cover for now.
@@ -136,7 +135,7 @@ class Manga:
 
         return None
 
-    async def author(self) -> t.Optional[str]:
+    async def author(self) -> str | None:
         """Return the author for this manga."""
         if (authors := self.search_relationships("author")):
             # Just pick the first author for now.
@@ -204,7 +203,7 @@ class Backend:
         return Manga(data)
 
     @classmethod
-    async def search(cls, title: str, maximum: int) -> t.List[Manga]:
+    async def search(cls, title: str, maximum: int) -> list[Manga]:
         """Return a list of `Manga` objects up to `maximum` in length."""
         if not 1 <= maximum <= 100:
             raise ValueError("Maximum must be between 1 and 100.")
