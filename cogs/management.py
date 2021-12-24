@@ -8,7 +8,7 @@ import discord
 import random
 
 class Management(commands.Cog):
-    """Handles configuration of guild-specific settings."""
+    """Here lie commands for managing guild-specific settings."""
     def __init__(self, bot: model.Bakerbot) -> None:
         self.bot = bot
 
@@ -22,7 +22,7 @@ class Management(commands.Cog):
 
     @guild.command()
     async def ignore(self, ctx: commands.Command, channels: commands.Greedy[discord.TextChannel]) -> None:
-        """Makes Bakerbot ignore/unignore messages from certain channels."""
+        """Make Bakerbot ignore/respond to messages from certain channels."""
         config = await database.GuildConfiguration.ensure(self.bot.db, ctx.guild.id)
 
         # Get the set of channels that are either already ignored or in the set of
@@ -48,7 +48,7 @@ class Management(commands.Cog):
 
     @guild.command()
     async def nodelete(self, ctx: commands.Context, toggle: t.Optional[bool]) -> None:
-        """Controls the message persistence system."""
+        """Query the status of/enable/disable the message persistence system."""
         config = await database.GuildConfiguration.ensure(self.bot.db, ctx.guild.id)
 
         if toggle is None:
@@ -62,7 +62,7 @@ class Management(commands.Cog):
 
     @guild.command()
     async def whoasked(self, ctx: commands.Context, toggle: t.Optional[bool]) -> None:
-        """Controls the message autoreply system."""
+        """Query the status of/enable/disable the message autoreply system."""
         config = await database.GuildConfiguration.ensure(self.bot.db, ctx.guild.id)
 
         if toggle is None:
@@ -75,14 +75,14 @@ class Management(commands.Cog):
         await ctx.reply(f"The message autoreply system has been {word_to_use}.")
 
     async def who_asked(self, message: discord.Message) -> None:
-        """Handles the "ok but who asked?" reply feature."""
+        """Handle the "ok but who asked?" reply feature."""
         if message.author.id != self.bot.user.id and message.guild is not None:
             if (config := await database.GuildConfiguration.get(self.bot.db, message.guild.id)) is not None:
                 if config.who_asked_enabled and random.randint(0, 1000) == 0:
                     await message.reply("ok but who asked?")
 
     async def message_resender(self, message: discord.Message) -> None:
-        """Handles the message resending feature."""
+        """Handle the message resending feature."""
         if message.author.id != self.bot.user.id and message.guild is not None:
             if (config := await database.GuildConfiguration.get(self.bot.db, message.guild.id)) is not None:
                 if config.message_resender_enabled:
@@ -91,12 +91,12 @@ class Management(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
-        """Calls relevant subroutines when a message is received."""
+        """Call relevant subroutines when a message is received."""
         await self.who_asked(message)
 
     @commands.Cog.listener()
     async def on_message_delete(self, message: discord.Message) -> None:
-        """Calls relevant subroutines when a message is deleted."""
+        """Call relevant subroutines when a message is deleted."""
         await self.message_resender(message)
 
 def setup(bot: model.Bakerbot) -> None:

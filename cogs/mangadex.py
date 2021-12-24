@@ -13,7 +13,7 @@ class Mangadex(commands.Cog):
         self.bot = bot
 
     def optional_titlecase(self, string: t.Optional[str], default: str) -> str:
-        """Optionally applies a titlecase transformation on `string`, else returns the default."""
+        """Optionally apply a titlecase transformation on `string`, else return the default."""
         if string is not None:
             return titlecase.titlecase(string)
 
@@ -29,7 +29,7 @@ class Mangadex(commands.Cog):
 
     @manga.command()
     async def info(self, ctx: commands.Context, *, title: str) -> None:
-        """Returns information about a specific manga."""
+        """Return information about a specific manga."""
         async with ctx.typing():
             manga = await mangadex.Backend.manga(title)
             author = await manga.author()
@@ -65,7 +65,7 @@ class Mangadex(commands.Cog):
 
     @manga.command()
     async def read(self, ctx: commands.Context, *, title: str) -> None:
-        """Initialises an instance of Bakerbot's manga reader."""
+        """Initialise an instance of Bakerbot's manga reader."""
         async with ctx.typing():
             manga = await mangadex.Backend.manga(title)
             await manga.aggregate(language="en")
@@ -94,7 +94,7 @@ class Mangadex(commands.Cog):
             await reader.run(message)
 
 class MangaReaderView(utilities.View):
-    """A subclass of `utilities.View` built for reading manga."""
+    """A manga reader view that can be used to navigate through a manga's chapters."""
     def __init__(self, manga: mangadex.Manga, index: int, *args: tuple, **kwargs: dict) -> None:
         super().__init__(*args, **kwargs)
         self.manga = manga
@@ -102,7 +102,7 @@ class MangaReaderView(utilities.View):
         self.chapter_index = 0
 
     async def get_current_page(self) -> str:
-        """Returns the current image pointed to by the chapter and index cursors."""
+        """Return the current image pointed to by the chapter and index cursors."""
         chapter = self.manga.chapters[self.current_chapter]
         page = chapter.data_saver[self.chapter_index]
 
@@ -113,13 +113,13 @@ class MangaReaderView(utilities.View):
         return f"{chapter.base_url}/data-saver/{chapter.hash}/{page}"
 
     async def run(self, message: discord.Message) -> None:
-        """Starts the manga reader using `message` as the output."""
+        """Start the manga reader using `message` as the output."""
         link = await self.get_current_page()
         await message.edit(content=link, view=self)
 
     @discord.ui.button(label="First")
     async def first(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
-        """Handles interactions to return to the first page."""
+        """Handle interactions to return to the first page."""
         if self.chapter_index < 1:
             error = "You're already at the first page!"
             return await interaction.response.send_message(content=error, ephemeral=True)
@@ -130,7 +130,7 @@ class MangaReaderView(utilities.View):
 
     @discord.ui.button(label="Previous")
     async def previous(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
-        """Handles requests to move back one page."""
+        """Handle requests to move back one page."""
         if self.chapter_index < 1:
             error = "You're already at the first page!"
             return await interaction.response.send_message(content=error, ephemeral=True)
@@ -141,7 +141,7 @@ class MangaReaderView(utilities.View):
 
     @discord.ui.button(label="Next")
     async def next(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
-        """Handles requests to move forward one page."""
+        """Handle requests to move forward one page."""
         chapter = self.manga.chapters[self.current_chapter]
         if self.chapter_index >= len(chapter.data) - 1:
             error = "You're already at the last page!"
@@ -153,7 +153,7 @@ class MangaReaderView(utilities.View):
 
     @discord.ui.button(label="Last")
     async def last(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
-        """Handles requests to move forward to the last page."""
+        """Handle requests to move forward to the last page."""
         chapter = self.manga.chapters[self.current_chapter]
         if self.chapter_index >= len(chapter.data) - 1:
             error = "You're already at the last page!"
@@ -165,7 +165,7 @@ class MangaReaderView(utilities.View):
 
     @discord.ui.button(label="Previous Chapter", row=2)
     async def last_chapter(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
-        """Handles requests to move back a whole chapter."""
+        """Handle requests to move back a whole chapter."""
         if self.current_chapter < 1:
             error = "You're already at the first chapter!"
             return await interaction.response.send_message(content=error, ephemeral=True)
@@ -177,7 +177,7 @@ class MangaReaderView(utilities.View):
 
     @discord.ui.button(label="Next Chapter", row=2)
     async def next_chapter(self, button: discord.ui.Button, interaction: discord.Interaction) -> None:
-        """Handles requests to move to the next chapter."""
+        """Handle requests to move to the next chapter."""
         if self.current_chapter >= len(self.manga.chapters) - 1:
             error = "You're already at the last chapter!"
             return await interaction.response.send_message(content=error, ephemeral=True)

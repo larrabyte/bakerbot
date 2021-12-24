@@ -32,7 +32,7 @@ class StarboardMessage:
 
     @classmethod
     async def new(cls, message: discord.Message, reactions: int) -> "StarboardMessage":
-        """Creates a new instance of `StarboardMessage` for a message with a specified reaction count."""
+        """Create a new instance of `StarboardMessage` for a message with a specified reaction count."""
         attachment_urls = [attachment.url for attachment in message.attachments]
         sticker_urls = [sticker.url for sticker in message.stickers]
 
@@ -49,7 +49,7 @@ class StarboardMessage:
         )
 
     async def write(self, db: motor_asyncio.AsyncIOMotorDatabase) -> None:
-        """Writes this StarboardMessage instance to the database."""
+        """Write this StarboardMessage instance to the database."""
         starboard = db["starboarded_messages"]
         query = {"message_id": self.message_id}
         document = dataclasses.asdict(self)
@@ -57,7 +57,7 @@ class StarboardMessage:
 
 @dataclasses.dataclass
 class GuildConfiguration:
-    """Available settings for a guild."""
+    """The database guild configuration template."""
     guild_id: int
     starboard_threshold: int
     starboard_channel_id: t.Optional[int]
@@ -69,7 +69,7 @@ class GuildConfiguration:
 
     @staticmethod
     async def ensure(db: motor_asyncio.AsyncIOMotorDatabase, identifier: int) -> "GuildConfiguration":
-        """"Returns the starboard configuration for a guild (inserting a new one if necessary)."""
+        """"Return the starboard configuration for a guild (inserting a new one if necessary)."""
         if db is None:
             raise RuntimeError("Database not connected!")
 
@@ -84,7 +84,7 @@ class GuildConfiguration:
 
     @classmethod
     def new(cls, identifier: int) -> "GuildConfiguration":
-        """Creates a new instance of `GuildConfiguration` for a guild with ID `identifier`."""
+        """Create a new instance of `GuildConfiguration` for a guild with ID `identifier`."""
         return cls(
             guild_id=identifier,
             starboard_threshold=3,
@@ -121,13 +121,13 @@ class GuildConfiguration:
         return cls(**document)
 
     async def write(self, db: motor_asyncio.AsyncIOMotorDatabase) -> None:
-        """Writes the guild's configuration to the database."""
+        """Write the guild's configuration to the database."""
         collection = db["guild_settings"]
         query = {"guild_id": self.guild_id}
         document = dataclasses.asdict(self)
         await collection.replace_one(query, document, upsert=True)
 
     def starboard_ready(self) -> bool:
-        """Checks whether this guild has its starboard configuration set."""
+        """Check whether this guild has its starboard configuration set."""
         members = (self.starboard_channel_id, self.starboard_emoji_id)
         return self.starboard_enabled == True and None not in members

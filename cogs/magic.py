@@ -1,4 +1,4 @@
-from backends import discord as expcord
+from backends import expcord
 import exceptions
 import utilities
 import model
@@ -18,7 +18,7 @@ class Magic(commands.Cog):
         self.bot = bot
 
     async def cog_check(self, ctx: commands.Context) -> None:
-        """Ensures that commands are being run either by the owner or Team Magic."""
+        """Ensure that commands are being run either by me or Team Magic."""
         owner = await self.bot.is_owner(ctx.author)
         return owner or (ctx.guild is not None and ctx.guild.id == self.guild_id)
 
@@ -60,7 +60,7 @@ class Magic(commands.Cog):
 
     @magic.command()
     async def gandalf(self, ctx: commands.Context, member: discord.Member) -> None:
-        """Prevents a member from joining a voice channel."""
+        """Prevent a member from joining a voice channel."""
         mentions = discord.AllowedMentions.none()
 
         if member.id in self.vc_targets:
@@ -75,7 +75,7 @@ class Magic(commands.Cog):
 
     @magic.command()
     async def shitting(self, ctx: commands.Context) -> None:
-        """Live shitting event."""
+        """Create a live shitting event."""
         if not ("discord-user-token" in self.bot.secrets and "discord-user-id" in self.bot.secrets):
             raise exceptions.SecretNotFound("discord-user secrets not specified in secrets.json.")
 
@@ -96,7 +96,8 @@ class Magic(commands.Cog):
         title = "live shitting event"
         description = "improved shitting setup for higher-quality shitting"
         remote = expcord.User(ctx, token, identifier)
-        await remote.create_event(ctx.author.voice.channel, title, description)
+        timestamp = discord.utils.utcnow()
+        await remote.create_event(ctx.author.voice.channel, title, description, timestamp)
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState) -> None:
@@ -113,18 +114,18 @@ class PersonalNotificationSystem:
         bot.add_listener(self.on_message)
 
     def identifier_check(self, message: discord.Message) -> bool:
-        """Checks whether tracked users are mentioned or replied to."""
+        """Check whether tracked users are mentioned or replied to."""
         return self.identifiers.intersection(set(member.id for member in message.mentions))
 
     async def post(self, message: discord.Message) -> None:
-        """Posts a message to each person's inbox."""
+        """Post a message to each person's inbox."""
         for identifier in self.identifiers:
             if (user := self.bot.get_user(identifier)) is not None:
                 embed = utilities.Embeds.package(message)
                 await user.send(embed=embed)
 
     async def on_message(self, message: discord.Message) -> None:
-        """Tracks each message and posts mentioned messages to each person's inbox."""
+        """Track each message and post mentioned messages to each person's inbox."""
         if message.guild is not None and message.guild.id == self.guild:
             if self.identifier_check(message):
                 await self.post(message)

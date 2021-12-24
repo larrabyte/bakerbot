@@ -6,14 +6,14 @@ import ujson
 import http
 
 class Relationship:
-    """A class that represents Mangadex's `Relationship` object."""
+    """Represents Mangadex's `Relationship` API object."""
     def __init__(self, data: dict) -> None:
         self.identifier: str = data["id"]
         self.type: str = data["type"]
         self.attributes: t.Optional[dict] = data.get("attributes", None)
 
 class Tag:
-    """A class that represents Mangadex's `Tag` object."""
+    """Represents Mangadex's `Tag` API object."""
     def __init__(self, data: dict) -> None:
         self.identifier: str = data["id"]
         self.name: str = data["attributes"]["name"]["en"]
@@ -30,7 +30,7 @@ class Tag:
             self.relationships.append(ship)
 
 class Chapter:
-    """A class that represents Mangadex's `Chapter` object."""
+    """Represents Mangadex's `Chapter` API object."""
     def __init__(self, data: dict) -> None:
         self.identifier: str = data["id"]
         self.title: str = data["attributes"]["title"]
@@ -58,12 +58,12 @@ class Chapter:
         self.base_url: t.Optional[str] = None
 
     async def base(self) -> None:
-        """Populates the base URL attribute for this chapter."""
+        """Populate the base URL attribute for this chapter."""
         data = await Backend.get(f"at-home/server/{self.identifier}")
         self.base_url = data["baseUrl"]
 
 class Manga:
-    """A class that represents Mangadex's `Manga` object."""
+    """Represents Mangadex's `Manga` API object."""
     def __init__(self, data: dict) -> None:
         self.identifier: str = data["id"]
         self.title: str = data["attributes"]["title"]["en"]
@@ -105,11 +105,11 @@ class Manga:
         self.chapters: t.Optional[t.List[Chapter]] = None
 
     def search_relationships(self, identifier: str) -> t.List[Relationship]:
-        """Searches the list of relationships for `identifier`."""
+        """Search the list of relationships for `identifier`."""
         return [r for r in self.relationships if r.type == identifier]
 
     def volume_count(self) -> int:
-        """Returns the number of volumes in this manga."""
+        """Return the number of volumes in this manga."""
         if self.volumes is None:
             raise NoAggregate
 
@@ -120,14 +120,14 @@ class Manga:
         return count
 
     def chapter_count(self) -> int:
-        """Returns the number of chapters in this manga."""
+        """Return the number of chapters in this manga."""
         if self.volumes is None:
             raise NoAggregate
 
         return sum(volume["count"] for volume in self.volumes.values())
 
     async def cover(self) -> t.Optional[str]:
-        """Returns the cover for this manga."""
+        """Return the cover for this manga."""
         if (covers := self.search_relationships("cover_art")):
             # Just pick the first cover for now.
             data = await Backend.get(f"cover/{covers[0].identifier}")
@@ -137,7 +137,7 @@ class Manga:
         return None
 
     async def author(self) -> t.Optional[str]:
-        """Returns the author for this manga."""
+        """Return the author for this manga."""
         if (authors := self.search_relationships("author")):
             # Just pick the first author for now.
             data = await Backend.get(f"author/{authors[0].identifier}")
@@ -146,13 +146,13 @@ class Manga:
         return None
 
     async def aggregate(self, language: str) -> None:
-        """Populates this manga's volume information."""
+        """Populate this manga's volume information."""
         parameters = {"translatedLanguage[]": language}
         data = await Backend.get(f"manga/{self.identifier}/aggregate", params=parameters)
         self.volumes = data["volumes"]
 
     async def feed(self, language: str) -> None:
-        """Populates this manga's chapter information."""
+        """Populate this manga's chapter information."""
         count = self.chapter_count()
         self.chapters = []
         offset = 0
@@ -169,7 +169,6 @@ class Manga:
 class Backend:
     @classmethod
     def setup(cls, bot: model.Bakerbot) -> None:
-        """Initialises an instance of `Backend` using objects from `bot`."""
         cls.base = "https://api.mangadex.org"
         cls.data = "https://uploads.mangadex.org"
         cls.client = "https://mangadex.org"
@@ -177,7 +176,7 @@ class Backend:
 
     @classmethod
     async def get(cls, endpoint: str, **kwargs: dict) -> dict:
-        """Sends a HTTP GET request to the base Mangadex API."""
+        """Send a HTTP GET request to the base Mangadex API."""
         async with cls.session.get(f"{cls.base}/{endpoint}", **kwargs) as response:
             data = await response.read()
 
@@ -191,7 +190,7 @@ class Backend:
 
     @classmethod
     async def manga(cls, title: str) -> Manga:
-        """Returns a `Manga` object by searching the API."""
+        """Return a `Manga` object by searching the API."""
         parameters = {"limit": 1, "title": title}
         data = await cls.get("manga", params=parameters)
 
@@ -206,7 +205,7 @@ class Backend:
 
     @classmethod
     async def search(cls, title: str, maximum: int) -> t.List[Manga]:
-        """Returns a `Manga` object or list of `Manga` objects up to `maximum` in length."""
+        """Return a list of `Manga` objects up to `maximum` in length."""
         if not 1 <= maximum <= 100:
             raise ValueError("Maximum must be between 1 and 100.")
 

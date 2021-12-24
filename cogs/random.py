@@ -19,7 +19,7 @@ class Random(commands.Cog):
 
     @discordo.command()
     async def typing(self, ctx: commands.Context) -> None:
-        """Starts typing in every available text channel."""
+        """Start typing in every available text channel."""
         coroutines = [channel.trigger_typing() for channel in ctx.guild.text_channels]
         await asyncio.gather(*coroutines)
 

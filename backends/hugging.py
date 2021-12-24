@@ -18,7 +18,7 @@ class Backend(text.Backend):
 
     @classmethod
     async def post(cls, endpoint: str, **kwargs: dict) -> dict:
-        """Sends a HTTP POST request to the Hugging Face Inference API."""
+        """Send a HTTP POST request to the Hugging Face Inference API."""
         async with cls.session.post(f"{cls.base}/{endpoint}", **kwargs) as response:
             data = await response.read()
 
@@ -32,7 +32,7 @@ class Backend(text.Backend):
 
     @classmethod
     async def generate(cls, model: text.Model, query: str) -> str:
-        """Generates text using the Hugging Face API."""
+        """Generate text using the Hugging Face API."""
         if cls.token is None:
             raise exceptions.SecretNotFound("hugging-token not found in secrets.json.")
 

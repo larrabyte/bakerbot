@@ -17,12 +17,12 @@ class Bakerbot(commands.Bot):
         self.db = self.connect_database()
 
     def load_secrets(self) -> dict:
-        """Loads the contents of `secrets.json` from disk."""
+        """Load the contents of `secrets.json` from disk."""
         with open("secrets.json", "r") as file:
             return ujson.load(file)
 
     def connect_database(self) -> t.Optional[motor_asyncio.AsyncIOMotorDatabase]:
-        """Connects to the specified MongoDB database in `secrets.json`."""
+        """Connect to the specified MongoDB database in `secrets.json`."""
         if "mongodb-address" not in self.secrets:
             return None
 
@@ -35,7 +35,7 @@ class Bakerbot(commands.Bot):
         return client["anthony_baker"]
 
     def reload(self) -> None:
-        """Reloads the bot's internal state without logging out of Discord."""
+        """Reload the bot's internal state without logging out of Discord."""
         self.secrets = self.load_secrets()
 
         for module in (exceptions, utilities, database):
@@ -44,7 +44,7 @@ class Bakerbot(commands.Bot):
             self.reload_extension(extension)
 
     def run(self) -> None:
-        """Starts the bot. This should be the last function that is called."""
+        """Start the bot. This should be the last function that is called."""
         if "discord-token" not in self.secrets:
             raise exceptions.SecretNotFound("discord-token not specified in secrets.json.")
 

@@ -8,7 +8,6 @@ import http
 class Backend(text.Backend):
     @classmethod
     def setup(cls, bot: model.Bakerbot) -> None:
-        """Initialises an instance of `Backend` using objects from `bot`."""
         cls.base = "https://api.openai.com/v1"
         cls.session = bot.session
         cls.token = bot.secrets.get("openai-token", None)
@@ -19,7 +18,7 @@ class Backend(text.Backend):
 
     @classmethod
     async def post(cls, endpoint: str, **kwargs) -> dict:
-        """Sends a HTTP POST request to OpenAI."""
+        """Send a HTTP POST request to OpenAI."""
         async with cls.session.post(f"{cls.base}/{endpoint}", **kwargs) as response:
             data = await response.json(encoding="utf-8", loads=ujson.loads)
 
@@ -30,7 +29,7 @@ class Backend(text.Backend):
 
     @classmethod
     async def generate(cls, model: text.Model, query: str) -> str:
-        """Generates text using OpenAI."""
+        """Generate text using OpenAI."""
         if cls.token is None:
             raise exceptions.SecretNotFound("openai-token not found in secrets.json.")
 

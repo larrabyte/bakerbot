@@ -3,23 +3,20 @@ import model
 
 from discord.ext import commands
 import datetime as dt
-import typing as t
 import discord
 import base64
 import ujson
 import http
 
 class User:
-    """Represents a user in Discord."""
+    """Represents a Discord user."""
     def __init__(self, ctx: commands.Context, token: str, identifier: int) -> None:
         self.identifier = identifier
         self.token = token
         self.ctx = ctx
 
-    async def create_event(self, channel: discord.VoiceChannel, name: str, description: str, *, time: t.Optional[dt.datetime]=None) -> None:
-        """Creates a Guild Event for `channel` with a name, description and optional time."""
-        time = time or dt.datetime.utcnow() + dt.timedelta(seconds=5)
-
+    async def create_event(self, channel: discord.VoiceChannel, name: str, description: str, time: dt.datetime) -> None:
+        """Create a Guild Event for `channel` with a name, description and timestamp."""
         payload = {
             "channel_id": channel.id,
             "description": description,
@@ -47,14 +44,20 @@ class User:
             "client_event_source": None
         }
 
-        properties = base64.b64encode(ujson.dumps(properties).encode("utf-8")).decode("utf-8")
-        headers = {"Authorization": self.token, "X-Super-Properties": properties}
+        dumped_properties = ujson.dumps(properties).encode("utf-8")
+        serialised_properties = base64.b64encode(dumped_properties).decode("utf-8")
+
+        headers = {
+            "Authorization": self.token,
+            "X-Super-Properties": serialised_properties
+        }
+
         await Backend.post(f"guilds/{channel.guild.id}/events", json=payload, headers=headers)
 
 class Webhooks:
     @staticmethod
     async def create(channel: discord.TextChannel, name: str) -> None:
-        """Creates a new webhook in `channel` with the name of `name`."""
+        """Create a new webhook in `channel`."""
         if Backend.token is None:
             raise exceptions.SecretNotFound("discord-token not specified in secrets.json.")
 
@@ -65,7 +68,7 @@ class Webhooks:
 
     @staticmethod
     async def move(webhook: discord.Webhook, channel: discord.TextChannel) -> None:
-        """Moves `webhook` from its current channel to `channel`."""
+        """Move `webhook` from its current channel to the specified `channel`."""
         if Backend.token is None:
             raise exceptions.SecretNotFound("discord-token not specified in secrets.json.")
 
@@ -80,11 +83,10 @@ class Backend:
         cls.base = "https://discord.com/api/v9"
         cls.session = bot.session
         cls.token = bot.secrets.get("discord-token", None)
-        cls.gateway_url = ""
 
     @classmethod
     async def get(cls, endpoint: str, **kwargs: dict) -> dict:
-        """Sends a HTTP GET request to the Discord API."""
+        """Send a HTTP GET request to the Discord REST API."""
         async with Backend.session.get(f"{Backend.base}/{endpoint}", **kwargs) as response:
             data = await response.json(encoding="utf-8", loads=ujson.loads)
 
@@ -96,7 +98,7 @@ class Backend:
 
     @classmethod
     async def post(cls, endpoint: str, **kwargs: dict) -> dict:
-        """Sends a HTTP POST request to the Discord API."""
+        """Send a HTTP POST request to the Discord REST API."""
         async with Backend.session.post(f"{Backend.base}/{endpoint}", **kwargs) as response:
             data = await response.json(encoding="utf-8", loads=ujson.loads)
 
@@ -105,15 +107,6 @@ class Backend:
                 raise exceptions.HTTPUnexpected(response.status, error)
 
             return data
-
-    @classmethod
-    async def gateway(cls) -> str:
-        """Returns a URL for connecting to a gateway."""
-        if not cls.gateway_url:
-            result = await cls.get("gateway")
-            cls.gateway_url = result["url"]
-
-        return cls.gateway_url
 
 def setup(bot: model.Bakerbot) -> None:
     Backend.setup(bot)

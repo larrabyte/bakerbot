@@ -14,7 +14,7 @@ class Backend:
 
     @classmethod
     async def post(cls, endpoint: str, **kwargs: dict) -> dict:
-        """Sends a HTTP GET request to the FifteenAI API."""
+        """Send a HTTP GET request to the FifteenAI API."""
         async with cls.session.post(f"{cls.base}/{endpoint}", **kwargs) as response:
             data = await response.json(loads=ujson.loads, content_type=None)
 
@@ -31,7 +31,7 @@ class Backend:
 
     @classmethod
     async def generate(cls, voice: str, text: str) -> str:
-        """Generates a text-to-speech WAV of `text` using the FifteenAI API."""
+        """Generate a text-to-speech WAV of `text` using the FifteenAI API."""
         payload = {"character": voice, "emotion": "Contextual", "text": text}
         response = await cls.post("app/getAudioFile5", json=payload)
         filename = response["wavNames"][0]

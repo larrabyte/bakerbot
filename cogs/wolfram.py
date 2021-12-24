@@ -14,7 +14,7 @@ class Wolfram(commands.Cog):
 
     @commands.command(aliases=["wa", "わ"])
     async def wolfram(self, ctx: commands.Context, *, query: str) -> None:
-        """Queries WolframAlpha with `query`."""
+        """Query WolframAlpha with `query`."""
         async with ctx.typing():
             query = wolfram.Query(input=query, format="image", mag="3", width="1000", reinterpret="true")
             result = await wolfram.Backend.request(query)
@@ -28,7 +28,7 @@ class Wolfram(commands.Cog):
         await ctx.reply("Press any button to view its content.", view=view)
 
 class WolframView(utilities.View):
-    """A subclass of `utilities.View` for viewing results from WolframAlpha."""
+    """Displays results retrieved from WolframAlpha."""
     def __init__(self, query: wolfram.Query, result: wolfram.Result, *args: tuple, **kwargs: dict) -> None:
         super().__init__(*args, **kwargs)
         self.query = query
@@ -42,7 +42,7 @@ class WolframView(utilities.View):
         return [blueprint.copy().set_image(url=subpod.image.source) for subpod in pod.subpods]
 
     def show_pod_buttons(self) -> None:
-        """Adds buttons to the view that correspond to each pod in `self.result`."""
+        """Add buttons to the view that correspond to each pod in `self.result`."""
         for index, pod in enumerate(self.result.pods):
             label = utilities.Limits.limit(pod.title, utilities.Limits.SELECT_LABEL)
             label = titlecase.titlecase(label)
@@ -53,7 +53,7 @@ class WolframView(utilities.View):
             self.add_item(button)
 
     def show_podstate_buttons(self, pod: wolfram.Pod) -> None:
-        """Adds buttons to the view that correspond to each podstate in a pod."""
+        """Add buttons to the view that correspond to each podstate in a pod."""
         for state in pod.states:
             label = utilities.Limits.limit(state["name"], utilities.Limits.SELECT_LABEL)
             label = titlecase.titlecase(label)
@@ -64,14 +64,14 @@ class WolframView(utilities.View):
             self.add_item(button)
 
     def show_control_buttons(self) -> None:
-        """Adds buttons to the view for control purposes."""
+        """Add buttons to the view for control purposes."""
         identifier = utilities.Identifiers.generate("back")
         back = discord.ui.Button(label="Back", custom_id=identifier)
         back.callback = self.control_callback
         self.add_item(back)
 
     async def pod_callback(self, interaction: discord.Interaction) -> None:
-        """Handles requests to view a pod."""
+        """Handle requests to view a pod."""
         cursor = utilities.Identifiers.extract(interaction, int)
         self.current_pod = self.result.pods[cursor]
 
@@ -85,7 +85,7 @@ class WolframView(utilities.View):
         await interaction.edit_original_message(content=None, embeds=embeds, view=self)
 
     async def podstate_callback(self, interaction: discord.Interaction) -> None:
-        """Handles requests to update the current pod's podstate."""
+        """Handle requests to update the current pod's podstate."""
         # Defer the interaction as we need to make another request.
         embed = utilities.Embeds.standard()
         embed.description = "Please wait while another WolframAlpha API request is made."
@@ -111,7 +111,7 @@ class WolframView(utilities.View):
         await interaction.edit_original_message(content=None, embeds=embeds, view=self)
 
     async def control_callback(self, interaction: discord.Interaction) -> None:
-        """Handles control button requests."""
+        """Handle control button requests."""
         identifier = utilities.Identifiers.extract(interaction, str)
         data = "Press any button to view its content."
 

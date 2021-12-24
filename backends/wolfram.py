@@ -10,13 +10,13 @@ import http
 import yarl
 
 class Source:
-    """A representation of WolframAlpha's `Source` object."""
+    """Represents WolframAlpha's `Source` API object."""
     def __init__(self, data: dict) -> None:
         self.url: str = data["url"]
         self.text: str = data["text"]
 
 class Image:
-    """A representation of WolframAlpha's `Image` object."""
+    """Represents WolframAlpha's `Image` API object."""
     def __init__(self, data: dict) -> None:
         self.source: str = data["src"]
         self.alternate: str = data["alt"]
@@ -28,7 +28,7 @@ class Image:
         self.colour_invertable: bool = data["colorinvertable"]
 
 class Subpod:
-    """A representation of WolframAlpha's `Subpod` object."""
+    """Represents WolframAlpha's `Subpod` API object."""
     def __init__(self, data: dict) -> None:
         self.title: str = data["title"]
 
@@ -41,7 +41,7 @@ class Subpod:
         self.plaintext: t.Optional[str] = data.get("plaintext", None)
 
 class Pod:
-    """A representation of WolframAlpha's `Pod` object."""
+    """Represents WolframAlpha's `Pod` API object."""
     def __init__(self, data: dict) -> None:
         self.title: str = data["title"]
         self.scanner: str = data["scanner"]
@@ -63,7 +63,7 @@ class Pod:
                 self.states.append(state)
 
 class Result:
-    """A representation of WolframAlpha's `QueryResult` object."""
+    """Represents WolframAlpha's `QueryResult` API object."""
     def __init__(self, data: dict) -> None:
         data = data["queryresult"]
         self.success: bool = data["success"]
@@ -93,7 +93,7 @@ class Result:
             self.error_message = data["error"]["msg"]
 
 class Query:
-    """A class representing the results of a WolframAlpha API request."""
+    """Represents the results of a WolframAlpha API request."""
     def __init__(self, **kwargs: dict) -> None:
         if Backend.id is None:
             raise exceptions.SecretNotFound("wolfram-id not specified in secrets.json.")
@@ -101,7 +101,7 @@ class Query:
         self.parameters = multidict.MultiDict(appid=Backend.id, output="json", **kwargs)
 
     def digest(self) -> str:
-        """Returns the MD5 digest for this query."""
+        """Return the MD5 digest for this query."""
         if Backend.salt is None:
             raise exceptions.SecretNotFound("wolfram-salt not specified in secrets.json.")
 
@@ -124,7 +124,7 @@ class Backend:
 
     @classmethod
     async def get(cls, endpoint: str, **kwargs: dict) -> dict:
-        """Sends a HTTP GET request to the WolframAlpha API."""
+        """Send a HTTP GET request to the WolframAlpha API."""
         # aiohttp doesn't know how to canonicalise correctly...
         parameters = kwargs.pop("params")
         query = urllib.parse.urlencode(parameters, quote_via=urllib.parse.quote_plus)
@@ -144,7 +144,7 @@ class Backend:
 
     @classmethod
     async def request(cls, query: Query) -> Result:
-        """Returns a `Result` object from WolframAlpha's Full Results API."""
+        """Return a `Result` object from WolframAlpha's Full Results API."""
         parameters = multidict.MultiDict(query.parameters, sig=query.digest())
         data = await cls.get(f"v2/query.jsp", params=parameters)
         return Result(data)

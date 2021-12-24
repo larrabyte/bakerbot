@@ -12,13 +12,13 @@ class Voice(commands.Cog):
         self.bot = bot
 
     def cog_unload(self) -> None:
-        """Ensures clients are disconnected when this cog is unloaded."""
+        """Ensure clients are disconnected when this cog is unloaded."""
         for client in self.bot.voice_clients:
             coro = client.disconnect()
             self.bot.loop.create_task(coro)
 
     def paginate_tracks(self) -> utilities.Paginator:
-        """Returns an instance of `utilities.Paginator` containing all music tracks."""
+        """Return an instance of `utilities.Paginator` containing all music tracks."""
         paginator = utilities.Paginator()
         paginator.placeholder = "Audio tracks: Options"
 
@@ -32,11 +32,11 @@ class Voice(commands.Cog):
         return paginator
 
     async def cog_check(self, ctx: commands.Context) -> None:
-        """Ensures that commands are being executed in a guild context."""
+        """Ensure that commands are being executed in a guild context."""
         return ctx.guild is not None
 
     async def connect(self, channel: discord.VoiceChannel) -> None:
-        """Either connects or moves the bot to a specific voice channel."""
+        """Either connect or move the bot to a specific voice channel."""
         client = channel.guild.voice_client
 
         if client is None or not client.is_connected():
@@ -54,7 +54,7 @@ class Voice(commands.Cog):
 
     @vc.command()
     async def play(self, ctx: commands.Context, track: t.Optional[str]) -> None:
-        """Plays audio tracks from Bakerbot's music folder."""
+        """Play audio tracks from Bakerbot's music folder."""
         if track is None:
             paginator = self.paginate_tracks()
             await ctx.reply("Select any track to begin playing it.", view=paginator)
@@ -90,13 +90,13 @@ class Voice(commands.Cog):
 
     @vc.command(aliases=["list"])
     async def tracks(self, ctx: commands.Context) -> None:
-        """Presents a list of Bakerbot's tracks."""
+        """Present a list of Bakerbot's tracks."""
         paginator = self.paginate_tracks()
         await ctx.reply("These menus are only for viewing (selecting a track won't do anything).", view=paginator)
 
     @vc.command(aliases=["connect"])
     async def join(self, ctx: commands.Context, *, channel: t.Optional[discord.VoiceChannel]) -> None:
-        """Joins the voice channel that the invoker is in, or `channel` if specified."""
+        """Join the voice channel that the invoker is in, or `channel` if specified."""
         channel = channel or getattr(ctx.author.voice, "channel", None)
 
         if channel is None:
@@ -108,7 +108,7 @@ class Voice(commands.Cog):
 
     @vc.command(aliases=["disconnect"])
     async def leave(self, ctx: commands.Context) -> None:
-        """Disconnects the bot from any voice channels."""
+        """Disconnect the bot from any voice channels."""
         if ctx.voice_client is not None and ctx.voice_client.is_connected():
             await ctx.voice_client.disconnect()
 

@@ -9,7 +9,7 @@ import discord
 import asyncio
 
 class TTSFlags(commands.FlagConverter):
-    """An object containing the parameters required to execute a FifteenAPI request."""
+    """Parameters required to execute a FifteenAPI request."""
     voice: t.Optional[str]
     text: t.Optional[str]
 
@@ -21,14 +21,14 @@ class TTS(commands.Cog):
         self.bot = bot
 
     def queue(self, guild: discord.Guild) -> collections.deque:
-        """Returns the guild's TTS queue."""
+        """Return the guild's TTS queue."""
         if guild.id not in self.queues:
             self.queues[guild.id] = collections.deque()
 
         return self.queues[guild.id]
 
     def callback(self, client: discord.VoiceClient, queue: collections.deque) -> None:
-        """Handles callbacks after the voice client finishes playing."""
+        """Handle callbacks after the voice client finishes playing."""
         if not client.is_connected():
             queue.clear()
         elif len(queue) > 0:
@@ -36,7 +36,7 @@ class TTS(commands.Cog):
             client.play(now, after=lambda e: self.callback(client, queue))
 
     async def generator(self, voice: str, text: str) -> discord.FFmpegOpusAudio:
-        """API request routine, called multiple times over different `text` inputs."""
+        """API request routine: called multiple times over different `text` inputs."""
         url = await fifteen.Backend.generate(voice, text)
         codec, bitrate = await discord.FFmpegOpusAudio.probe(url)
 

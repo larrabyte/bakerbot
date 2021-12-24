@@ -13,7 +13,7 @@ class Starboard(commands.Cog):
         self.bot = bot
 
     def get_emoji(self, message: discord.Message, identifier: int) -> t.Optional[discord.Reaction]:
-        """Returns the reaction with an ID of `identifier` or None."""
+        """Return the reaction with an ID of `identifier` or None."""
         for reaction in message.reactions:
             if isinstance(reaction.emoji, discord.Emoji) and reaction.emoji.id == identifier:
                 return reaction
@@ -30,7 +30,7 @@ class Starboard(commands.Cog):
 
     @starboard.command()
     async def status(self, ctx: commands.Context) -> None:
-        """Displays this guild's starboard status."""
+        """Query this guild's starboard status."""
         config = await database.GuildConfiguration.ensure(self.bot.db, ctx.guild.id)
         embed = utilities.Embeds.standard()
         icon = ctx.guild.icon.url if ctx.guild.icon is not None else None
@@ -58,7 +58,7 @@ class Starboard(commands.Cog):
 
     @starboard.command()
     async def enable(self, ctx: commands.Context) -> None:
-        """Enables this guild's starboard."""
+        """Enable this guild's starboard."""
         config = await database.GuildConfiguration.ensure(self.bot.db, ctx.guild.id)
 
         if None in (config.starboard_channel_id, config.starboard_emoji_id):
@@ -78,7 +78,7 @@ class Starboard(commands.Cog):
 
     @starboard.command()
     async def threshold(self, ctx: commands.Context, threshold: t.Optional[int]) -> None:
-        """Sets or reads this guild's starboard threshold."""
+        """Set or read this guild's starboard threshold."""
         config = await database.GuildConfiguration.ensure(self.bot.db, ctx.guild.id)
 
         if threshold is None:
@@ -90,7 +90,7 @@ class Starboard(commands.Cog):
 
     @starboard.command()
     async def channel(self, ctx: commands.Context, channel: t.Optional[discord.TextChannel]) -> None:
-        """Sets or reads this guild's starboard channel."""
+        """Set or read this guild's starboard channel."""
         config = await database.GuildConfiguration.ensure(self.bot.db, ctx.guild.id)
         configured = self.bot.get_channel(config.starboard_channel_id)
 
@@ -105,7 +105,7 @@ class Starboard(commands.Cog):
 
     @starboard.command()
     async def emote(self, ctx: commands.Context, emoji: t.Optional[discord.Emoji]) -> None:
-        """Sets or reads this guild's starboard emote."""
+        """Set or read this guild's starboard emote."""
         config = await database.GuildConfiguration.ensure(self.bot.db, ctx.guild.id)
         configured = self.bot.get_emoji(config.starboard_emoji_id)
 
@@ -120,7 +120,7 @@ class Starboard(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
-        """If we encounter a message with a special reaction, send it to that guild's starboard channel."""
+        """Global starboard reaction handler."""
         config = await database.GuildConfiguration.get(self.bot.db, payload.guild_id)
         if config is not None or not config.starboard_ready() or payload.channel_id == config.starboard_channel_id:
             return

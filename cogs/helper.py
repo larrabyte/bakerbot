@@ -11,7 +11,7 @@ class Helper(commands.Cog):
         self.bot = bot
 
     def embeddify(self, cog: commands.Cog) -> discord.Embed:
-        """Transforms command group documentation into the format of a Discord embed."""
+        """Transform command group documentation into the format of a Discord embed."""
         embed = utilities.Embeds.standard(description=cog.description)
         embed.title = f"Documentation for `{cog.__class__.__module__}`:"
         embed.set_footer(text="Arguments enclosed in <> are required while [] are optional.", icon_url=utilities.Icons.INFO)
@@ -28,7 +28,7 @@ class Helper(commands.Cog):
 
     @commands.command()
     async def help(self, ctx: commands.Context, cog: t.Optional[str]) -> None:
-        """Sends Bakerbot's documentation in a neatly formatted message."""
+        """Send Bakerbot's documentation in a neatly formatted message."""
         view = DocumentationView(self.bot.cogs, self.embeddify)
 
         if cog is None:
@@ -50,7 +50,7 @@ class Helper(commands.Cog):
             await ctx.reply(embed=embed, view=view)
 
 class DocumentationView(utilities.View):
-    """A subclass of `utilities.View` for documenting commands."""
+    """Provides a method of browsing command group documentation."""
     def __init__(self, cogs: t.Mapping[str, commands.Cog], formatter: t.Callable, *args: tuple, **kwargs: dict) -> None:
         super().__init__(*args, **kwargs)
         self.formatter = formatter
@@ -59,16 +59,17 @@ class DocumentationView(utilities.View):
         self.menu = discord.ui.Select(placeholder="Select any cog to view its commands.")
         self.menu.callback = self.cog_callback
 
+        limits = utilities.Limits
         for name, cog in self.cogs.items():
-            label = utilities.Limits.limit(cog.__class__.__module__, utilities.Limits.SELECT_LABEL)
-            name = utilities.Limits.limit(name, utilities.Limits.SELECT_VALUE)
-            description = utilities.Limits.limit(cog.description, utilities.Limits.SELECT_DESCRIPTION)
+            label = limits.limit(cog.__class__.__module__, limits.SELECT_LABEL)
+            name = limits.limit(name, limits.SELECT_VALUE)
+            description = limits.limit(cog.description, limits.SELECT_DESCRIPTION)
             self.menu.add_option(label=label, value=name, description=description)
 
         self.add_item(self.menu)
 
     async def cog_callback(self, interaction: discord.Interaction) -> None:
-        """Handles cog selection requests from the Select Menu."""
+        """Handle cog selection requests from the Select Menu."""
         selection = self.menu.values[0]
         cog = self.cogs[selection]
         embed = self.formatter(cog)

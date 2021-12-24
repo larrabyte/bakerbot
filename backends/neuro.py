@@ -8,7 +8,6 @@ import http
 class Backend(text.Backend):
     @classmethod
     def setup(cls, bot: model.Bakerbot) -> None:
-        """Initialises an instance of `Backend` using objects from `bot`."""
         cls.base = "https://api.neuro-ai.co.uk"
         cls.session = bot.session
         cls.token = bot.secrets.get("neuro-token", None)
@@ -19,7 +18,7 @@ class Backend(text.Backend):
 
     @classmethod
     async def post(cls, endpoint: str, **kwargs) -> dict:
-        """Sends a HTTP POST request to the Neuro API."""
+        """Send a HTTP POST request to the Neuro API."""
         async with cls.session.post(f"{cls.base}/{endpoint}", **kwargs) as response:
             data = await response.json(encoding="utf-8", loads=ujson.loads)
 
@@ -31,7 +30,7 @@ class Backend(text.Backend):
 
     @classmethod
     async def generate(cls, model: text.Model, query: str) -> str:
-        """Generates text using the Neuro API."""
+        """Generate text using the Neuro API."""
         if cls.token is None:
             raise exceptions.SecretNotFound("neuro-token not found in secrets.json.")
 

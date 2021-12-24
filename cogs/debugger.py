@@ -2,10 +2,9 @@ import utilities
 import model
 
 from discord.ext import commands
-import typing as t
 
 class Debugger(commands.Cog):
-    """Provides a built-in debugger for Bakerbot."""
+    """Provides bot-wide administrative, configuration and debugging commands."""
     def __init__(self, bot: model.Bakerbot):
         self.bot = bot
 
@@ -20,7 +19,7 @@ class Debugger(commands.Cog):
 
     @mod.command()
     async def load(self, ctx: commands.Context, cog: str) -> None:
-        """Loads a command group."""
+        """Load a command group."""
         self.bot.load_extension(cog)
         embed = utilities.Embeds.status(True)
         embed.description = f"{cog} has been loaded."
@@ -28,15 +27,15 @@ class Debugger(commands.Cog):
 
     @mod.command()
     async def unload(self, ctx: commands.Context, cog: str) -> None:
-        """Unloads a command group."""
+        """Unload a command group."""
         self.bot.unload_extension(cog)
         embed = utilities.Embeds.status(True)
         embed.description = f"{cog} has been unloaded."
         await ctx.reply(embed=embed)
 
     @mod.command()
-    async def reload(self, ctx: commands.Context, cog: t.Optional[str]) -> None:
-        """Reloads `cog` if specified, otherwise refreshes the bot's internal state."""
+    async def reload(self, ctx: commands.Context, cog: str | None) -> None:
+        """Reload `cog` if specified, otherwise refresh the bot's internal state."""
         if cog is not None:
             self.bot.reload_extension(cog)
             summary = f"{cog} has been reloaded."
@@ -56,31 +55,6 @@ class Debugger(commands.Cog):
                    "See `$help debugger` for a full list of available subcommands.")
 
         await utilities.Commands.group(ctx, summary)
-
-    @debug.command()
-    async def message(self, ctx: commands.Command, url: str) -> None:
-        """Examine a message using its jump URL."""
-        parts = url.split("/")
-        channel_id = int(parts[5])
-        channel = self.bot.get_channel(channel_id)
-        if channel is None:
-            return await ctx.reply(f"Channel ID `{channel_id}` not found.")
-
-        message_id = int(parts[6])
-        message = await channel.fetch_message(message_id)
-        if message is None:
-            return await ctx.reply(f"Message ID `{message_id}` not found.")
-
-        await ctx.reply(repr(message))
-
-    @debug.command()
-    async def guild(self, ctx: commands.Context, identifier: int) -> None:
-        """Examine a guild using its identifier."""
-        guild = self.bot.get_guild(identifier)
-        if guild is None:
-            return await ctx.reply(f"Guild ID `{identifier}` not found.")
-
-        await ctx.reply(repr(guild))
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: commands.CommandError) -> None:
