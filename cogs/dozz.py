@@ -30,16 +30,16 @@ class Loader(commands.Cog):
     async def joke(self, ctx: commands.Context) -> None:
         """let see what the fuck happens."""
         async with ctx.typing():
-            ctx.reply("OK, cooking up a joke.")
+            await ctx.reply("OK, cooking up a joke.")
             joke = await self.get_joke()
             # if it failed, it throws exception by now.
             try:
-                ctx.send(joke['setup'])
+                await ctx.send(joke['setup'])
                 await asyncio.sleep(5)
-                ctx.send(joke['delivery'])
+                await ctx.send(joke['delivery'])
             except KeyError:
                 # musn't be a
-                ctx.send(joke['joke'])
+                await ctx.send(joke['joke'])
             
 
 def setup(bot: model.Bakerbot) -> None:
