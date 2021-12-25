@@ -15,7 +15,7 @@ class Loader(commands.Cog):
     async def get_joke(self):
         """Get a fucking joke"""
         url = 'https://v2.jokeapi.dev/joke/Any'
-        async with self.session.get(url) as response:
+        async with self.bot.session.get(url) as response:
             data = await response.read()
 
             if response.status !=200:
