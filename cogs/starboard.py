@@ -124,8 +124,12 @@ class Starboard(commands.Cog):
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
         """Global starboard reaction handler."""
+        if payload.guild_id is None:
+            return
+
         config = await database.GuildConfiguration.get(payload.guild_id)
-        if config is not None or not config.starboard_ready() or payload.channel_id == config.starboard_channel_id:
+        no_configuration = config is None or not config.starboard_ready()
+        if no_configuration or payload.channel_id == config.starboard_channel_id:
             return
 
         channel = self.bot.get_channel(payload.channel_id)
@@ -146,9 +150,8 @@ class Starboard(commands.Cog):
 
             # Write either the updated version or new StarboardMessage instance to the database.
             sbmsg = cache or (await database.StarboardMessage.new(message, reaction.count))
-            await sbmsg.write(self.bot.db)
+            await sbmsg.write()
 
 def setup(bot: model.Bakerbot) -> None:
-    if bot.db is not None:
-        cog = Starboard(bot)
-        bot.add_cog(cog)
+    cog = Starboard(bot)
+    bot.add_cog(cog)
