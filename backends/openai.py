@@ -1,11 +1,11 @@
-from abcs import text
 import exceptions
 import model
 
+import typing
 import ujson
 import http
 
-class Backend(text.Backend):
+class Backend:
     @classmethod
     def setup(cls, bot: model.Bakerbot) -> None:
         cls.base = "https://api.openai.com/v1"
@@ -28,7 +28,7 @@ class Backend(text.Backend):
             return data
 
     @classmethod
-    async def generate(cls, model: text.Model, query: str) -> str:
+    async def generate(cls, model: typing.Any, query: str) -> str:
         """Generate text using OpenAI."""
         if cls.token is None:
             raise model.SecretNotFound("openai-token not found in secrets.json.")

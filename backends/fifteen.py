@@ -14,7 +14,7 @@ class Backend:
 
     @classmethod
     async def post(cls, endpoint: str, **kwargs: dict) -> dict:
-        """Send a HTTP GET request to the FifteenAI API."""
+        """Send a HTTP POST request to the FifteenAI API."""
         async with cls.session.post(f"{cls.base}/{endpoint}", **kwargs) as response:
             data = await response.json(loads=ujson.loads, content_type=None)
 

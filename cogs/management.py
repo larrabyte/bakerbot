@@ -103,6 +103,16 @@ class Management(commands.Cog):
         await self.message_resender(message)
 
 def setup(bot: model.Bakerbot) -> None:
-    if bot.db is not None:
-        cog = Management(bot)
-        bot.add_cog(cog)
+    cog = Management(bot)
+    bot.add_cog(cog)
+
+    async def on_message(message: discord.Message) -> None:
+        """Bot-wide message handler to enforce guild-ignored channels."""
+        if message.guild is not None:
+            config = await database.GuildConfiguration.get(message.guild.id)
+            if config is None or message.channel.id in config.ignored_channels:
+                return
+
+        await bot.process_commands(message)
+
+    bot.on_message = on_message
