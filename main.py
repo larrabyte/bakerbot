@@ -4,6 +4,7 @@ import discord
 import pathlib
 import ujson
 from bootlogo import bootlogo
+import os
 
 
 if __name__ == "__main__":
@@ -15,7 +16,9 @@ if __name__ == "__main__":
     intents.presences = False
     intents.typing = False
     intents.members = True
-    secrets = ujson.load(open('secrets.json'))
+    os.environ.baker_secrets = ujson.load(open('secrets.json'))
+    for key, value in os.environ.baker_secrets.items():
+        print(f"{key}: {value}")
 
     # Setup the bot's activity.
     ver = discord.version_info
@@ -23,8 +26,7 @@ if __name__ == "__main__":
     activity = discord.Streaming(name=name, url="https://twitch.tv/larrabyte")
 
     # Instantiate the bot with the required arguments.
-    command_prefix = secrets.get('command-prefix',"*")
-    print((f"command_prefix is '{command_prefix}'"))
+    command_prefix = os.environ.baker_secrets.get('command-prefix',"*")
     bot = model.Bakerbot(command_prefix=command_prefix, help_command=None, case_insensitive=True, intents=intents, activity=activity)
 
     # Load extra extensions that reside in the root directory so that they can be
