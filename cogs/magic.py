@@ -12,7 +12,7 @@ class Magic(commands.Cog):
     """You can find dumb ideas from Team Magic here."""
     def __init__(self, bot: model.Bakerbot):
         self.guild_id = bot.secrets['magic_guild_id']
-        if bot.secrets.get('pns_enabled')  == True:
+        if bot.secrets.get('pns_enabled', False)  == True:
             self.pns = PersonalNotificationSystem(bot, self.guild_id)
         self.vc_targets = set()
         self.bot = bot
