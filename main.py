@@ -3,10 +3,12 @@ import model
 import discord
 import pathlib
 import ujson
+from bootlogo import bootlogo
 
-print("Baker Bot Starting....",end="")
 
 if __name__ == "__main__":
+    print("Baker Bot Starting....")
+    bootlogo()
 
     # Setup Discord API intents.
     intents = discord.Intents.default()
