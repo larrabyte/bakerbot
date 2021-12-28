@@ -128,5 +128,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-/runbakerbot.bat
-/ffmpeg
+
+# Just for the Big Dominic.
+runbakerbot.bat
+ffmpeg/
