@@ -54,7 +54,7 @@ class TTS(commands.Cog):
         return discord.FFmpegOpusAudio(url, **options)
 
     def make_sam_url(self, phrase: str):
-        safe_phrase = urllib.quote.quote_plus(phrase)
+        safe_phrase = urllib.parse.quote_plus(phrase)
         safe_url = f"https://tetyys.com/SAPI4/SAPI4?text={safe_phrase}&voice=Sam&pitch=100&speed=150"
         return discord.FFmpegPCMAudio(safe_url)
 
@@ -100,7 +100,7 @@ class TTS(commands.Cog):
             await ctx.reply(f"Text-to-speech synthesis complete.")
         else:
             await ctx.reply(f"Text-to-speech audio received and placed in queue. You are #{len(queue)}.")
-    
+
     @commands.command()
     async def sam(self, ctx: commands.Context, *, phrase: str ) -> None:
         """It's Microsoft Sam, y'all."""
