@@ -54,7 +54,7 @@ class TTS(commands.Cog):
 
         return discord.FFmpegOpusAudio(url, **options)
 
-    def make_sam_url(phrase: str):
+    def make_sam_url(self, phrase: str):
         safe_url = f"https://tetyys.com/SAPI4/SAPI4?text={quote_plus(phrase)}&voice=Sam&pitch=100&speed=150"
         return discord.FFmpegPCMAudio(safe_url)
 

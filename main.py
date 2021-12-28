@@ -13,7 +13,7 @@ if __name__ == "__main__":
     intents.presences = False
     intents.typing = False
     intents.members = True
-    secrets = ujson.load('secrets.json')
+    secrets = ujson.load(open('secrets.json'))
 
     # Setup the bot's activity.
     ver = discord.version_info
@@ -21,7 +21,9 @@ if __name__ == "__main__":
     activity = discord.Streaming(name=name, url="https://twitch.tv/larrabyte")
 
     # Instantiate the bot with the required arguments.
-    bot = model.Bakerbot(command_prefix=secrets.get('command_prefix',"*"), help_command=None, case_insensitive=True, intents=intents, activity=activity)
+    command_prefix = secrets.get('command-prefix',"*")
+    print((f"command_prefix is '{command_prefix}'"))
+    bot = model.Bakerbot(command_prefix=command_prefix, help_command=None, case_insensitive=True, intents=intents, activity=activity)
 
     # Load extra extensions that reside in the root directory so that they can be
     # reloaded using bot.reload_extension(). They are still imported as modules.
