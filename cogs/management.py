@@ -79,14 +79,14 @@ class Management(commands.Cog):
 
     async def who_asked(self, message: discord.Message) -> None:
         """Handle the "ok but who asked?" reply feature."""
-        if message.author.id != self.bot.user.id and message.guild is not None:
+        if message.author.id != self.bot.user.id and message.guild is not None and database.Backend.db_object is not None:
             if (config := await database.GuildConfiguration.get(message.guild.id)) is not None:
                 if config.who_asked_enabled and random.randint(0, 1000) == 0:
                     await message.reply("ok but who asked?")
 
     async def message_resender(self, message: discord.Message) -> None:
         """Handle the message resending feature."""
-        if message.author.id != self.bot.user.id and message.guild is not None:
+        if message.author.id != self.bot.user.id and message.guild is not None and database.Backend.db_object is not None:
             if (config := await database.GuildConfiguration.get(message.guild.id)) is not None:
                 if config.message_resender_enabled:
                     embed = utilities.Embeds.package(message)
@@ -108,9 +108,9 @@ def setup(bot: model.Bakerbot) -> None:
 
     async def on_message(message: discord.Message) -> None:
         """Bot-wide message handler to enforce guild-ignored channels."""
-        if message.guild is not None:
+        if message.guild is not None and database.Backend.db_object is not None:
             config = await database.GuildConfiguration.get(message.guild.id)
-            if config is None or message.channel.id in config.ignored_channels:
+            if config is not None and message.channel.id in config.ignored_channels:
                 return
 
         await bot.process_commands(message)
