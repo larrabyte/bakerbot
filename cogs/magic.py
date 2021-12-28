@@ -11,8 +11,8 @@ import random
 class Magic(commands.Cog):
     """You can find dumb ideas from Team Magic here."""
     def __init__(self, bot: model.Bakerbot):
-        self.guild_id = os.environ.baker_secrets['magic_guild_id']
-        if os.environ.baker_secrets.get('pns_enabled') == 'True':
+        self.guild_id = bot.secrets['magic_guild_id']
+        if bot.secrets.get('pns_enabled') == 'True':
             self.pns = PersonalNotificationSystem(bot, self.guild_id)
         self.vc_targets = set()
         self.bot = bot
@@ -110,7 +110,7 @@ class PersonalNotificationSystem:
     def __init__(self, bot: model.Bakerbot, guild_id: int) -> None:
         self.bot = bot
         self.guild = guild_id
-        self.identifiers = set(os.environ.baker_secrets.get('pns_subscribers',[]))
+        self.identifiers = set(bot.secrets.get('pns_subscribers',[]))
         bot.add_listener(self.on_message)
 
     def identifier_check(self, message: discord.Message) -> bool:
