@@ -3,13 +3,18 @@ import model
 
 import discord
 import pathlib
+import ujson
+
+print("Baker Bot Starting....",end="")
 
 if __name__ == "__main__":
+
     # Setup Discord API intents.
     intents = discord.Intents.default()
     intents.presences = False
     intents.typing = False
     intents.members = True
+    secrets = ujson.load('secrets.json')
 
     # Setup the bot's activity.
     ver = discord.version_info
@@ -17,7 +22,7 @@ if __name__ == "__main__":
     activity = discord.Streaming(name=name, url="https://twitch.tv/larrabyte")
 
     # Instantiate the bot with the required arguments.
-    bot = model.Bakerbot(command_prefix="$", help_command=None, case_insensitive=True, intents=intents, activity=activity)
+    bot = model.Bakerbot(command_prefix=secrets.get('command_prefix',"*"), help_command=None, case_insensitive=True, intents=intents, activity=activity)
 
     @bot.event
     async def on_message(message: discord.Message) -> None:
@@ -39,4 +44,5 @@ if __name__ == "__main__":
     for extension in ["database", "exceptions", "utilities"]:
         bot.load_extension(extension)
 
+    print("Imports done!")
     bot.run()

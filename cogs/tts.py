@@ -2,6 +2,8 @@ from backends import fifteen
 import utilities
 import model
 
+from urllib.parse import quote_plus
+
 from discord.ext import commands
 import collections
 import discord
@@ -52,6 +54,11 @@ class TTS(commands.Cog):
 
         return discord.FFmpegOpusAudio(url, **options)
 
+    def make_sam_url(phrase: str):
+        safe_url = f"https://tetyys.com/SAPI4/SAPI4?text={quote_plus(phrase)}&voice=Sam&pitch=100&speed=150"
+        return discord.FFmpegPCMAudio(safe_url)
+
+
     @commands.command()
     async def tts(self, ctx: commands.Context, *, flags: TTSFlags) -> None:
         """Text-to-speech with a dash of machine learning."""
@@ -85,6 +92,31 @@ class TTS(commands.Cog):
         queue = self.queue(ctx.guild)
         async with self.lock:
             queue.extend(results)
+
+        if ctx.voice_client is None or not ctx.voice_client.is_connected():
+            await ctx.author.voice.channel.connect()
+
+        if not ctx.voice_client.is_playing():
+            self.callback(ctx.voice_client, queue)
+            await ctx.reply(f"Text-to-speech synthesis complete.")
+        else:
+            await ctx.reply(f"Text-to-speech audio received and placed in queue. You are #{len(queue)}.")
+    
+    @commands.command()
+    async def sam(self, ctx: commands.Context, *, phrase: str ) -> None:
+        """Its microsoft Sam, Y'all"""
+
+        if ctx.voice_client is None and ctx.author.voice is not None and ctx.author.voice.channel is None:
+            fail = utilities.Embeds.status(False)
+            fail.description = "Unable to join a voice channel."
+            fail.set_footer(text="Either the bot isn't in a channel or you aren't in one.", icon_url=utilities.Icons.CROSS)
+            return await ctx.reply(embed=fail)
+
+        sam_audio = self.make_sam_url(phrase)
+
+        queue = self.queue(ctx.guild)
+        async with self.lock:
+            queue.append(sam_audio)
 
         if ctx.voice_client is None or not ctx.voice_client.is_connected():
             await ctx.author.voice.channel.connect()
