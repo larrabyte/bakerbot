@@ -6,15 +6,23 @@ import ujson
 
 class Bakerbot(commands.Bot):
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
-        super().__init__(*args, **kwargs)
         self.session = aiohttp.ClientSession(json_serialize=ujson.dumps)
         self.secrets = self.load_secrets()
+        prefix = self.secrets.get("command-prefix", "$")
+        super().__init__(command_prefix=prefix, *args, **kwargs)
         self.db = self.connect_database()
 
     def load_secrets(self) -> dict:
         """Load the contents of `secrets.json` from disk."""
         with open("secrets.json", "r") as file:
-            return ujson.load(file)
+            secrets = ujson.load(file)
+
+            print("model.Bakerbot.load_secrets(): secrets read as follows.")
+            for key, value in secrets.items():
+                print(f"    {key}: {value}")
+
+            print("")
+            return secrets
 
     def connect_database(self) -> motor.AsyncIOMotorDatabase | None:
         """Return the bot's database from the specified MongoDB address in `secrets.json`."""

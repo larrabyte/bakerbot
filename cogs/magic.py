@@ -11,9 +11,11 @@ import random
 class Magic(commands.Cog):
     """You can find dumb ideas from Team Magic here."""
     def __init__(self, bot: model.Bakerbot):
-        self.guild_id = bot.secrets['magic_guild_id']
-        if bot.secrets.get('pns_enabled', False)  == True:
+        self.guild_id = 473426067823263749
+
+        if bot.secrets.get("pns-enabled", False) == True:
             self.pns = PersonalNotificationSystem(bot, self.guild_id)
+
         self.vc_targets = set()
         self.bot = bot
 
@@ -110,12 +112,15 @@ class PersonalNotificationSystem:
     def __init__(self, bot: model.Bakerbot, guild_id: int) -> None:
         self.bot = bot
         self.guild = guild_id
-        self.identifiers = set(bot.secrets.get('pns_subscribers',[]))
+
+        subscribers = bot.secrets.get("pns-subscribers", [])
+        self.identifiers = set(subscribers)
         bot.add_listener(self.on_message)
 
     def identifier_check(self, message: discord.Message) -> bool:
         """Check whether tracked users are mentioned or replied to."""
-        return self.identifiers.intersection(set(member.id for member in message.mentions))
+        mentioned = set(member.id for member in message.mentions)
+        return self.identifiers.intersection(mentioned)
 
     async def post(self, message: discord.Message) -> None:
         """Post a message to each person's inbox."""
