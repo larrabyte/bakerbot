@@ -1,3 +1,8 @@
+# Things I don't want to be tracked.
+.vscode/
+local/
+keychain.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
