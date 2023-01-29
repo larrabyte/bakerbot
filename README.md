@@ -11,4 +11,5 @@ $ pip install -r requirements.txt
 You'll also need a `keychain.py` file formatted like so:
 ```py
 DISCORD_TOKEN = "YOUR DISCORD TOKEN HERE"
+DEBUG_GUILD = "YOUR DEBUG GUILD IDENTIFIER HERE"
 ```
