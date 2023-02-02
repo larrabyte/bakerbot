@@ -17,7 +17,7 @@ class Debug(commands.GroupCog):
     @application.command(description="Synchronises application commands.")
     @application.describe(guild="The guild ID to sync to. If an ID is not specified, a global sync will be executed instead.")
     @application.describe(overwrite="Whether to copy global commands to the specified guild. This is ignored if a guild ID is not specified.")
-    async def sync(self, interaction: discord.Interaction, guild: typing.Optional[str], overwrite: bool=False) -> None:
+    async def sync(self, interaction: discord.Interaction, guild: str | None, overwrite: bool=False) -> None:
         assert await self.bot.is_owner(interaction.user)
 
         if guild is None:
