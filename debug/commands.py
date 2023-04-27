@@ -60,4 +60,6 @@ class Debug(commands.GroupCog):
             colour=colours.FAILURE
         )
 
-        await interaction.response.send_message(embed=embed)
+        # A message may have already been sent by the command via the
+        # response object, so use the followup webhook instead.
+        await interaction.followup.send(embed=embed)
