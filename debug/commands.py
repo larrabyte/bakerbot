@@ -1,11 +1,8 @@
 import discord.app_commands as application
 import discord.ext.commands as commands
 
-import traceback
 import discord
 import logging
-import colours
-import limits
 
 class Debug(commands.GroupCog):
     def __init__(self, bot: commands.Bot, logger: logging.Logger) -> None:
@@ -46,20 +43,3 @@ class Debug(commands.GroupCog):
             await self.bot.tree.sync(guild=snowflake)
             await interaction.response.send_message("Guild-specific commands synchronised.")
             self.logger.info("Guild-specific commands synchronised.")
-
-    async def on_application_error(self, interaction: discord.Interaction, error: application.AppCommandError) -> None:
-        trace = "".join(traceback.format_exception(error.__cause__ or error))
-        command = interaction.command.name if interaction.command is not None else "unknown"
-
-        self.logger.error(f"Exception raised during execution of '{command}'.")
-        self.logger.error(trace)
-
-        embed = discord.Embed(
-            title="Exception raised. See below for more information.",
-            description=f"```{limits.limit(trace, limits.EMBED_DESCRIPTION - 6)}```",
-            colour=colours.FAILURE
-        )
-
-        # A message may have already been sent by the command via the
-        # response object, so use the followup webhook instead.
-        await interaction.followup.send(embed=embed)

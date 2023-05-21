@@ -8,10 +8,15 @@ import pathlib
 
 async def main():
     discord.utils.setup_logging(level=logging.INFO)
-
-    ver = discord.version_info
     logger = logging.getLogger(f"bakerbot.main")
-    logger.info(f"Using discord.py v{ver.major}.{ver.minor}.{ver.micro} {ver.releaselevel}.")
+
+    logger.info(
+        "Using discord.py v%s.%s.%s %s",
+        discord.version_info.major,
+        discord.version_info.minor,
+        discord.version_info.micro,
+        discord.version_info.releaselevel
+    )
 
     # With no way to read message content, the command prefix doesn't really matter.
     async with commands.Bot(command_prefix="$", intents=discord.Intents.all()) as bot:

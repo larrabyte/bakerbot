@@ -10,9 +10,10 @@ import asyncio
 
 class Dozza(commands.Cog):
     def __init__(self, bot: commands.Bot, logger: logging.Logger, session: aiohttp.ClientSession) -> None:
-        self.session = session
         self.logger = logger
         self.bot = bot
+
+        self.session = session
 
     @application.command(description="Get a fucking joke.")
     async def joke(self, interaction: discord.Interaction) -> None:

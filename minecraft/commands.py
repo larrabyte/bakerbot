@@ -7,21 +7,20 @@ import discord
 import logging
 import limits
 
-COLOUR_PATTERNS = [
-    "§4", "§c", "§6", "§e", "§2", "§a", "§b", "§3", "§1", "§9", "§d",
-    "§5", "§f", "§7", "§8", "§0", "§r", "§l", "§o", "§n", "§m", "§k"
-]
-
 class Minecraft(commands.GroupCog):
     def __init__(self, bot: commands.Bot, logger: logging.Logger) -> None:
         super().__init__()
         self.logger = logger
         self.bot = bot
 
+        self.colour_patterns = [
+            "§4", "§c", "§6", "§e", "§2", "§a", "§b", "§3", "§1", "§9", "§d",
+            "§5", "§f", "§7", "§8", "§0", "§r", "§l", "§o", "§n", "§m", "§k"
+        ]
+
     @application.command(description="Ping a Minecraft server.")
     @application.describe(address="The address of the server.")
     async def ping(self, interaction: discord.Interaction, address: str) -> None:
-        self.logger.info(f"Ping requested for {address}.")
         slices = address.split(":", 1)
         endpoint = slices[0]
         port = int(slices[1]) if len(slices) == 2 else 25565
@@ -29,7 +28,7 @@ class Minecraft(commands.GroupCog):
         # Pings could take a while to come back.
         await interaction.response.defer(thinking=True)
         response = await slp.query(endpoint, port)
-    
+
         if response is None:
             await interaction.followup.send(
                 "A connection was successfully made, but the server did not return a response."
@@ -50,7 +49,7 @@ class Minecraft(commands.GroupCog):
 
         if response.message_of_the_day:
             message = response.message_of_the_day
-            for replaceable in COLOUR_PATTERNS:
+            for replaceable in self.colour_patterns:
                 message = message.replace(replaceable, "")
 
             message = discord.utils.escape_markdown(message.strip())

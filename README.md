@@ -8,8 +8,8 @@ Python (preferably not the snake variety).
 $ pip install -r requirements.txt
 ```
 
-You'll also need a `keychain.py` file formatted like so:
+You'll also need a `keychain.py` file with the following structure:
 ```py
-DISCORD_TOKEN = "YOUR DISCORD TOKEN HERE"
-DEBUG_GUILD = "YOUR DEBUG GUILD IDENTIFIER HERE"
+DISCORD_TOKEN: str
+DEBUG_GUILD: int
 ```
