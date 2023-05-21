@@ -23,18 +23,20 @@ class Minecraft(commands.GroupCog):
     async def ping(self, interaction: discord.Interaction, address: str):
         slices = address.split(":", 1)
         endpoint = slices[0]
-        port = int(slices[1]) if len(slices) == 2 else 25565
 
         # Pings could take a while to come back.
         await interaction.response.defer(thinking=True)
-        response = await slp.query(endpoint, port)
+
+        try:
+            port = int(slices[1]) if len(slices) == 2 else 25565
+            response = await slp.query(endpoint, port)
+        except ValueError:
+            return await interaction.followup.send("The specified port is not an integer.")
+        except (TimeoutError, OSError):
+            return await interaction.followup.send("Connection could not be established.")
 
         if response is None:
-            await interaction.followup.send(
-                "A connection was successfully made, but the server did not return a response."
-            )
-
-            return
+            return await interaction.followup.send("The server did not return a response.")
 
         reply = (
             f"• **Version:** {discord.utils.escape_markdown(response.version_name)}\n"
@@ -55,7 +57,7 @@ class Minecraft(commands.GroupCog):
             message = discord.utils.escape_markdown(message.strip())
             reply += f"• **Message of the day:** {message}\n"
 
-        modded = f"Yes, {response.modded}" if response.modded is not None else "No"
+        modded = f"Yes, {response.modded}" if response.modded else "No"
         reply += f"• **Modded:** {modded}\n"
 
         if response.mods:
