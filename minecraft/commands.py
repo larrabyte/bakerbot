@@ -8,7 +8,7 @@ import logging
 import limits
 
 class Minecraft(commands.GroupCog):
-    def __init__(self, bot: commands.Bot, logger: logging.Logger) -> None:
+    def __init__(self, bot: commands.Bot, logger: logging.Logger):
         super().__init__()
         self.logger = logger
         self.bot = bot
@@ -20,7 +20,7 @@ class Minecraft(commands.GroupCog):
 
     @application.command(description="Ping a Minecraft server.")
     @application.describe(address="The address of the server.")
-    async def ping(self, interaction: discord.Interaction, address: str) -> None:
+    async def ping(self, interaction: discord.Interaction, address: str):
         slices = address.split(":", 1)
         endpoint = slices[0]
         port = int(slices[1]) if len(slices) == 2 else 25565

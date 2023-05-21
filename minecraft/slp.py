@@ -6,7 +6,7 @@ import json
 
 class VariableInteger:
     """A variable-length integer, used in packets sent by Minecraft servers."""
-    def __init__(self, value: int) -> None:
+    def __init__(self, value: int):
         self.bytes = bytes()
 
         while (value & ~0x7F) != 0:
@@ -48,7 +48,7 @@ class VariableInteger:
 
 class VariableString:
     """A variable-length string, used in packets sent by Minecraft servers."""
-    def __init__(self, string: str) -> None:
+    def __init__(self, string: str):
         self.string = string
 
     def __bytes__(self) -> bytes:

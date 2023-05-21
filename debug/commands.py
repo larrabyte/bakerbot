@@ -5,7 +5,7 @@ import discord
 import logging
 
 class Debug(commands.GroupCog):
-    def __init__(self, bot: commands.Bot, logger: logging.Logger) -> None:
+    def __init__(self, bot: commands.Bot, logger: logging.Logger):
         super().__init__()
         self.logger = logger
         self.bot = bot
@@ -15,7 +15,7 @@ class Debug(commands.GroupCog):
 
     @application.command(description="Synchronise application commands.")
     @application.describe(guild="The guild ID to sync to.")
-    async def sync(self, interaction: discord.Interaction, guild: str | None) -> None:
+    async def sync(self, interaction: discord.Interaction, guild: str | None):
         if guild is None:
             await self.bot.tree.sync()
             await interaction.response.send_message("Global commands synchronised.")
