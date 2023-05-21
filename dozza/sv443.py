@@ -88,6 +88,9 @@ async def request(session: aiohttp.ClientSession) -> ResponseSingle | ResponseTw
         data = await response.read()
         bundle = json.loads(data)
 
+        # The bundle will be an instance of Payload.
+        # If it also has an error field set to true,
+        # then it's an instance of Error.
         if bundle["error"]:
             raise RuntimeError(bundle["message"])
 
@@ -96,12 +99,10 @@ async def request(session: aiohttp.ClientSession) -> ResponseSingle | ResponseTw
 async def funny(session: aiohttp.ClientSession) -> Joke:
     """Get a fucking joke."""
     bundle = await request(session)
-
-    # One of these fields must exist.
     quip = bundle.get("joke") or bundle.get("setup")
-    assert isinstance(quip, str)
-
     followup = bundle.get("delivery")
+
+    assert isinstance(quip, str)
     assert isinstance(followup, str | None)
 
     return Joke(quip, followup)
