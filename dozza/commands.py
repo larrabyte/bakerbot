@@ -1,4 +1,4 @@
-from dozza import sv443
+from dozza import backend
 
 import discord.app_commands as application
 import discord.ext.commands as commands
@@ -17,7 +17,7 @@ class Dozza(commands.Cog):
 
     @application.command(description="Get a fucking joke.")
     async def joke(self, interaction: discord.Interaction):
-        joke = await sv443.funny(self.session)
+        joke = await backend.funny(self.session)
         await interaction.response.send_message(joke.quip)
 
         if joke.followup is not None:

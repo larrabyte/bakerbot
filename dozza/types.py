@@ -1,7 +1,5 @@
 import dataclasses
-import aiohttp
 import typing
-import json
 import enum
 
 class Language(enum.Enum):
@@ -46,11 +44,11 @@ class Flags(typing.TypedDict):
     explicit: bool
 
 class Payload(typing.TypedDict):
-    """The base format of any response from the API."""
+    """The base format of any response."""
     error: bool
 
 class Response(Payload):
-    """The format for a successful response from the API."""
+    """The format for a successful response."""
     category: Category
     type: Type
     flags: Flags
@@ -59,16 +57,16 @@ class Response(Payload):
     lang: Language
 
 class ResponseSingle(Response):
-    """The format of a single-type joke response from the API."""
+    """The format of a single-type joke response."""
     joke: str
 
 class ResponseTwoPart(Response):
-    """The format of a two-part-type joke response from the API."""
+    """The format of a two-part-type joke response."""
     setup: str
     delivery: str
 
 class Error(Payload):
-    """The format of a failed response from the API."""
+    """The format of a failed response."""
     internalError: bool
     code: int
     message: str
@@ -81,28 +79,3 @@ class Joke:
     """Holds funny stuff."""
     quip: str
     followup: str | None
-
-async def request(session: aiohttp.ClientSession) -> ResponseSingle | ResponseTwoPart:
-    """Request a joke from the sv443 JokeAPI."""
-    async with session.get("https://v2.jokeapi.dev/joke/Any") as response:
-        data = await response.read()
-        bundle = json.loads(data)
-
-        # The bundle will be an instance of Payload.
-        # If it also has an error field set to true,
-        # then it's an instance of Error.
-        if bundle["error"]:
-            raise RuntimeError(bundle["message"])
-
-        return bundle
-
-async def funny(session: aiohttp.ClientSession) -> Joke:
-    """Get a fucking joke."""
-    bundle = await request(session)
-    quip = bundle.get("joke") or bundle.get("setup")
-    followup = bundle.get("delivery")
-
-    assert isinstance(quip, str)
-    assert isinstance(followup, str | None)
-
-    return Joke(quip, followup)
