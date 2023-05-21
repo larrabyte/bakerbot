@@ -13,5 +13,6 @@ async def setup(bot: commands.Bot):
     cog = Debug(bot, logger)
 
     await bot.add_cog(cog, guild=guild)
+    bot.on_command_error = on_command_error
     bot.tree.on_error = on_application_error
-    logger.info(f"Custom application command error handler set.")
+    logger.info(f"Custom command error handlers set.")

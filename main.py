@@ -18,8 +18,8 @@ async def main():
         discord.version_info.releaselevel
     )
 
-    # With no way to read message content, the command prefix doesn't really matter.
-    async with commands.Bot(command_prefix="$", intents=discord.Intents.all()) as bot:
+    # Since we have no text-based commands, the command prefix doesn't really matter.
+    async with commands.Bot(command_prefix="$", help_command=None, intents=discord.Intents.all()) as bot:
         for package in (p for p in pathlib.Path(".").iterdir() if p.is_dir() and not p.name.startswith(".")):
             await bot.load_extension(package.name)
             logger.info(f"Loaded extension {package.name}.")

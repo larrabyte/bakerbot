@@ -1,4 +1,5 @@
 import discord.app_commands as application
+import discord.ext.commands as commands
 
 import traceback
 import logging
@@ -12,6 +13,11 @@ async def dispatch(interaction: discord.Interaction, **parameters):
         await interaction.response.send_message(**parameters)
     else:
         await interaction.followup.send(**parameters)
+
+async def on_command_error(context: commands.Context, error: commands.CommandError):
+    """Handles text-based command errors."""
+    logger = logging.getLogger(f"bakerbot.{__package__}")
+    logger.error(f"Commmand error of type {type(error).__name__} raised, ignoring.")
 
 async def on_application_error(interaction: discord.Interaction, error: application.AppCommandError):
     """Handles application command errors."""
