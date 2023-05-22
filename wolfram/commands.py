@@ -58,13 +58,12 @@ class View(discord.ui.View):
 
     def add_cherry_buttons(self, capsule: types.Capsule):
         """Add buttons for each cherry in a capsule to the view."""
-        button = discord.ui.Button(label="Back")
+        button = discord.ui.Button(label="Back", custom_id=self.stringify(capsule.id))
         button.callback = self.reset
         self.add_item(button)
 
         for cherry in capsule.cherries:
-            identifier = self.stringify(capsule.id, cherry.input)
-            button = discord.ui.Button(label=cherry.name, custom_id=identifier)
+            button = discord.ui.Button(label=cherry.name, custom_id=self.stringify(cherry.input))
             button.callback = self.update
             self.add_item(button)
 
@@ -92,13 +91,19 @@ class View(discord.ui.View):
 
     async def update(self, interaction: discord.Interaction):
         """Update the view by requesting more information from Wolfram|Alpha."""
+        # This is an extremely cursed system, but whatever.
+        # The capsule identifier is encoded in the identifier of the Back button.
+        # The cherry input is encoded in the identifier of the just-pressed button.
+        # The type checker goes insane if I don't tell it to ignore what's happening here.
+        identifier, = self.destringify(self.children[0].custom_id) # type: ignore
+        state, = self.destringify(interaction.data["custom_id"]) # type: ignore
+
+        self.parameters["includepodid"] = identifier
+        self.parameters.add("podstate", state)
+
         self.clear_items()
         self.add_item(discord.ui.Button(label="Please wait while another request is made.", disabled=True))
         await interaction.response.edit_message(view=self)
-
-        identifier, state = self.destringify(interaction.data["custom_id"]) # type: ignore
-        self.parameters["includepodid"] = identifier
-        self.parameters.add("podstate", state)
 
         # We specified that only one capsule should be returned.
         response = await backend.request(self.session, self.parameters)
