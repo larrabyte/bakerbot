@@ -47,7 +47,7 @@ class Payload(typing.TypedDict):
     """The base format of any response."""
     error: bool
 
-class Response(Payload):
+class Reply(Payload):
     """The format for a successful response."""
     category: Category
     type: Type
@@ -56,11 +56,11 @@ class Response(Payload):
     safe: bool
     lang: Language
 
-class ResponseSingle(Response):
+class Single(Reply):
     """The format of a single-type joke response."""
     joke: str
 
-class ResponseTwoPart(Response):
+class Compound(Reply):
     """The format of a two-part-type joke response."""
     setup: str
     delivery: str

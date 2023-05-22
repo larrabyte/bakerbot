@@ -3,7 +3,7 @@ from dozza import types
 import aiohttp
 import json
 
-async def request(session: aiohttp.ClientSession) -> types.ResponseSingle | types.ResponseTwoPart:
+async def request(session: aiohttp.ClientSession) -> types.Single | types.Compound:
     """Request a joke from the sv443 JokeAPI."""
     async with session.get("https://v2.jokeapi.dev/joke/Any") as response:
         data = await response.read()

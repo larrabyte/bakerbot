@@ -5,6 +5,10 @@ import struct
 import json
 import time
 
+class Empty(Exception):
+    """Expected a response, got nothing."""
+    pass
+
 def encapsulate(identifier: types.Identifier, data: bytes) -> bytes:
     """Encapsulate the given data into a Minecraft packet."""
     payload = identifier.value + data
@@ -32,7 +36,7 @@ def empty() -> bytes:
     data = struct.pack("!Q", timestamp)
     return encapsulate(types.Identifier.PING_PONG, data)
 
-async def query(address: str, port: int) -> types.Payload | None:
+async def query(address: str, port: int) -> types.Payload:
     """Send an SLP request to a server."""
     connection = asyncio.open_connection(address, port)
     rx, tx = await asyncio.wait_for(connection, timeout=5)
@@ -56,16 +60,16 @@ async def query(address: str, port: int) -> types.Payload | None:
     length, alpha = types.Integer.parse(response)
     identifier, beta = types.Integer.parse(response[alpha:])
     data, gamma = types.Integer.parse(response[alpha + beta:])
-
     payload = response[alpha + beta + gamma:alpha + beta + gamma + data]
-    return json.loads(payload) if payload else None
 
-async def ping(address: str, port: int) -> types.Ping | None:
+    if not payload:
+        raise Empty
+
+    return json.loads(payload)
+
+async def ping(address: str, port: int) -> types.Ping:
     """Ping a Minecraft server."""
     payload = await query(address, port)
-    if payload is None:
-        return None
-
     motd = payload["description"]
 
     # MOTDs require some special handling.

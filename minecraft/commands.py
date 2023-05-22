@@ -26,12 +26,11 @@ class Minecraft(commands.GroupCog):
         try:
             port = int(slices[1]) if len(slices) == 2 else 25565
             response = await backend.ping(endpoint, port)
-            assert response is not None
         except ValueError:
             return await interaction.followup.send("The specified port is not an integer.")
         except (TimeoutError, OSError):
             return await interaction.followup.send("A connection could not be established.")
-        except AssertionError:
+        except backend.Empty:
             return await interaction.followup.send("The server did not return a response.")
 
         reply = (

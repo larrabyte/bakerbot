@@ -75,12 +75,9 @@ class Players(typing.TypedDict):
     online: int
     sample: list[Player] | None
 
-class Chat(typing.TypedDict, total=False):
+class Chat(typing.TypedDict):
     """The format of a JSON Chat object in the Minecraft protocol."""
-    text: str
-
-    # All entries below may not be present.
-    extra: list["Chat"]
+    text: typing.NotRequired[str]
 
     # This is an incomplete listing.
     # Not that it matters, since we don't use these anyway.
@@ -89,6 +86,8 @@ class Chat(typing.TypedDict, total=False):
     underlined: bool
     strikethrough: bool
     obfuscated: bool
+
+    extra: typing.NotRequired[list["Chat"]]
 
 class Payload(typing.TypedDict):
     """The format of an SLP response for servers running Minecraft 1.7 or above."""
