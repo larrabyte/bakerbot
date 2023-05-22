@@ -38,35 +38,29 @@ class View(discord.ui.View):
         self.parameters = response.parameters
         self.capsules = response.capsules
 
-        self.add_capsule_buttons(back=False)
+        self.add_capsule_buttons()
 
     def stringify(self, *objects: typing.Any) -> str:
         """Create an interaction ID suffixed with stringified Python objects."""
-        # Hopefully no object has ":" in its string representation.
-        return self.id + ":".join(str(element) for element in objects)
+        # Hopefully no object has "|" in its string representation.
+        return self.id + "|".join(str(element) for element in objects)
 
     def destringify(self, identifier: str) -> list[str]:
         """Convert an interaction ID into a list of stringified Python objects."""
-        return identifier[len(self.id):].split(":")
+        return identifier[len(self.id):].split("|")
 
-    def add_capsule_buttons(self, *, back: bool):
+    def add_capsule_buttons(self):
         """Add buttons for each capsule to the view."""
-        if back:
-            button = discord.ui.Button(label="Back")
-            button.callback = self.reset
-            self.add_item(button)
-
         for index, capsule in enumerate(self.capsules):
             button = discord.ui.Button(label=capsule.title, custom_id=self.stringify(index))
             button.callback = self.select
             self.add_item(button)
 
-    def add_cherry_buttons(self, capsule: types.Capsule, *, back: bool):
+    def add_cherry_buttons(self, capsule: types.Capsule):
         """Add buttons for each cherry in a capsule to the view."""
-        if back:
-            button = discord.ui.Button(label="Back")
-            button.callback = self.reset
-            self.add_item(button)
+        button = discord.ui.Button(label="Back")
+        button.callback = self.reset
+        self.add_item(button)
 
         for cherry in capsule.cherries:
             identifier = self.stringify(capsule.id, cherry.input)
@@ -77,7 +71,7 @@ class View(discord.ui.View):
     async def reset(self, interaction: discord.Interaction):
         """Return the view to the capsule preview state."""
         self.clear_items()
-        self.add_capsule_buttons(back=False)
+        self.add_capsule_buttons()
         self.parameters.popall("includepodid", None)
         self.parameters.popall("podstate", None)
         await interaction.response.edit_message(embed=None, view=self)
@@ -88,7 +82,7 @@ class View(discord.ui.View):
         capsule = self.capsules[int(index)]
 
         self.clear_items()
-        self.add_cherry_buttons(capsule, back=True)
+        self.add_cherry_buttons(capsule)
 
         embed = discord.Embed(colour=colours.REGULAR)
         embeds = [embed.copy().set_image(url=url) for url in capsule.pictures]
@@ -108,10 +102,10 @@ class View(discord.ui.View):
 
         # We specified that only one capsule should be returned.
         response = await backend.request(self.session, self.parameters)
-        capsule = backend.parse(response)[0]
+        capsule, = backend.parse(response)
 
         self.clear_items()
-        self.add_cherry_buttons(capsule, back=True)
+        self.add_cherry_buttons(capsule)
 
         embed = discord.Embed(colour=colours.REGULAR)
         embeds = [embed.copy().set_image(url=url) for url in capsule.pictures]
