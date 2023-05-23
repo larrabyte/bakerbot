@@ -1,8 +1,15 @@
 from dozza import types
 
 import aiohttp
-import typing
 import json
+
+class Error(Exception):
+    """sv443 returned an error."""
+    def __init__(self, reason: str):
+        self.reason = reason
+
+    def __str__(self) -> str:
+        return self.reason
 
 async def request(session: aiohttp.ClientSession) -> types.Single | types.Compound:
     """Request a joke from the sv443 JokeAPI."""
@@ -14,7 +21,8 @@ async def request(session: aiohttp.ClientSession) -> types.Single | types.Compou
         # If it also has an error field set to true,
         # then it's an instance of types.Error.
         if bundle["error"]:
-            raise RuntimeError(bundle["message"])
+            error = bundle["message"]
+            raise Error(error)
 
         return bundle
 

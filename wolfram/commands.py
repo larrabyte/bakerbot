@@ -20,7 +20,12 @@ class Wolfram(commands.Cog):
     @application.describe(query="Enter what you want to calculate or know about.")
     async def wolfram(self, interaction: discord.Interaction, query: str):
         await interaction.response.defer(thinking=True)
-        response = await backend.ask(self.session, query)
+
+        try:
+            response = await backend.ask(self.session, query)
+        except backend.Error as error:
+            message = f"An unexpected error was returned: {error.reason}"
+            return await interaction.followup.send(message)
 
         if response.capsules:
             view = View(self.session, response)
