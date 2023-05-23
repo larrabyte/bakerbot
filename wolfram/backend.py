@@ -33,20 +33,21 @@ def parse(payload: types.Payload) -> list[types.Capsule]:
         reason = result["error"]["msg"]
         raise Error(reason)
 
-    # TODO: Make this cleaner.
-    capsules: list[types.Capsule] = []
-    for pod in result.get("pods") or []:
-        cherries: list[types.Cherry] = []
-        for state in pod.get("states") or []:
-            for cherry in state.get("states") or [state]:
-                cherries.append(types.Cherry(titlecase.titlecase(cherry["name"]), cherry["input"])) # type: ignore
+    return [
+        types.Capsule(
+            pod["id"],
+            titlecase.titlecase(pod["title"]),
+            [subpod["img"]["src"] for subpod in pod.get("subpods") or [] if "img" in subpod],
 
-        identifier = pod["id"]
-        title = titlecase.titlecase(pod["title"])
-        pictures = [subpod["img"]["src"] for subpod in pod.get("subpods") or [] if "img" in subpod]
-        capsules.append(types.Capsule(identifier, title, pictures, cherries))
+            [
+                types.Cherry(titlecase.titlecase(substate["name"]), substate["input"]) # type: ignore
+                for state in (pod.get("states") or [])
+                for substate in (state.get("states") or [state])
+            ]
+        )
 
-    return capsules
+        for pod in result.get("pods") or []
+    ]
 
 async def request(session: aiohttp.ClientSession, parameters: multidict.MultiDict) -> types.Payload:
     """Send a request to the Wolfram|Alpha API."""
