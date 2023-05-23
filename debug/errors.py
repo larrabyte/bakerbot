@@ -7,12 +7,12 @@ import discord
 import colours
 import limits
 
-async def dispatch(interaction: discord.Interaction, **parameters):
+async def dispatch(interaction: discord.Interaction, **kwargs):
     """Sends an embed to Discord, accounting for interaction responses."""
     if not interaction.response.is_done():
-        await interaction.response.send_message(**parameters)
+        await interaction.response.send_message(**kwargs)
     else:
-        await interaction.followup.send(**parameters)
+        await interaction.followup.send(**kwargs)
 
 async def on_command_error(context: commands.Context, error: commands.CommandError):
     """Handles text-based command errors."""

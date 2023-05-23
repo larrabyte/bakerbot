@@ -1,6 +1,7 @@
 from dozza import types
 
 import aiohttp
+import typing
 import json
 
 async def request(session: aiohttp.ClientSession) -> types.Single | types.Compound:
@@ -23,7 +24,4 @@ async def funny(session: aiohttp.ClientSession) -> types.Joke:
     quip = bundle.get("joke") or bundle.get("setup")
     followup = bundle.get("delivery")
 
-    assert isinstance(quip, str)
-    assert isinstance(followup, str | None)
-
-    return types.Joke(quip, followup)
+    return types.Joke(quip, followup) # type: ignore

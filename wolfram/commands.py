@@ -3,7 +3,6 @@ from wolfram import backend, types
 import discord.app_commands as application
 import discord.ext.commands as commands
 
-import titlecase
 import discord
 import logging
 import aiohttp
@@ -77,7 +76,9 @@ class View(discord.ui.View):
 
     async def select(self, interaction: discord.Interaction):
         """Update the view to select a specific capsule."""
-        index, = self.destringify(interaction.data["custom_id"]) # type: ignore
+        identifier = interaction.data["custom_id"] # type: ignore
+
+        index, = self.destringify(identifier)
         capsule = self.capsules[int(index)]
 
         self.clear_items()
@@ -95,10 +96,12 @@ class View(discord.ui.View):
         # The capsule identifier is encoded in the identifier of the Back button.
         # The cherry input is encoded in the identifier of the just-pressed button.
         # The type checker goes insane if I don't tell it to ignore what's happening here.
-        identifier, = self.destringify(self.children[0].custom_id) # type: ignore
-        state, = self.destringify(interaction.data["custom_id"]) # type: ignore
+        back = self.children[0].custom_id # type: ignore
+        identifier = interaction.data["custom_id"] # type: ignore
 
-        self.parameters["includepodid"] = identifier
+        pod, = self.destringify(back)
+        state, = self.destringify(identifier)
+        self.parameters["includepodid"] = pod
         self.parameters.add("podstate", state)
 
         self.clear_items()
