@@ -12,7 +12,7 @@ async def dispatch(interaction: discord.Interaction, **kwargs):
     if not interaction.response.is_done():
         await interaction.response.send_message(**kwargs)
     else:
-        await interaction.followup.send(**kwargs)
+        await interaction.edit_original_response(**kwargs)
 
 async def on_command_error(context: commands.Context, error: commands.CommandError):
     """Handles text-based command errors."""
@@ -39,6 +39,22 @@ async def on_application_error(interaction: discord.Interaction, error: applicat
         )
 
         await dispatch(interaction, embed=embed)
+
+async def on_view_error(interaction: discord.Interaction, error: Exception):
+    """Handles view errors."""
+    description = "".join(traceback.format_exception(error.__cause__ or error))
+
+    logger = logging.getLogger(f"bakerbot.{__package__}")
+    logger.error(f"Exception raised during execution of view.")
+    logger.error(description)
+
+    embed = discord.Embed(
+        title="Exception raised. See below for more information.",
+        description=f"```{limits.limit(description, limits.EMBED_DESCRIPTION - 6)}```",
+        colour=colours.FAILURE
+    )
+
+    await dispatch(interaction, content=None, embed=embed)
 
 async def on_check_failure(interaction: discord.Interaction, error: application.CheckFailure):
     """Handles application command permissions failure."""

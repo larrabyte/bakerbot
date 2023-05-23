@@ -7,7 +7,7 @@ import discord
 import logging
 import aiohttp
 import colours
-import typing
+import views
 
 class Wolfram(commands.Cog):
     def __init__(self, bot: commands.Bot, logger: logging.Logger, session: aiohttp.ClientSession):
@@ -34,7 +34,7 @@ class Wolfram(commands.Cog):
             content = "Wolfram|Alpha was unable to answer your query."
             await interaction.followup.send(content=content)
 
-class View(discord.ui.View):
+class View(views.View):
     """An interactive view for Wolfram|Alpha queries."""
     def __init__(self, session: aiohttp.ClientSession, response: types.Response):
         super().__init__()
@@ -43,15 +43,6 @@ class View(discord.ui.View):
         self.capsules = response.capsules
 
         self.add_capsule_buttons()
-
-    def stringify(self, *objects: typing.Any) -> str:
-        """Create an interaction ID suffixed with stringified Python objects."""
-        # Hopefully no object has "|" in its string representation.
-        return self.id + "|".join(str(element) for element in objects)
-
-    def destringify(self, identifier: str) -> list[str]:
-        """Convert an interaction ID into a list of stringified Python objects."""
-        return identifier[len(self.id):].split("|")
 
     def add_capsule_buttons(self):
         """Add buttons for each capsule to the view."""
