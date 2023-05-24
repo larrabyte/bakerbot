@@ -1,6 +1,7 @@
-from wolfram import types
+import wolfram.types as types
 
 import urllib.parse
+import dataclasses
 import titlecase
 import multidict
 import keychain
@@ -17,6 +18,26 @@ class Error(Exception):
     def __str__(self):
         return self.reason
 
+@dataclasses.dataclass
+class State:
+    """The equivalent of a State object."""
+    name: str
+    input: str
+
+@dataclasses.dataclass
+class Pod:
+    """The equivalent of a Pod object."""
+    id: str
+    title: str
+    pictures: list[str]
+    states: list[State]
+
+@dataclasses.dataclass
+class Response:
+    """Answers from Wolfram|Alpha."""
+    parameters: multidict.MultiDict
+    pods: list[Pod]
+
 def digest(parameters: multidict.MultiDict) -> str:
     """Compute the MD5 digest for a set of parameters."""
     payload = "".join(f"{k}{urllib.parse.quote_plus(v)}" for k, v in sorted(parameters.items()))
@@ -25,7 +46,7 @@ def digest(parameters: multidict.MultiDict) -> str:
     signature = hashlib.md5(data.encode())
     return signature.hexdigest().upper()
 
-def parse(payload: types.Payload) -> list[types.Capsule]:
+def parse(payload: types.Payload) -> list[Pod]:
     """Parse a payload into a list of capsules."""
     result = payload["queryresult"]
 
@@ -34,13 +55,13 @@ def parse(payload: types.Payload) -> list[types.Capsule]:
         raise Error(reason)
 
     return [
-        types.Capsule(
+        Pod(
             pod["id"],
             titlecase.titlecase(pod["title"]),
             [subpod["img"]["src"] for subpod in pod.get("subpods") or [] if "img" in subpod],
 
             [
-                types.Cherry(titlecase.titlecase(substate["name"]), substate["input"]) # type: ignore
+                State(titlecase.titlecase(substate["name"]), substate["input"]) # type: ignore
                 for state in (pod.get("states") or [])
                 for substate in (state.get("states") or [state])
             ]
@@ -62,7 +83,7 @@ async def request(session: aiohttp.ClientSession, parameters: multidict.MultiDic
         data = await response.read()
         return json.loads(data)
 
-async def ask(session: aiohttp.ClientSession, query: str) -> types.Response:
+async def ask(session: aiohttp.ClientSession, query: str) -> Response:
     """Query Wolfram|Alpha."""
     parameters = multidict.MultiDict(
         appid=keychain.WOLFRAM_ID,
@@ -75,4 +96,4 @@ async def ask(session: aiohttp.ClientSession, query: str) -> types.Response:
     )
 
     payload = await request(session, parameters)
-    return types.Response(parameters, parse(payload))
+    return Response(parameters, parse(payload))

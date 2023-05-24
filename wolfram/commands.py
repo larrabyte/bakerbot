@@ -1,20 +1,16 @@
-from wolfram import backend, types
-
 import discord.app_commands as application
 import discord.ext.commands as commands
+import wolfram.backend as backend
 
 import discord
-import logging
 import aiohttp
 import colours
 import views
 
 class Wolfram(commands.Cog):
-    def __init__(self, bot: commands.Bot, logger: logging.Logger, session: aiohttp.ClientSession):
-        self.logger = logger
-        self.bot = bot
-
+    def __init__(self, bot: commands.Bot, session: aiohttp.ClientSession):
         self.session = session
+        self.bot = bot
 
     @application.command(description="Ask Wolfram|Alpha something.")
     @application.describe(query="Enter what you want to calculate or know about.")
@@ -27,7 +23,7 @@ class Wolfram(commands.Cog):
             message = f"An unexpected error was returned: {error.reason}"
             return await interaction.followup.send(message)
 
-        if response.capsules:
+        if response.pods:
             view = View(self.session, response)
             await interaction.followup.send(view=view)
         else:
@@ -36,61 +32,61 @@ class Wolfram(commands.Cog):
 
 class View(views.View):
     """An interactive view for Wolfram|Alpha queries."""
-    def __init__(self, session: aiohttp.ClientSession, response: types.Response):
+    def __init__(self, session: aiohttp.ClientSession, response: backend.Response):
         super().__init__()
         self.session = session
         self.parameters = response.parameters
-        self.capsules = response.capsules
+        self.pods = response.pods
 
-        self.add_capsule_buttons()
+        self.add_pod_buttons()
 
-    def add_capsule_buttons(self):
-        """Add buttons for each capsule to the view."""
-        for index, capsule in enumerate(self.capsules):
-            button = discord.ui.Button(label=capsule.title, custom_id=self.stringify(index))
+    def add_pod_buttons(self):
+        """Add buttons for each pod to the view."""
+        for index, pod in enumerate(self.pods):
+            button = discord.ui.Button(label=pod.title, custom_id=self.stringify(index))
             button.callback = self.select
             self.add_item(button)
 
-    def add_cherry_buttons(self, capsule: types.Capsule):
-        """Add buttons for each cherry in a capsule to the view."""
-        button = discord.ui.Button(label="Back", custom_id=self.stringify(capsule.id))
+    def add_state_buttons(self, pod: backend.Pod):
+        """Add buttons for each state in a pod to the view."""
+        button = discord.ui.Button(label="Back", custom_id=self.stringify(pod.id))
         button.callback = self.reset
         self.add_item(button)
 
-        for cherry in capsule.cherries:
-            button = discord.ui.Button(label=cherry.name, custom_id=self.stringify(cherry.input))
+        for state in pod.states:
+            button = discord.ui.Button(label=state.name, custom_id=self.stringify(state.input))
             button.callback = self.update
             self.add_item(button)
 
     async def reset(self, interaction: discord.Interaction):
-        """Return the view to the capsule preview state."""
+        """Return the view to the pod preview state."""
         self.clear_items()
-        self.add_capsule_buttons()
+        self.add_pod_buttons()
         self.parameters.popall("includepodid", None)
         self.parameters.popall("podstate", None)
         await interaction.response.edit_message(embed=None, view=self)
 
     async def select(self, interaction: discord.Interaction):
-        """Update the view to select a specific capsule."""
+        """Update the view to select a specific pod."""
         identifier = interaction.data["custom_id"] # type: ignore
 
         index, = self.destringify(identifier)
-        capsule = self.capsules[int(index)]
+        pod = self.pods[int(index)]
 
         self.clear_items()
-        self.add_cherry_buttons(capsule)
+        self.add_state_buttons(pod)
 
         embed = discord.Embed(colour=colours.REGULAR)
-        embeds = [embed.copy().set_image(url=url) for url in capsule.pictures]
-        embeds[0].title = capsule.title
+        embeds = [embed.copy().set_image(url=url) for url in pod.pictures]
+        embeds[0].title = pod.title
 
         await interaction.response.edit_message(embeds=embeds, view=self)
 
     async def update(self, interaction: discord.Interaction):
         """Update the view by requesting more information from Wolfram|Alpha."""
         # This is an extremely cursed system, but whatever.
-        # The capsule identifier is encoded in the identifier of the Back button.
-        # The cherry input is encoded in the identifier of the just-pressed button.
+        # The pod identifier is encoded in the identifier of the Back button.
+        # The state input is encoded in the identifier of the just-pressed button.
         # The type checker goes insane if I don't tell it to ignore what's happening here.
         back = self.children[0].custom_id # type: ignore
         identifier = interaction.data["custom_id"] # type: ignore
@@ -106,13 +102,13 @@ class View(views.View):
 
         # We specified that only one capsule should be returned.
         response = await backend.request(self.session, self.parameters)
-        capsule, = backend.parse(response)
+        pod, = backend.parse(response)
 
         self.clear_items()
-        self.add_cherry_buttons(capsule)
+        self.add_state_buttons(pod)
 
         embed = discord.Embed(colour=colours.REGULAR)
-        embeds = [embed.copy().set_image(url=url) for url in capsule.pictures]
-        embeds[0].title = capsule.title
+        embeds = [embed.copy().set_image(url=url) for url in pod.pictures]
+        embeds[0].title = pod.title
 
         await interaction.edit_original_response(embeds=embeds, view=self)

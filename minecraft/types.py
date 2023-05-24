@@ -1,15 +1,7 @@
-import dataclasses
 import typing
-import enum
-import json
-
-class Identifier(enum.Enum):
-    """The type of packet."""
-    GENERIC = b"\x00"
-    PING_PONG = b"\x01"
 
 class Integer:
-    """A variable-length integer, used in packets sent by Minecraft servers."""
+    """A variable-length integer."""
     def __init__(self, value: int):
         self.bytes = bytes()
 
@@ -39,7 +31,7 @@ class Integer:
 
     @classmethod
     def parse(cls, data: bytes) -> tuple[int, int]:
-        """Parse a stream of bytes encoding a `VariableInteger` into an (integer, length) pair."""
+        """Parse a stream of bytes into an (integer, length) pair."""
         value, bytecount = (0, 0)
 
         for index, byte in enumerate(data):
@@ -51,7 +43,7 @@ class Integer:
         return (value, bytecount)
 
 class String:
-    """A variable-length string, used in packets sent by Minecraft servers."""
+    """A variable-length string."""
     def __init__(self, string: str):
         self.string = string
 
@@ -76,7 +68,7 @@ class Players(typing.TypedDict):
     sample: list[Player] | None
 
 class Chat(typing.TypedDict):
-    """The format of a JSON Chat object in the Minecraft protocol."""
+    """The format of a JSON Chat object."""
     text: typing.NotRequired[str]
 
     # This is an incomplete listing.
@@ -90,20 +82,8 @@ class Chat(typing.TypedDict):
     extra: typing.NotRequired[list["Chat"]]
 
 class Payload(typing.TypedDict):
-    """The format of an SLP response for servers running Minecraft 1.7 or above."""
+    """The format of an SLP payload for servers running Minecraft 1.7 or above."""
     version: Version
     players: Players
     description: str | Chat
     favicon: str
-
-@dataclasses.dataclass
-class Ping:
-    """Holds metadata about a Minecraft server."""
-    version: str
-    protocol: int
-    maximum_players: int
-    online_players: int
-    user_sample: list[str]
-    message_of_the_day: str
-    favicon: str
-    modded: bool

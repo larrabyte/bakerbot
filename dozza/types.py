@@ -73,9 +73,3 @@ class Error(Payload):
     causedBy: list[str]
     additionalInfo: str
     timestamp: int
-
-@dataclasses.dataclass
-class Joke:
-    """Holds funny stuff."""
-    quip: str
-    followup: str | None

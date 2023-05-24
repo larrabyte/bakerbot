@@ -1,35 +1,43 @@
-from dozza import types
+import dozza.types as types
 
+import dataclasses
 import aiohttp
+import typing
 import json
 
 class Error(Exception):
-    """sv443 returned an error."""
+    """Something unexpected happened on sv443's end."""
     def __init__(self, reason: str):
         self.reason = reason
 
     def __str__(self) -> str:
         return self.reason
 
-async def request(session: aiohttp.ClientSession) -> types.Single | types.Compound:
+@dataclasses.dataclass
+class Joke:
+    """Holds funny stuff."""
+    quip: str
+    followup: str | None
+
+async def request(session: aiohttp.ClientSession) -> types.Reply:
     """Request a joke from the sv443 JokeAPI."""
     async with session.get("https://v2.jokeapi.dev/joke/Any") as response:
         data = await response.read()
-        bundle = json.loads(data)
+        payload = typing.cast(types.Payload, json.loads(data))
 
-        # The bundle will be an instance of types.Payload.
-        # If it also has an error field set to true,
-        # then it's an instance of types.Error.
-        if bundle["error"]:
-            error = bundle["message"]
+        if payload["error"]:
+            failure = typing.cast(types.Error, payload)
+            error = failure["message"]
             raise Error(error)
 
-        return bundle
+        return typing.cast(types.Reply, payload)
 
-async def funny(session: aiohttp.ClientSession) -> types.Joke:
+async def funny(session: aiohttp.ClientSession) -> Joke:
     """Get a fucking joke."""
-    bundle = await request(session)
-    quip = bundle.get("joke") or bundle.get("setup")
-    followup = bundle.get("delivery")
+    response = await request(session)
 
-    return types.Joke(quip, followup) # type: ignore
+    # This is valid since the response must either be a single or compound joke.
+    quip = typing.cast(str, response.get("joke") or response.get("setup"))
+    followup = typing.cast(str | None, response.get("delivery"))
+
+    return Joke(quip, followup)

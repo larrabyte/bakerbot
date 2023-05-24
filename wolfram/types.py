@@ -1,5 +1,3 @@
-import dataclasses
-import multidict
 import typing
 
 class Error(typing.TypedDict):
@@ -63,23 +61,3 @@ class Query(typing.TypedDict, total=False):
 class Payload(typing.TypedDict):
     """The format of an API response."""
     queryresult: Query
-
-@dataclasses.dataclass
-class Cherry:
-    """The equivalent of a State object."""
-    name: str
-    input: str
-
-@dataclasses.dataclass
-class Capsule:
-    """The equivalent of a Pod object."""
-    id: str
-    title: str
-    pictures: list[str]
-    cherries: list[Cherry]
-
-@dataclasses.dataclass
-class Response:
-    """Answers from Wolfram|Alpha."""
-    parameters: multidict.MultiDict
-    capsules: list[Capsule]

@@ -1,22 +1,19 @@
-from dozza import backend
-
 import discord.app_commands as application
 import discord.ext.commands as commands
+import dozza.backend as backend
 
 import discord
-import logging
 import aiohttp
 import asyncio
 
 class Dozza(commands.Cog):
-    def __init__(self, bot: commands.Bot, logger: logging.Logger, session: aiohttp.ClientSession):
-        self.logger = logger
-        self.bot = bot
-
+    def __init__(self, bot: commands.Bot, session: aiohttp.ClientSession):
         self.session = session
+        self.bot = bot
 
     @application.command(description="Get a fucking joke.")
     async def joke(self, interaction: discord.Interaction):
+        # Jokes could take a while to come back.
         await interaction.response.defer(thinking=True)
 
         try:
