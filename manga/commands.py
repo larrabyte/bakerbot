@@ -61,9 +61,9 @@ class Manga(commands.GroupCog):
 
         chapters = await titles[0].chapters(self.session)
         paginator = views.Paginator(
-            lambda chapter: (
-                (f"Volume {vol}, " if (vol := chapter.volume) is not None else "") + f"Chapter {chapter.chapter}",
-                ""
+            lambda chapter: ((
+                f"Volume {vol}, " if (vol := chapter.volume) is not None else "") +
+                f"Chapter {chapter.chapter}", ""
             ),
 
             chapters
@@ -117,7 +117,10 @@ class Reader(views.View):
     async def forward(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Move the reader to the next chapter."""
         # Chapters are ordered backwards.
-        self.chapter = max(0, self.chapter - 1)
+        if (new := max(0, self.chapter - 1)) == 0:
+            return await interaction.response.defer()
+
+        self.chapter = new
         self.page = 0
 
         chapter = self.chapters[self.chapter]
@@ -127,8 +130,10 @@ class Reader(views.View):
     @discord.ui.button(label="Previous Chapter", row=1)
     async def back(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Move the reader to the previous chapter."""
+        if (new := min(len(self.chapters) - 1, self.chapter + 1)) == len(self.chapters) - 1:
+            return await interaction.response.defer()
 
-        self.chapter = min(len(self.chapters) - 1, self.chapter + 1)
+        self.chapter = new
         self.page = 0
 
         chapter = self.chapters[self.chapter]
