@@ -66,6 +66,18 @@ class Paginator(View, typing.Generic[T]):
         values = interaction.data["values"] # type: ignore
         value, = map(int, values)
         self.selection = self.options[value]
+
+        # It's OK to manipulate class internals here
+        # since this is when we stop the paginator.
+        for item in self.children.copy():
+            if isinstance(item, discord.ui.Button):
+                self.remove_item(item)
+            else:
+                menu = typing.cast(discord.ui.Select, item)
+                menu.disabled = True
+
+        self.add_item(discord.ui.Button(label="Discombobulating...", disabled=True, row=4))
+        await interaction.response.edit_message(view=self)
         self.stop()
 
     @discord.ui.button(label="First", row=4)
