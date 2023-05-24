@@ -40,7 +40,7 @@ class Paginator(View, typing.Generic[T]):
     def set_menu_options(self, page: int):
         """Set the menu options for the current page."""
         for _ in range(limits.VIEW_ITEMS_PER_ROW - 1 - len(self.get_menus())):
-            menu = discord.ui.Select()
+            menu = discord.ui.Select(placeholder="Please make a selection.")
             menu.callback = self.select
             self.add_item(menu)
 

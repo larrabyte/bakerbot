@@ -62,8 +62,8 @@ class Manga(commands.GroupCog):
         chapters = await titles[0].chapters(self.session)
         paginator = views.Paginator(
             lambda chapter: (
-                f"Chapter {chapter.chapter}",
-                f"Volume {chapter.volume}" if chapter.volume else ""
+                (f"Volume {vol}, " if (vol := chapter.volume) is not None else "") + f"Chapter {chapter.chapter}",
+                ""
             ),
 
             chapters
@@ -74,13 +74,15 @@ class Manga(commands.GroupCog):
         if (chapter := await paginator.wait()) is not None:
             pages = await chapter.pages(self.session)
             reader = Reader(self.session, chapters, chapter, pages)
-            await interaction.edit_original_response(view=reader)
+            await interaction.edit_original_response(content=pages[0], view=reader)
 
 class Reader(views.View):
     """An interactive manga reader built with Discord components."""
     def __init__(self, session: aiohttp.ClientSession, chapters: list[backend.Chapter], chapter: backend.Chapter, pages: list[str]):
         super().__init__()
         self.session = session
+
+        # Remember that the chapters are ordered backwards.
         self.chapters = chapters
         self.pages = pages
 
@@ -125,7 +127,7 @@ class Reader(views.View):
     @discord.ui.button(label="Previous Chapter", row=1)
     async def back(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Move the reader to the previous chapter."""
-        # Chapters are ordered backwards.
+
         self.chapter = min(len(self.chapters) - 1, self.chapter + 1)
         self.page = 0
 
