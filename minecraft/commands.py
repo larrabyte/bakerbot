@@ -33,14 +33,14 @@ class Minecraft(commands.GroupCog):
         except backend.Empty:
             return await interaction.followup.send("The server did not return a response.")
 
-        reply = (
-            f"• **Version:** {discord.utils.escape_markdown(response.version)}.\n"
-            f"• **Players online:** {response.online_players}/{response.maximum_players}.\n"
-            f"• **Player sample:** {', '.join(p for p in response.user_sample) or 'Not provided'}.\n"
-            f"• **Modded:** {'Yes.' if response.modded else 'Probably not.'}\n"
-            f"• **Message of the day:** {discord.utils.escape_markdown(re.sub('§.', '', response.message_of_the_day.strip()))}"
+        # Enough players/a long enough MOTD will push the reply over the character limit.
+        reply = limits.limit(
+            f"- **Version:** {discord.utils.escape_markdown(response.version)}.\n"
+            f"- **Players online:** {response.online_players}/{response.maximum_players}.\n"
+            f"- **Player sample:** {', '.join(p for p in response.user_sample) or 'Not provided'}.\n"
+            f"- **Modded:** {'Yes.' if response.modded else 'Probably not.'}\n"
+            f"- **Message of the day:** {discord.utils.escape_markdown(re.sub('§.', '', response.message_of_the_day.strip()))}",
+            limits.MESSAGE_CHARACTERS
         )
 
-        # Enough players/a long enough MOTD will push the reply over the character limit.
-        reply = limits.limit(reply, limits.MESSAGE_CHARACTERS)
         await interaction.followup.send(reply)
