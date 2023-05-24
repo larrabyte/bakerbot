@@ -61,12 +61,17 @@ class Manga:
 
     async def chapters(self, session: aiohttp.ClientSession) -> list[Chapter]:
         """Request the list of chapters."""
-        response = await request(session, f"https://api.mangadex.org/manga/{self.id}/aggregate")
+        response = await request(
+            session,
+            f"https://api.mangadex.org/manga/{self.id}/aggregate",
+            params={"translatedLanguage[]": "en"}
+        )
+
         aggregate = typing.cast(types.AggregateResponse, response)
 
         return [
             Chapter(chapter["id"], vol if (vol := volume["volume"]) != "none" else None, chapter["chapter"])
-            for volume in aggregate["volumes"].values()
+            for volume in (dict() if isinstance(aggregate["volumes"], list) else aggregate["volumes"]).values()
             for chapter in volume["chapters"].values()
         ]
 
@@ -74,6 +79,10 @@ async def request(session: aiohttp.ClientSession, url: str, **kwargs) -> types.P
     """Send a request to the Mangadex API."""
     async with session.get(url, **kwargs) as response:
         data = await response.read()
+
+        with open("manga/sample.json", "wb+") as file:
+            file.write(data)
+
         payload = typing.cast(types.Payload, json.loads(data))
 
         if payload["result"] == "error":
@@ -84,7 +93,12 @@ async def request(session: aiohttp.ClientSession, url: str, **kwargs) -> types.P
 
 async def search(session: aiohttp.ClientSession, title: str) -> list[Manga]:
     """Search for a manga."""
-    payload = await request(session, "https://api.mangadex.org/manga", params={"title": title})
+    payload = await request(
+        session,
+        "https://api.mangadex.org/manga",
+        params={"title": title}
+    )
+
     result = typing.cast(types.MangaList, payload)
 
     return [

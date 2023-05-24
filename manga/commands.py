@@ -56,10 +56,12 @@ class Manga(commands.GroupCog):
     @application.describe(title="The title of a manga.")
     async def read(self, interaction: discord.Interaction, title: str):
         await interaction.response.defer(thinking=True)
+
         if not (titles := await backend.search(self.session, title)):
             return await interaction.followup.send("No manga found.")
+        if not (chapters := await titles[0].chapters(self.session)):
+            return await interaction.followup.send("No chapters found.")
 
-        chapters = await titles[0].chapters(self.session)
         paginator = views.Paginator(
             lambda chapter: ((
                 f"Volume {vol}, " if (vol := chapter.volume) is not None else "") +

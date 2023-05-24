@@ -118,7 +118,9 @@ class AuthorResponse(Payload):
 
 class AggregateResponse(Payload):
     """The format of a response from the manga aggregate endpoint."""
-    volumes: dict[str, Volume]
+    # NOTE: This doesn't seem to be documented, but an empty aggregate
+    # is returned as an empty list rather than as a dictionary with no keys.
+    volumes: dict[str, Volume] | list
 
 class CDNResponse(Payload):
     """The format of a response from the CDN chapter request endpoint."""
