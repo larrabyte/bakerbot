@@ -1,8 +1,7 @@
 from .commands import *
 
-import discord.ext.commands as commands
+import bot
 
-async def setup(bot: commands.Bot):
-    session = aiohttp.ClientSession(raise_for_status=True)
-    cog = Dozza(bot, session)
+async def setup(bot: bot.Bot):
+    cog = Dozza(bot)
     await bot.add_cog(cog)

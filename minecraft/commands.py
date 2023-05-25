@@ -4,10 +4,11 @@ import minecraft.backend as backend
 
 import discord
 import limits
+import bot
 import re
 
 class Minecraft(commands.GroupCog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: bot.Bot):
         super().__init__()
         self.bot = bot
 

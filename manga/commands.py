@@ -6,19 +6,19 @@ import aiohttp
 import discord
 import limits
 import views
+import bot
 import re
 
 class Manga(commands.GroupCog):
-    def __init__(self, bot: commands.Bot, session: aiohttp.ClientSession):
+    def __init__(self, bot: bot.Bot):
         super().__init__()
-        self.session = session
         self.bot = bot
 
     @application.command(description="Get information about a manga via Mangadex.")
     @application.describe(title="The title of a manga.")
     async def info(self, interaction: discord.Interaction, title: str):
         await interaction.response.defer(thinking=True)
-        if not (titles := await backend.search(self.session, title)):
+        if not (titles := await backend.search(self.bot.session, title)):
             return await interaction.followup.send("No manga found.")
 
         paginator = views.Paginator(
@@ -33,7 +33,7 @@ class Manga(commands.GroupCog):
         await interaction.followup.send(view=paginator, suppress_embeds=True)
 
         if (manga := await paginator.wait()) is not None:
-            authors = await manga.authors(self.session)
+            authors = await manga.authors(self.bot.session)
             authors = ", ".join(authors)
             tags = ", ".join(manga.tags)
             summary = manga.description or "No description given."
@@ -57,9 +57,9 @@ class Manga(commands.GroupCog):
     async def read(self, interaction: discord.Interaction, title: str):
         await interaction.response.defer(thinking=True)
 
-        if not (titles := await backend.search(self.session, title)):
+        if not (titles := await backend.search(self.bot.session, title)):
             return await interaction.followup.send("No manga found.")
-        if not (chapters := await titles[0].chapters(self.session)):
+        if not (chapters := await titles[0].chapters(self.bot.session)):
             return await interaction.followup.send("No chapters found.")
 
         paginator = views.Paginator(
@@ -74,8 +74,8 @@ class Manga(commands.GroupCog):
         await interaction.followup.send(view=paginator)
 
         if (chapter := await paginator.wait()) is not None:
-            pages = await chapter.pages(self.session)
-            reader = Reader(self.session, chapters, chapter, pages)
+            pages = await chapter.pages(self.bot.session)
+            reader = Reader(self.bot.session, chapters, chapter, pages)
             await interaction.edit_original_response(content=pages[0], view=reader)
 
 class Reader(views.View):

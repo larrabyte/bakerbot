@@ -1,7 +1,7 @@
 from .commands import *
 
-import discord.ext.commands as commands
+import bot
 
-async def setup(bot: commands.Bot):
+async def setup(bot: bot.Bot):
     cog = Minecraft(bot)
     await bot.add_cog(cog)

@@ -1,10 +1,10 @@
-import discord.ext.commands as commands
-
 import keychain
 import discord
 import asyncio
 import logging
 import pathlib
+import aiohttp
+import bot
 
 async def main():
     discord.utils.setup_logging(level=logging.INFO)
@@ -18,13 +18,12 @@ async def main():
         discord.version_info.releaselevel
     )
 
-    # Since we have no text-based commands, the command prefix doesn't really matter.
-    async with commands.Bot(command_prefix="$", help_command=None, intents=discord.Intents.all()) as bot:
+    async with aiohttp.ClientSession(raise_for_status=True) as session, bot.Bot(session) as client:
         for package in (p for p in pathlib.Path(".").iterdir() if p.is_dir() and not p.name.startswith(".")):
-            await bot.load_extension(package.name)
+            await client.load_extension(package.name)
             logger.info(f"Loaded extension {package.name}.")
 
-        await bot.start(keychain.DISCORD_TOKEN)
+        await client.start(keychain.DISCORD_TOKEN)
 
 if __name__ == "__main__":
     asyncio.run(main())

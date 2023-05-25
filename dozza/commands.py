@@ -3,12 +3,11 @@ import discord.ext.commands as commands
 import dozza.backend as backend
 
 import discord
-import aiohttp
 import asyncio
+import bot
 
 class Dozza(commands.Cog):
-    def __init__(self, bot: commands.Bot, session: aiohttp.ClientSession):
-        self.session = session
+    def __init__(self, bot: bot.Bot):
         self.bot = bot
 
     @application.command(description="Get a fucking joke.")
@@ -17,7 +16,7 @@ class Dozza(commands.Cog):
         await interaction.response.defer(thinking=True)
 
         try:
-            joke = await backend.funny(self.session)
+            joke = await backend.funny(self.bot.session)
         except backend.Error as error:
             message = f"An unexpected error occurred during joke fetching: {error.reason}"
             return await interaction.followup.send(message)

@@ -6,10 +6,10 @@ import discord
 import aiohttp
 import colours
 import views
+import bot
 
 class Wolfram(commands.Cog):
-    def __init__(self, bot: commands.Bot, session: aiohttp.ClientSession):
-        self.session = session
+    def __init__(self, bot: bot.Bot):
         self.bot = bot
 
     @application.command(description="Ask Wolfram|Alpha something.")
@@ -18,13 +18,13 @@ class Wolfram(commands.Cog):
         await interaction.response.defer(thinking=True)
 
         try:
-            response = await backend.ask(self.session, query)
+            response = await backend.ask(self.bot.session, query)
         except backend.Error as error:
             message = f"An unexpected error was returned: {error.reason}"
             return await interaction.followup.send(message)
 
         if response.pods:
-            view = View(self.session, response)
+            view = View(self.bot.session, response)
             await interaction.followup.send(view=view)
         else:
             content = "Wolfram|Alpha was unable to answer your query."

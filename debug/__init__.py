@@ -1,13 +1,12 @@
 from .commands import *
 from .errors import *
 
-import discord.ext.commands as commands
-
 import keychain
 import discord
 import logging
+import bot
 
-async def setup(bot: commands.Bot):
+async def setup(bot: bot.Bot):
     logger = logging.getLogger(f"bakerbot.{__package__}")
     guild = discord.Object(keychain.DEBUG_GUILD)
     cog = Debug(bot, logger)
