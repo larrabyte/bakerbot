@@ -4,6 +4,7 @@ import asyncio
 import logging
 import pathlib
 import aiohttp
+import asyncpg
 import bot
 
 async def main():
@@ -18,8 +19,18 @@ async def main():
         discord.version_info.releaselevel
     )
 
-    async with aiohttp.ClientSession(raise_for_status=True) as session, bot.Bot(session) as client:
-        for package in (p for p in pathlib.Path(".").iterdir() if p.is_dir() and not p.name.startswith(".")):
+    async with (
+        aiohttp.ClientSession(raise_for_status=True) as session,
+        asyncpg.create_pool(keychain.POSTGRES_URL) as pool,
+        bot.Bot(session, pool) as client
+    ):
+
+        packages = (
+            path for path in pathlib.Path(".").iterdir()
+            if path.is_dir() and not path.name.startswith(".")
+        )
+
+        for package in packages:
             await client.load_extension(package.name)
             logger.info(f"Loaded extension {package.name}.")
 
