@@ -3,9 +3,10 @@ import discord.ext.commands as commands
 
 import discord
 import logging
+import bot
 
 class Debug(commands.GroupCog):
-    def __init__(self, bot: commands.Bot, logger: logging.Logger):
+    def __init__(self, bot: bot.Bot, logger: logging.Logger):
         super().__init__()
         self.logger = logger
         self.bot = bot
