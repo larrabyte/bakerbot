@@ -5,6 +5,7 @@ Bakerbot is a Discord bot written in Python. Originally made as a learning exerc
 # Features
 - Component-based frontends for Wolfram|Alpha and Mangadex.
 - Jokes (some of them are actually funny, I swear).
+- A starboard implementation.
 
 ## Prerequisites
 Python (preferably not the snake variety).
@@ -18,4 +19,5 @@ DISCORD_TOKEN: str
 DEBUG_GUILD: int
 WOLFRAM_ID: str
 WOLFRAM_SALT: str
+POSTGRES_URL: str
 ```
