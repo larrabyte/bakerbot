@@ -71,22 +71,27 @@ class Starboard(commands.GroupCog):
 
         config = await database.GuildConfiguration.read(self.bot.pool, interaction.guild.id)
 
-        if config is not None:
-            status = "enabled" if config.starboard_configured() else "disabled."
-            threshold = config.starboard_reaction_threshold or "not set."
-
-            channel = self.bot.get_channel(config.starboard_channel_id or 0)
-            mention = channel.mention if isinstance(channel, discord.abc.Messageable) else "not set."
-
-            reaction = discord.utils.escape_markdown(config.starboard_reaction_string or "not set.")
-
-            await interaction.response.send_message(
-                f"The starboard is currently **{status}**.\n"
-                f"- Reaction threshold: {threshold}\n"
-                f"- Destination channel: {mention}\n"
-                f"- Reaction: {reaction}",
-                suppress_embeds=True
+        if config is None:
+            return await interaction.response.send_message(
+                "This guild does not have a starboard configuration.\n"
+                "Consider executing `/starboard set` to initialise one."
             )
+
+        status = "enabled" if config.starboard_configured() else "disabled."
+        threshold = config.starboard_reaction_threshold or "not set."
+
+        channel = self.bot.get_channel(config.starboard_channel_id or 0)
+        mention = channel.mention if isinstance(channel, discord.abc.Messageable) else "not set."
+
+        reaction = discord.utils.escape_markdown(config.starboard_reaction_string or "not set.")
+
+        await interaction.response.send_message(
+            f"The starboard is currently **{status}**.\n"
+            f"- Reaction threshold: {threshold}\n"
+            f"- Destination channel: {mention}\n"
+            f"- Reaction: {reaction}",
+            suppress_embeds=True
+        )
 
     @application.command(description="Modify the current starboard configuration.")
     @application.describe(threshold="The number of reactions required to send a message to the starboard.  0 disables the starboard.")
