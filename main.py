@@ -27,7 +27,7 @@ async def main():
 
         packages = (
             path for path in pathlib.Path(".").iterdir()
-            if path.is_dir() and not path.name.startswith(".")
+            if path.is_dir() and not path.name.startswith((".", "_"))
         )
 
         for package in packages:
