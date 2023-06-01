@@ -79,10 +79,6 @@ async def request(session: aiohttp.ClientSession, url: str, **kwargs) -> types.P
     """Send a request to the Mangadex API."""
     async with session.get(url, **kwargs) as response:
         data = await response.read()
-
-        with open("manga/sample.json", "wb+") as file:
-            file.write(data)
-
         payload = typing.cast(types.Payload, json.loads(data))
 
         if payload["result"] == "error":
