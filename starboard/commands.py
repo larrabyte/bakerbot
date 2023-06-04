@@ -4,7 +4,6 @@ import discord.ext.commands as commands
 import database
 import discord
 import colours
-import typing
 import icons
 import bot
 import re
@@ -77,19 +76,16 @@ class Starboard(commands.GroupCog):
                 "Consider executing `/starboard set` to initialise one."
             )
 
-        status = "enabled" if config.starboard_configured() else "disabled."
-        threshold = config.starboard_reaction_threshold or "not set."
-
-        channel = self.bot.get_channel(config.starboard_channel_id or 0)
-        mention = channel.mention if isinstance(channel, discord.abc.Messageable) else "not set."
-
-        reaction = discord.utils.escape_markdown(config.starboard_reaction_string or "not set.")
+        threshold = config.starboard_reaction_threshold
+        channel = self.bot.get_channel(config.starboard_channel_id) if config.starboard_channel_id is not None else None
+        reaction = discord.utils.escape_markdown(config.starboard_reaction_string) if config.starboard_reaction_string is not None else None
+        status = "enabled" if threshold is not None and channel is not None and reaction is not None else "disabled"
 
         await interaction.response.send_message(
             f"The starboard is currently **{status}**.\n"
-            f"- Reaction threshold: {threshold}\n"
-            f"- Destination channel: {mention}\n"
-            f"- Reaction: {reaction}",
+            f"- Reaction threshold: {threshold if threshold is not None else 'not set.'}\n"
+            f"- Destination channel: {channel.mention if isinstance(channel, discord.abc.Messageable) else 'not set/invalid.'}\n"
+            f"- Reaction: {reaction if reaction is not None else 'not set.'}",
             suppress_embeds=True
         )
 
@@ -108,11 +104,14 @@ class Starboard(commands.GroupCog):
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         """Global starboard reaction handler."""
-        if payload.guild_id is None:
+        if payload.guild_id is None or (config := await database.GuildConfiguration.read(self.bot.pool, payload.guild_id)) is None:
             return
 
-        config = await database.GuildConfiguration.read(self.bot.pool, payload.guild_id)
-        if config is None or not config.starboard_configured() or payload.channel_id == config.starboard_channel_id:
+        threshold = config.starboard_reaction_threshold
+        identifier = config.starboard_channel_id
+        target = config.starboard_reaction_string
+
+        if threshold is None or identifier is None or target is None or payload.channel_id == identifier:
             return
 
         channel = self.bot.get_channel(payload.channel_id)
@@ -120,21 +119,13 @@ class Starboard(commands.GroupCog):
             return
 
         message = await channel.fetch_message(payload.message_id)
-        reactions = sum(str(reaction.emoji) == config.starboard_reaction_string for reaction in message.reactions)
-        threshold = typing.cast(int, config.starboard_reaction_threshold)
+        reactions = sum(str(reaction.emoji) == target for reaction in message.reactions)
 
         if reactions >= threshold:
-            cache = await database.StarboardMessage.read(self.bot.pool, payload.message_id)
-
-            if cache is not None:
-                # If the message is already in the database, then don't send a new message.
+            if (cache := await database.StarboardMessage.read(self.bot.pool, payload.message_id)) is not None:
                 cache.reactions = reactions
-            else:
-                identifier = typing.cast(int, config.starboard_channel_id)
-                starboard = self.bot.get_channel(identifier)
-
-                if isinstance(starboard, discord.abc.Messageable):
-                    await starboard.send(embed=package(message))
+            elif isinstance((starboard := self.bot.get_channel(identifier)), discord.abc.Messageable):
+                await starboard.send(embed=package(message))
 
             result = cache or database.StarboardMessage(
                 payload.message_id,

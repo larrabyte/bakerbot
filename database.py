@@ -11,15 +11,6 @@ class GuildConfiguration:
     starboard_channel_id: int | None
     starboard_reaction_string: str | None
 
-    def starboard_configured(self) -> bool:
-        """Check if all starboard fields are valid."""
-        return (
-            self.starboard_reaction_threshold is not None and
-            self.starboard_channel_id is not None and
-            self.starboard_reaction_string is not None and
-            self.starboard_reaction_threshold > 0
-        )
-
     @classmethod
     async def read(cls, pool: asyncpg.Pool, id: int) -> "GuildConfiguration | None":
         """Read an instance of a guild configuration from the database."""
