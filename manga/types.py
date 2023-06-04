@@ -23,7 +23,7 @@ class Volume(typing.TypedDict):
 
     # NOTE: This doesn't seem to be documented, but empty chapters can be
     # returned as an empty list rather than as a dictionary with no keys.
-    chapters: dict[str, Chapter]
+    chapters: dict[str, Chapter] | list
 
 class Routes(typing.TypedDict):
     """The format of the image delivery metadata from the CDN chapter request endpoint."""

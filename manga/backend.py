@@ -68,11 +68,13 @@ class Manga:
         )
 
         aggregate = typing.cast(types.AggregateResponse, response)
+        alpha = typing.cast(dict[str, types.Volume], dict())
+        beta = typing.cast(dict[str, types.Chapter], dict())
 
         return [
             Chapter(chapter["id"], vol if (vol := volume["volume"]) != "none" else None, chapter["chapter"])
-            for volume in (dict() if isinstance(aggregate["volumes"], list) else aggregate["volumes"]).values()
-            for chapter in (dict() if isinstance(volume["chapters"], list) else volume["chapters"]).values()
+            for volume in (alpha if isinstance(aggregate["volumes"], list) else aggregate["volumes"]).values()
+            for chapter in (beta if isinstance(volume["chapters"], list) else volume["chapters"]).values()
         ]
 
 async def request(session: aiohttp.ClientSession, url: str, **kwargs) -> types.Payload:
