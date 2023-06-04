@@ -130,12 +130,11 @@ class Starboard(commands.GroupCog):
                 # If the message is already in the database, then don't send a new message.
                 cache.reactions = reactions
             else:
-                embed = package(message)
-                id = typing.cast(int, config.starboard_channel_id)
-                starboard = self.bot.get_channel(id)
+                identifier = typing.cast(int, config.starboard_channel_id)
+                starboard = self.bot.get_channel(identifier)
 
-                assert isinstance(starboard, discord.abc.Messageable)
-                await starboard.send(embed=embed)
+                if isinstance(starboard, discord.abc.Messageable):
+                    await starboard.send(embed=package(message))
 
             result = cache or database.StarboardMessage(
                 payload.message_id,

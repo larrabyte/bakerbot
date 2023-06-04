@@ -4,7 +4,6 @@ import dataclasses
 import aiohttp
 import asyncio
 import typing
-import json
 
 class Error(Exception):
     """Mangadex returned an error."""
@@ -29,8 +28,10 @@ class Chapter:
 
     async def pages(self, session: aiohttp.ClientSession) -> list[str]:
         """Request the pages for this chapter."""
-        response = await request(session, f"https://api.mangadex.org/at-home/server/{self.id}")
-        metadata = typing.cast(types.CDNResponse, response)
+        metadata = typing.cast(
+            types.CDNResponse,
+            await request(session, f"https://api.mangadex.org/at-home/server/{self.id}")
+        )
 
         return [
             f"{metadata['baseUrl']}/data/{metadata['chapter']['hash']}/{image}"
@@ -61,13 +62,15 @@ class Manga:
 
     async def chapters(self, session: aiohttp.ClientSession) -> list[Chapter]:
         """Request the list of chapters."""
-        response = await request(
-            session,
-            f"https://api.mangadex.org/manga/{self.id}/aggregate",
-            params={"translatedLanguage[]": "en"}
+        aggregate = typing.cast(
+            types.AggregateResponse,
+            await request(
+                session,
+                f"https://api.mangadex.org/manga/{self.id}/aggregate",
+                params={"translatedLanguage[]": "en"}
+            )
         )
 
-        aggregate = typing.cast(types.AggregateResponse, response)
         alpha = typing.cast(dict[str, types.Volume], dict())
         beta = typing.cast(dict[str, types.Chapter], dict())
 
@@ -80,8 +83,7 @@ class Manga:
 async def request(session: aiohttp.ClientSession, url: str, **kwargs) -> types.Payload:
     """Send a request to the Mangadex API."""
     async with session.get(url, **kwargs) as response:
-        data = await response.read()
-        payload = typing.cast(types.Payload, json.loads(data))
+        payload = typing.cast(types.Payload, await response.json())
 
         if payload["result"] == "error":
             failure = typing.cast(types.ErrorResponse, payload)
@@ -91,13 +93,14 @@ async def request(session: aiohttp.ClientSession, url: str, **kwargs) -> types.P
 
 async def search(session: aiohttp.ClientSession, title: str) -> list[Manga]:
     """Search for a manga."""
-    payload = await request(
-        session,
-        "https://api.mangadex.org/manga",
-        params={"title": title}
+    result = typing.cast(
+        types.MangaList,
+        await request(
+            session,
+            "https://api.mangadex.org/manga",
+            params={"title": title}
+        )
     )
-
-    result = typing.cast(types.MangaList, payload)
 
     return [
         Manga(

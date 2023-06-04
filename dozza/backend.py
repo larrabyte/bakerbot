@@ -3,7 +3,6 @@ import dozza.types as types
 import dataclasses
 import aiohttp
 import typing
-import json
 
 class Error(Exception):
     """Something unexpected happened on sv443's end."""
@@ -22,8 +21,7 @@ class Joke:
 async def request(session: aiohttp.ClientSession) -> types.Reply:
     """Request a joke from the sv443 JokeAPI."""
     async with session.get("https://v2.jokeapi.dev/joke/Any") as response:
-        data = await response.read()
-        payload = typing.cast(types.Payload, json.loads(data))
+        payload = typing.cast(types.Payload, await response.json())
 
         if payload["error"]:
             failure = typing.cast(types.Error, payload)

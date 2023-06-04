@@ -7,7 +7,6 @@ import multidict
 import keychain
 import aiohttp
 import hashlib
-import json
 import yarl
 
 class Error(Exception):
@@ -80,8 +79,7 @@ async def request(session: aiohttp.ClientSession, parameters: multidict.MultiDic
     url = yarl.URL(f"https://api.wolframalpha.com/v2/query.jsp?{query}", encoded=True)
 
     async with session.get(url) as response:
-        data = await response.read()
-        return json.loads(data)
+        return await response.json()
 
 async def ask(session: aiohttp.ClientSession, query: str) -> Response:
     """Query Wolfram|Alpha."""
