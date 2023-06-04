@@ -72,7 +72,7 @@ class Manga:
         return [
             Chapter(chapter["id"], vol if (vol := volume["volume"]) != "none" else None, chapter["chapter"])
             for volume in (dict() if isinstance(aggregate["volumes"], list) else aggregate["volumes"]).values()
-            for chapter in volume["chapters"].values()
+            for chapter in (dict() if isinstance(volume["chapters"], list) else volume["chapters"]).values()
         ]
 
 async def request(session: aiohttp.ClientSession, url: str, **kwargs) -> types.Payload:

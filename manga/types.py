@@ -20,6 +20,9 @@ class Volume(typing.TypedDict):
     """The format of a volume from the manga aggregate endpoint."""
     volume: str
     count: int
+
+    # NOTE: This doesn't seem to be documented, but empty chapters can be
+    # returned as an empty list rather than as a dictionary with no keys.
     chapters: dict[str, Chapter]
 
 class Routes(typing.TypedDict):
