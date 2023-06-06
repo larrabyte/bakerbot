@@ -4,6 +4,7 @@ import discord.ext.commands as commands
 import database
 import discord
 import colours
+import typing
 import icons
 import bot
 import re
@@ -57,18 +58,16 @@ def package(message: discord.Message) -> discord.Embed:
 
     return embed
 
+@application.guild_only()
 class Starboard(commands.GroupCog):
     def __init__(self, bot: bot.Bot):
         super().__init__()
         self.bot = bot
 
-    # @application.guild_only() doesn't work in subcommands.
     @application.command(description="Query the current status of the starboard.")
     async def status(self, interaction: discord.Interaction):
-        if interaction.guild is None:
-            return await interaction.response.send_message("This command must be executed in a guild.")
-
-        config = await database.GuildConfiguration.read(self.bot.pool, interaction.guild.id)
+        guild = typing.cast(discord.Guild, interaction.guild)
+        config = await database.GuildConfiguration.read(self.bot.pool, guild.id)
 
         if config is None:
             return await interaction.response.send_message(
@@ -94,10 +93,8 @@ class Starboard(commands.GroupCog):
     @application.describe(channel="The channel to send starboarded messages to.")
     @application.describe(emote="The emote (either as a Unicode character or custom ID) required to \"star\" a message.")
     async def set(self, interaction: discord.Interaction, threshold: application.Range[int, 0, None], channel: discord.TextChannel, emote: str):
-        if interaction.guild is None:
-            return await interaction.response.send_message("This command must be executed in a guild.")
-
-        config = database.GuildConfiguration(interaction.guild.id, threshold, channel.id, emote.strip())
+        guild = typing.cast(discord.Guild, interaction.guild)
+        config = database.GuildConfiguration(guild.id, threshold, channel.id, emote.strip())
         await config.write(self.bot.pool)
         await interaction.response.send_message("Guild configuration saved.")
 
