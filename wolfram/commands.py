@@ -5,6 +5,7 @@ import wolfram.backend as backend
 import discord
 import aiohttp
 import colours
+import limits
 import views
 import bot
 
@@ -80,7 +81,7 @@ class View(views.View):
         embeds = [embed.copy().set_image(url=url) for url in pod.pictures]
         embeds[0].title = pod.title
 
-        await interaction.response.edit_message(embeds=embeds, view=self)
+        await interaction.response.edit_message(embeds=embeds[:limits.MESSAGE_EMBEDS], view=self)
 
     async def update(self, interaction: discord.Interaction):
         """Update the view by requesting more information from Wolfram|Alpha."""
@@ -111,4 +112,4 @@ class View(views.View):
         embeds = [embed.copy().set_image(url=url) for url in pod.pictures]
         embeds[0].title = pod.title
 
-        await interaction.edit_original_response(embeds=embeds, view=self)
+        await interaction.edit_original_response(embeds=embeds[:limits.MESSAGE_EMBEDS], view=self)
