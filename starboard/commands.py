@@ -116,11 +116,11 @@ class Starboard(commands.GroupCog):
             return
 
         message = await channel.fetch_message(payload.message_id)
-        reactions = sum(str(reaction.emoji) == target for reaction in message.reactions)
+        reaction = next(filter(lambda reaction: str(reaction.emoji) == target, message.reactions))
 
-        if reactions >= threshold:
+        if reaction.count >= threshold:
             if (cache := await database.StarboardMessage.read(self.bot.pool, payload.message_id)) is not None:
-                cache.reactions = reactions
+                cache.reactions = reaction.count
             elif isinstance((starboard := self.bot.get_channel(identifier)), discord.abc.Messageable):
                 await starboard.send(embed=package(message))
 
@@ -134,7 +134,7 @@ class Starboard(commands.GroupCog):
                 message.content,
                 [attachment.url for attachment in message.attachments],
                 [sticker.url for sticker in message.stickers],
-                reactions
+                reaction.count
             )
 
             await result.write(self.bot.pool)
