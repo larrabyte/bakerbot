@@ -1,7 +1,9 @@
 import discord.app_commands as application
 import discord.ext.commands as commands
+import starboard.tenor as tenor
 
 import database
+import aiohttp
 import discord
 import colours
 import typing
@@ -9,7 +11,7 @@ import icons
 import bot
 import re
 
-def package(message: discord.Message) -> discord.Embed:
+async def package(session: aiohttp.ClientSession, message: discord.Message) -> discord.Embed:
     """Package a message into a starboard embed."""
     embed = discord.Embed(colour=colours.REGULAR, timestamp=message.created_at)
     embed.set_footer(text="NUTS!", icon_url=icons.INFO)
@@ -25,8 +27,14 @@ def package(message: discord.Message) -> discord.Embed:
 
         embed.description = message.content
 
-    if message.embeds and (source := message.embeds[0]).type == "image" and source.url not in re.findall(r"\|\|(.+?)\|\|", message.content):
-        embed.set_image(url=source.url)
+    if message.embeds:
+        if (source := message.embeds[0]).type == "image" and source.url not in re.findall(r"\|\|(.+?)\|\|", message.content):
+            embed.set_image(url=source.url)
+
+        if (source := message.embeds[0]).type == "gifv" and source.url is not None and (gif := await tenor.raw(session, source.url)) is not None:
+            # Assume that the text component of a GIF message is solely the GIF URL.
+            embed.description = ""
+            embed.set_image(url=gif)
 
     embed.add_field(name="Original", value=f"[Jump!]({message.jump_url})")
     if (ref := message.reference) is not None and isinstance((res := ref.resolved), discord.Message):
@@ -122,7 +130,7 @@ class Starboard(commands.GroupCog):
             if (cache := await database.StarboardMessage.read(self.bot.pool, payload.message_id)) is not None:
                 cache.reactions = reaction.count
             elif isinstance((starboard := self.bot.get_channel(identifier)), discord.abc.Messageable):
-                await starboard.send(embed=package(message))
+                await starboard.send(embed=await package(self.bot.session, message))
 
             result = cache or database.StarboardMessage(
                 payload.message_id,
