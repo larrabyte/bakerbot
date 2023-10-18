@@ -124,7 +124,10 @@ class Starboard(commands.GroupCog):
             return
 
         message = await channel.fetch_message(payload.message_id)
-        reaction = next(filter(lambda reaction: str(reaction.emoji) == target, message.reactions))
+        reaction = next(filter(lambda reaction: str(reaction.emoji) == target, message.reactions), None)
+
+        if reaction is None:
+            return
 
         if reaction.count >= threshold:
             if (cache := await database.StarboardMessage.read(self.bot.pool, payload.message_id)) is not None:
