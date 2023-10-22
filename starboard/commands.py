@@ -2,6 +2,7 @@ import discord.app_commands as application
 import discord.ext.commands as commands
 import starboard.tenor as tenor
 
+import urllib.parse
 import database
 import aiohttp
 import discord
@@ -11,60 +12,59 @@ import icons
 import bot
 import re
 
+def sanitise(url: str | None) -> str | None:
+    """Sanitise attachment URLs (eg. strip query parameters off of Discord CDN URLs)."""
+    if url is None:
+        return None
+
+    scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url)
+
+    return urllib.parse.urlunparse((
+        scheme,
+        netloc,
+        path,
+        params,
+        query if netloc != "cdn.discordapp.com" else "",
+        fragment
+    ))
+
 async def package(session: aiohttp.ClientSession, message: discord.Message) -> discord.Embed:
     """Package a message into a starboard embed."""
-    embed = discord.Embed(colour=colours.REGULAR, timestamp=message.created_at)
-    embed.set_footer(text="NUTS!", icon_url=icons.INFO)
+    package = discord.Embed(colour=colours.REGULAR, timestamp=message.created_at)
+    package.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
+    package.set_footer(text="NUTS!", icon_url=icons.INFO)
+    package.add_field(name="Original", value=f"[Jump!]({message.jump_url})")
+    package.description = message.content
 
-    if message.embeds and (source := message.embeds[0]).type == "rich":
-        embed.set_author(name=source.author.name, icon_url=source.author.icon_url)
-        embed.description = source.description
-    else:
-        embed.set_author(
-            name=message.author.display_name,
-            icon_url=message.author.display_avatar.url
-        )
+    if message.reference is not None and isinstance(message.reference.resolved, discord.Message):
+        package.add_field(name="Replying to...", value=f"[{message.reference.resolved.author}]({message.reference.resolved.jump_url})")
 
-        embed.description = message.content
+    if (embed := next((embed for embed in message.embeds), None)) is not None:
+        if embed.type == "rich":
+            package.set_author(name=embed.author.name, icon_url=embed.author.icon_url)
+            package.description = embed.description
+        elif embed.type == "image" and embed.url not in re.findall(r"\|\|(.+?)\|\|", message.content):
+            package.set_image(url=embed.url)
+            package.description = ""
+        elif embed.type == "gifv" and embed.url is not None and (gif := await tenor.raw(session, embed.url)) is not None:
+            package.set_image(url=gif)
+            package.description = ""
 
-    if message.embeds:
-        if (source := message.embeds[0]).type == "image" and source.url not in re.findall(r"\|\|(.+?)\|\|", message.content):
-            embed.set_image(url=source.url)
+    if (file := next((attachment for attachment in message.attachments), None)) is not None:
+        # Strip attachment signature fields so that Discord renders attachments.
+        assert (url := sanitise(file.url)) is not None
 
-        if (source := message.embeds[0]).type == "gifv" and source.url is not None and (gif := await tenor.raw(session, source.url)) is not None:
-            # Assume that the text component of a GIF message is solely the GIF URL.
-            embed.description = ""
-            embed.set_image(url=gif)
-
-    embed.add_field(name="Original", value=f"[Jump!]({message.jump_url})")
-    if (ref := message.reference) is not None and isinstance((res := ref.resolved), discord.Message):
-        embed.add_field(name="Replying to...", value=f"[{res.author}]({res.jump_url})")
-
-    if message.attachments:
-        file = message.attachments[0]
-        extensions = ("png", "jpeg", "jpg", "gif", "webp")
-
-        if not file.is_spoiler() and file.url.lower().endswith(extensions):
-            embed.set_image(url=file.url)
-
+        if not file.is_spoiler() and url.lower().endswith(("png", "jpeg", "jpg", "gif", "webp")):
+            package.set_image(url=url)
         elif file.is_spoiler():
-            embed.add_field(
-                name="Attachment",
-                value=f"||[{file.filename}]({file.url})||",
-                inline=False
-            )
-
+            package.add_field(name="Attachment", value=f"||[{file.filename}]({url})||", inline=False)
         else:
-            embed.add_field(
-                name="Attachment",
-                value=f"[{file.filename}]({file.url})",
-                inline=False
-            )
+            package.add_field(name="Attachment", value=f"[{file.filename}]({url})", inline=False)
 
-    if message.stickers:
-        embed.set_image(url=message.stickers[0].url)
+    if (embed := next((sticker for sticker in message.stickers), None)) is not None:
+        package.set_image(url=embed.url)
 
-    return embed
+    return package
 
 @application.guild_only()
 class Starboard(commands.GroupCog):
@@ -143,7 +143,7 @@ class Starboard(commands.GroupCog):
                 message.reference.message_id if message.reference is not None else None,
                 message.created_at,
                 message.content,
-                [attachment.url for attachment in message.attachments],
+                [url for attachment in message.attachments if (url := sanitise(attachment.url)) is not None],
                 [sticker.url for sticker in message.stickers],
                 reaction.count
             )
