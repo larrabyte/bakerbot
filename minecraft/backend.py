@@ -20,7 +20,7 @@ class Ping:
     online_players: int
     user_sample: list[str]
     message_of_the_day: str
-    favicon: str
+    favicon: str | None
     modded: bool
 
 class Identifier(enum.Enum):
@@ -106,8 +106,8 @@ async def ping(address: str, port: int) -> Ping:
         protocol=payload["version"]["protocol"],
         maximum_players=payload["players"]["max"],
         online_players=payload["players"]["online"],
-        user_sample=[player["name"] for player in payload["players"]["sample"] or []],
+        user_sample=[player["name"] for player in payload["players"].get("sample", [])],
         message_of_the_day=message,
-        favicon=payload["favicon"],
+        favicon=payload.get("favicon"),
         modded="modinfo" in payload or "forgeData" in payload
     )

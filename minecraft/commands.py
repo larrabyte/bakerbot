@@ -38,7 +38,7 @@ class Minecraft(commands.GroupCog):
         message = discord.utils.escape_markdown(message)
 
         reply = limits.limit(
-            f"- **Version:** {version}.\n"
+            f"- **Version:** {version}\n"
             f"- **Players online:** {response.online_players}/{response.maximum_players}\n"
             f"- **Player sample:** {sample}\n"
             f"- **Modded:** {modded}\n"
